@@ -85,12 +85,20 @@ int main(int argc, char *argv[])
         if(c == '"') {
             i = 0;
             buffer[i++] = c;
+            bool escape = false;
             while((c = fgetc(in)) != EOF) {
                 if(c == '\n') {
                     fprintf(stderr, "Unexpected end of string literal on line %d\n", linecount);
                     exit(IFJ_LEX_ERR);
-                } else if(c == '"') {
+                } else if(escape == false && c == '"') {
                     break;
+                } else if(c == '\\') {
+                    if(escape == true)
+                        escape = false;
+                    else
+                        escape = true;
+                } else if(escape == true) {
+                    escape = false;
                 }
                 buffer[i++] = c;
             }
