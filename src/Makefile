@@ -6,3 +6,6 @@ all: ${EXEC}
 
 ifj15: main.c
 	${CC} ${CFLAGS} $^ -o $@
+
+lex: lex.c
+	${CC} ${CFLAGS} $^ -o $@
