@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+#include "error.h"
+
 // Main function here is only for testing purposes
 int main(int argc, char *argv[])
 {
@@ -74,7 +76,30 @@ int main(int argc, char *argv[])
             }
             buffer[i] = '\0';
             puts(buffer);  
-        } 
+
+            continue;
+        }
+
+        // Get string literal
+        // TODO: Remove buffer output
+        if(c == '"') {
+            i = 0;
+            buffer[i++] = c;
+            while((c = fgetc(in)) != EOF) {
+                if(c == '\n') {
+                    fprintf(stderr, "Unexpected end of string literal on line %d\n", linecount);
+                    exit(IFJ_LEX_ERR);
+                } else if(c == '"') {
+                    break;
+                }
+                buffer[i++] = c;
+            }
+            buffer[i++] = c;
+            buffer[i] = '\0';
+            puts(buffer);
+            
+            continue;
+        }
     }    
 
     printf("%d lines\n", linecount);
