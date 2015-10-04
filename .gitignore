@@ -33,3 +33,6 @@
 
 # IFJ binaries
 ifj15
+
+# Vim swap file
+*.swp
