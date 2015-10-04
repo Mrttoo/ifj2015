@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
                 // Skip oneline comments
                 if(la == '/') {
                     while((c = fgetc(in)) != '\n' && c != EOF);
+                    if(c == '\n') linecount++;
                     continue;
                 // Skip multiline comments
                 } else if(la == '*') {
@@ -52,6 +53,8 @@ int main(int argc, char *argv[])
                             starFound = true;
                         else if(starFound && c == '/')
                             break;
+                        else if(c == '\n')
+                            linecount++;
                         else
                             starFound = false;
                     }
@@ -88,7 +91,7 @@ int main(int argc, char *argv[])
             bool escape = false;
             while((c = fgetc(in)) != EOF) {
                 if(c == '\n') {
-                    fprintf(stderr, "Unexpected end of string literal on line %d\n", linecount);
+                    fprintf(stderr, "Unexpected end of string literal on line %d\n", linecount + 1);
                     exit(IFJ_LEX_ERR);
                 } else if(escape == false && c == '"') {
                     break;
@@ -107,6 +110,56 @@ int main(int argc, char *argv[])
             puts(buffer);
             
             continue;
+        }
+
+        // Get number (integer or float)
+        if(isdigit(c)) {
+            i = 0;
+            buffer[i++] = c;
+            bool isFloat = false;
+            bool hasExponent = false;
+            bool hasSign = false;
+            bool isValid = true;;
+            while((c = fgetc(in)) != EOF) {
+                buffer[i++] = c;
+                if(isspace(c)) {
+                    break;
+                } else if(c == '.') {
+                    isValid = false;
+                    if(isFloat == true) {
+                        break;
+                    } else {
+                        isFloat = true;
+                    }
+                } else if(c == 'E' || c == 'e') {
+                    isValid = false;
+                    if(hasExponent == true) {
+                        break;
+                    } else {
+                        hasExponent = true;
+                    }
+                } else if(isdigit(c) && isValid == false) {
+                    isValid = true;
+                } else if(hasExponent == true && isValid == false && (c == '+' || c == '-')) {
+                    if(hasSign == true)
+                        break;
+                    hasSign = true;
+                } else if(isdigit(c) == false) {
+                    if(isalpha(c)) 
+                        isValid = false;
+                    ungetc(c, in);
+                    i--;
+                    break; 
+                }
+            }   
+            
+            if(isValid == false) {
+                fprintf(stderr, "Invalid number literal on line %d\n", linecount + 1);
+                exit(IFJ_LEX_ERR);
+            } else {
+                buffer[i] = '\0';
+                puts(buffer);
+            }
         }
     }    
 
