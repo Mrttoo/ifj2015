@@ -22,7 +22,10 @@ int main(int argc, char *argv[])
     int c = '\0';
     int la = '\0';
     int linecount = 0;
-
+    // Test buffer - TODO: Must be dynamic
+    char buffer[1024] = "\0";
+    int i = 0;
+ 
     while((c = fgetc(in)) != EOF) {
         // Skip spaces and tabs
         if(c == ' ' || c == '\t')
@@ -35,7 +38,7 @@ int main(int argc, char *argv[])
 
         if(c == '/') {
             if((la = fgetc(in)) != EOF) {
-                // Skip one line comments
+                // Skip oneline comments
                 if(la == '/') {
                     while((c = fgetc(in)) != '\n' && c != EOF);
                     continue;
@@ -56,8 +59,22 @@ int main(int argc, char *argv[])
                 }
             }
         }
-      
-        fputc(c, stdout);
+        
+        // Get identifier (or keyword)
+        // TODO: Detect keywords
+        // TODO: Remove buffer output
+        if(isalpha(c) || c == '_') {
+            i = 0;
+            buffer[i++] = c;
+            while((c = fgetc(in)) != EOF) {
+                if(isalnum(c) || c == '_')
+                    buffer[i++] = c;
+                else
+                    break;
+            }
+            buffer[i] = '\0';
+            puts(buffer);  
+        } 
     }    
 
     printf("%d lines\n", linecount);
