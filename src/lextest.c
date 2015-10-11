@@ -1,8 +1,8 @@
 /* Test file for lexical analysis - draft */
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include "error.h"
+//#include <cstdio>
+//#include <cstdlib>
+//#include <string>
+//#include "error.h"
 // Test
 
 string escaped = "Test1\"test2\"test3\"\t\n\\\"\\";

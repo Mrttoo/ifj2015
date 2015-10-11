@@ -157,14 +157,6 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        // TODO: Temporarily skip preprocesor commands
-        if(c == '#') {
-            while((c = fgetc(in)) != EOF && c != '\n');
-            if(c == '\n') linecount++;
-
-            continue;
-        }
-
         // Get identifier (or keyword)
         // TODO: Detect keywords
         // TODO: Remove buffer output
@@ -224,7 +216,6 @@ int main(int argc, char *argv[])
         }
 
         // Get number (integer or float)
-        // TODO: Ignore leading zeroes (in integer and exponent)
         if(isdigit(c)) {
             i = 0;
             ungetc(c, in);
