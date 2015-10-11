@@ -227,16 +227,28 @@ int main(int argc, char *argv[])
         // TODO: Ignore leading zeroes (in integer and exponent)
         if(isdigit(c)) {
             i = 0;
-            buffer[i++] = c;
+            ungetc(c, in);
+
             bool isFloat = false;
             bool hasExponent = false;
             bool hasSign = false;
-            bool isValid = true;;
+            bool isValid = true;
+            bool skipZero = true;
             while((c = fgetc(in)) != EOF) {
+                // Skip leading zeros
+                if(c == '0') {
+                    if(skipZero == true)
+                        continue;
+                } else {
+                    skipZero = false;
+                }
+
                 buffer[i++] = c;
+                // Number should not contain spaces
                 if(isspace(c)) {
                     i--;
                     break;
+                // Parse dots
                 } else if(c == '.') {
                     isValid = false;
                     if(isFloat == true) {
@@ -244,20 +256,26 @@ int main(int argc, char *argv[])
                     } else {
                         isFloat = true;
                     }
+                // Parse exponent
                 } else if(c == 'E' || c == 'e') {
                     isValid = false;
+                    skipZero = true;
                     if(hasExponent == true) {
                         break;
                     } else {
                         hasExponent = true;
                         isFloat = true;
                     }
+                // Check number validity
                 } else if(isdigit(c) && isValid == false) {
                     isValid = true;
+                // Parse exponent sign
                 } else if(hasExponent == true && isValid == false && (c == '+' || c == '-')) {
                     if(hasSign == true)
                         break;
                     hasSign = true;
+                    skipZero = true;
+                // Skip unwanted characters
                 } else if(isdigit(c) == false) {
                     if(isalpha(c)) 
                         isValid = false;

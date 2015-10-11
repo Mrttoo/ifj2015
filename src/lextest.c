@@ -15,9 +15,12 @@ double testexpdouble4 = 700.20E+30;
 double testexpdouble5 = 800.20E-30;
 double testexpdouble6 = 900E-30;
 
-double questionable  = 900.E100;
+double leadingzeroes = 0000015;
+double leadingzeroes2 = 15.0E00014;
+double leadingzeroes3 = 14.000E-00013;
+double leadingzeroes4 = 00020.E+00000004;
 
-double invalid2 = 20.0 / 30.E2;;
+double questionable  = 900.E100;
 
 double expression1 = 20.0 + 300 - 1.2 * 5E+9 / 2;
 int expression2 = (testint <= 2);
