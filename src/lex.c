@@ -3,8 +3,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "error.h"
+
+char *keywords[] = { "int", "double", "string", "auto", "cin",
+                     "cout", "for", "if", "else", "return", NULL };
 
 // Main function here is only for testing purposes
 int main(int argc, char *argv[])
@@ -174,7 +178,18 @@ int main(int argc, char *argv[])
                     break;
             }
             buffer[i] = '\0';
-            printf("<id, %s>\n", buffer);
+
+            // Check if lexeme is a keyword
+            int ti = 0;
+            bool isKeyword = false;
+            for( ; keywords[ti] != NULL; ti++) {
+                if(strcmp(buffer, keywords[ti]) == 0) {
+                    isKeyword = true;
+                    break;
+                }
+            }
+
+            printf("<%s, %s>\n", ((isKeyword) ? "keyword" : "identificator"), buffer);
 
             continue;
         }

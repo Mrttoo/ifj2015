@@ -1,11 +1,11 @@
 /* Test file for lexical analysis - draft */
-#include <stdio.h>
-#include <stdlib.h>
-
+#include <cstdio>
+#include <cstdlib>
+#include <string>
 #include "error.h"
 // Test
 
-char *escaped = "Test1\"test2\"test3\"\t\n\\\"\\";
+string escaped = "Test1\"test2\"test3\"\t\n\\\"\\";
 int testint = 200;
 double testdouble = 300.01;
 double testexpdouble = 400E12;
