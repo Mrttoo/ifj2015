@@ -5,7 +5,7 @@
 #include "error.h"
 // Test
 
-char *escaped = "Test1\"test2\"test3\"\t\n\\\"\\"
+char *escaped = "Test1\"test2\"test3\"\t\n\\\"\\";
 int testint = 200;
 double testdouble = 300.01;
 double testexpdouble = 400E12;
@@ -24,6 +24,8 @@ int expression2 = (testint <= 2);
 int expression3 = (testint >= 2);
 int expression4 = (testint < 2);
 int expression5 = (testint > 2);
+int expression6 = (testint == 2);
+int expression7 = (testint != 2);
 
 int main(int argc, char *argv[])
 {

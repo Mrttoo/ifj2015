@@ -38,6 +38,16 @@ int main(int argc, char *argv[])
             continue;
         }
 
+        // TODO: End of command
+        if(c == ';') {
+            continue;
+        }
+
+        // TODO: Command separator
+        if(c == ',') {
+            continue;
+        }
+
         if(c == '/') {
             if((la = fgetc(in)) != EOF) {
                 // Skip oneline comments
@@ -82,6 +92,12 @@ int main(int argc, char *argv[])
             continue;
         }
 
+        // Multiplication operator
+        if(c == '*') {
+            printf("<operator, '*'>\n");
+            continue;
+        }
+
         if(c == '<') {
             if((c = fgetc(in)) != EOF && c == '=') {
                 // Less or equal operator
@@ -104,6 +120,43 @@ int main(int argc, char *argv[])
                 ungetc(c, in);
                 printf("<operator, '>'>\n");
             }
+
+            continue;
+        }
+
+        if(c == '=') {
+            if((c = fgetc(in)) != EOF && c == '=') {
+                // Equals to operator
+                printf("<operator, '=='>\n");
+            } else if(c != '=') {
+                // Assignment operator
+                ungetc(c, in);
+                printf("<operator, '='>\n");
+            }
+
+            continue;
+        }
+
+        if(c == '!') {
+            if((c = fgetc(in)) != EOF && c == '=') {
+                // Not equals to operator
+                printf("<operator, '!='>\n");
+            } else if(c != '=') {
+                ungetc(c, in);
+            }
+
+            continue;
+        }
+
+        // TODO: Temporarily skip brackets
+        if(c == '{' || c == '}' || c == '(' || c == ')' || c == '[' || c == ']') {
+            continue;
+        }
+
+        // TODO: Temporarily skip preprocesor commands
+        if(c == '#') {
+            while((c = fgetc(in)) != EOF && c != '\n');
+            if(c == '\n') linecount++;
 
             continue;
         }
@@ -208,6 +261,9 @@ int main(int argc, char *argv[])
 
             continue;
         }
+
+        fprintf(stderr, "Lex error: Unknown sequence on line %d (char %c)\n", linecount + 1, c);
+        exit(IFJ_LEX_ERR);
     }    
 
     printf("%d lines\n", linecount);
