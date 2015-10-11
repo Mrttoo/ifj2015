@@ -63,8 +63,51 @@ int main(int argc, char *argv[])
                     ungetc(la, in);
                 }
             }
+
+            // Apparently we got division operator
+            printf("<operator, '%c'>\n", c);
+
+            continue;
         }
-        
+
+        // Addition operator
+        if(c == '+') {
+            printf("<operator, '%c'>\n", c);
+            continue;
+        }
+
+        // Subtraction operator
+        if(c == '-') {
+            printf("<operator, '%c'>\n", c);
+            continue;
+        }
+
+        if(c == '<') {
+            if((c = fgetc(in)) != EOF && c == '=') {
+                // Less or equal operator
+                printf("<operator, '<='>\n");
+            } else if(c != '=') {
+                // Less than operator
+                ungetc(c, in);
+                printf("<operator, '<'>\n");
+            }
+
+            continue;
+        }
+
+        if(c == '>') {
+            if((c = fgetc(in)) != EOF && c == '=') {
+                // Greater or equal operator
+                printf("<operator, '>='>\n");
+            } else if(c != '=') {
+                // Greater than operator
+                ungetc(c, in);
+                printf("<operator, '>'>\n");
+            }
+
+            continue;
+        }
+
         // Get identifier (or keyword)
         // TODO: Detect keywords
         // TODO: Remove buffer output
@@ -78,7 +121,7 @@ int main(int argc, char *argv[])
                     break;
             }
             buffer[i] = '\0';
-            puts(buffer);  
+            printf("<id, %s>\n", buffer);
 
             continue;
         }
@@ -107,12 +150,13 @@ int main(int argc, char *argv[])
             }
             buffer[i++] = c;
             buffer[i] = '\0';
-            puts(buffer);
+            printf("<string, %s>\n", buffer);
             
             continue;
         }
 
         // Get number (integer or float)
+        // TODO: Ignore leading zeroes (in integer and exponent)
         if(isdigit(c)) {
             i = 0;
             buffer[i++] = c;
@@ -123,6 +167,7 @@ int main(int argc, char *argv[])
             while((c = fgetc(in)) != EOF) {
                 buffer[i++] = c;
                 if(isspace(c)) {
+                    i--;
                     break;
                 } else if(c == '.') {
                     isValid = false;
@@ -158,8 +203,10 @@ int main(int argc, char *argv[])
                 exit(IFJ_LEX_ERR);
             } else {
                 buffer[i] = '\0';
-                puts(buffer);
+                printf("<%s, %s>\n", ((isFloat) ? "float" : "integer"),  buffer);
             }
+
+            continue;
         }
     }    
 

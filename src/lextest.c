@@ -18,6 +18,13 @@ double testexpdouble6 = 900E-30;
 double questionable  = 900.E100;
 
 double invalid2 = 20.0 / 30.E2;;
+
+double expression1 = 20.0 + 300 - 1.2 * 5E+9 / 2;
+int expression2 = (testint <= 2);
+int expression3 = (testint >= 2);
+int expression4 = (testint < 2);
+int expression5 = (testint > 2);
+
 int main(int argc, char *argv[])
 {
     int ec = IFJ_OK;
