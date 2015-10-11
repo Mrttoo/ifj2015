@@ -235,6 +235,7 @@ int main(int argc, char *argv[])
                         break;
                     } else {
                         hasExponent = true;
+                        isFloat = true;
                     }
                 } else if(isdigit(c) && isValid == false) {
                     isValid = true;
