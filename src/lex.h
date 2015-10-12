@@ -46,5 +46,6 @@ enum lex_token_type {
 void lexInitialize(lex_data_t *d, const char *filename);
 void lexClean(lex_data_t *d);
 void lexExpandBuffer(lex_data_t *d);
+void lexBufferInsert(lex_data_t *d, int index, char c);
 
 #endif

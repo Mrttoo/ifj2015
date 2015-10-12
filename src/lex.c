@@ -61,6 +61,15 @@ void lexExpandBuffer(lex_data_t *d)
     }
 }
 
+void lexBufferInsert(lex_data_t *d, int index, char c)
+{
+    if((index + 1) > d->bsize) {
+        lexExpandBuffer(d);
+    }
+
+    d->buffer[index] = c;
+}
+
 void lexGetToken(lex_data_t *d) { 
     int i = 0;
  
@@ -205,14 +214,14 @@ void lexGetToken(lex_data_t *d) {
         // TODO: Remove buffer output
         if(isalpha(d->c) || d->c == '_') {
             i = 0;
-            d->buffer[i++] = d->c;
+            lexBufferInsert(d, i++, d->c);
             while((d->c = fgetc(d->source)) != EOF) {
                 if(isalnum(d->c) || d->c == '_')
-                    d->buffer[i++] = d->c;
+                    lexBufferInsert(d, i++, d->c);
                 else
                     break;
             }
-            d->buffer[i] = '\0';
+            lexBufferInsert(d, i, '\0');
 
             // Check if lexeme is a keyword
             int ti = 0;
@@ -233,7 +242,7 @@ void lexGetToken(lex_data_t *d) {
         // TODO: Remove buffer output
         if(d->c == '"') {
             i = 0;
-            d->buffer[i++] = d->c;
+            lexBufferInsert(d, i++, d->c);
             bool escape = false;
             while((d->c = fgetc(d->source)) != EOF) {
                 if(d->c == '\n') {
@@ -249,10 +258,10 @@ void lexGetToken(lex_data_t *d) {
                 } else if(escape == true) {
                     escape = false;
                 }
-                d->buffer[i++] = d->c;
+                lexBufferInsert(d, i++, d->c);
             }
-            d->buffer[i++] = d->c;
-            d->buffer[i] = '\0';
+            lexBufferInsert(d, i++, d->c);
+            lexBufferInsert(d, i, '\0');
             printf("<string, %s>\n", d->buffer);
             
             continue;
@@ -294,7 +303,7 @@ void lexGetToken(lex_data_t *d) {
                     zeroSkipped = false;
                 }
 
-                d->buffer[i++] = d->c;
+                lexBufferInsert(d, i++, d->c);
                 // Number should not contain spaces
                 if(isspace(d->c)) {
                     i--;
@@ -335,8 +344,8 @@ void lexGetToken(lex_data_t *d) {
                     break; 
                 }
             }   
-            
-            d->buffer[i] = '\0';
+
+            lexBufferInsert(d, i, '\0'); 
 
             if(isValid == false) {
                 fprintf(stderr, "Invalid number literal on line %d (%s)\n", d->line + 1, d->buffer);
