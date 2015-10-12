@@ -5,6 +5,11 @@
 //#include "error.h"
 // Test
 
+/* Multiline
+ * comment
+ / test ** /*
+*/
+
 string escaped = "Test1\"test2\"test3\"\t\n\\\"\\";
 int testint = 200;
 double testdouble = 300.01;
@@ -30,16 +35,32 @@ int expression5 = (testint > 2);
 int expression6 = (testint == 2);
 int expression7 = (testint != 2);
 
-int main(int argc, char *argv[])
+/* PRogram 3: Prace s retezci a vestavenymi funkcemi */
+int main()
 {
-    int ec = IFJ_OK;
-
-    if(argc >= 2) {
-        printf("Source file: %s\n", argv[1]);
-    } else {
-        printf("No source file specified.\n");
-        ec = IFJ_INTERNAL_ERR;
+    string str1;
+    { // vnoreny blok s lokalni promennou str2 a pristupem k str1
+        int x;
+        str1 = "Toto je nejaky text";
+        string str2;
+        str2 = concat(str1, ", ktery jeste trochu obohatime");
+        x = find(str2, "text");
+        cout << "Pozice retezce \"text\" v retezci str2: "
+             << x << "\n";
+        cout << "Zadejte nejakou posloupnost vsech malych pismen a-h, "
+             << "pricemz se pismena nesmeji v posloupnosti opakovat: ";
     }
-
-   return ec;
+    cin >> str1;
+    str1 = sort(str1);
+    if (str1 != "abcdefgh")
+    {
+        for (auto s = str1; s != "abcdefgh"; s = s)
+        {
+            cout << "Spatne zadana posloupnost, zkuste znovu: ";
+            cin >> str1;
+            s = sort(str1);
+        }
+    }
+    else {}
+    return 0;
 }
