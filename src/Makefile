@@ -12,3 +12,7 @@ lex: lex.c
 
 lextest: lex
 	./lex lextest.c
+
+lexanalyze: lex.c
+	clang --analyze ${CFLAGS} $^ -o $@
+	${RM} $@
