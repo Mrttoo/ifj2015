@@ -24,6 +24,11 @@ double leadingzeroes = 0000015;
 double leadingzeroes2 = 15.0E00014;
 double leadingzeroes3 = 14.000E-00013;
 double leadingzeroes4 = 00020.E+00000004;
+double leadingzeroes5 = 14.E0;
+double leadingzeroes6 = 15.E0000;
+double leadingzeroes7 = 0.1;
+double leadingzeroes8 = 0000.001;
+double leadingzeroes9 = 0000.000E0001;
 
 double questionable  = 900.E100;
 

@@ -223,7 +223,6 @@ void lexGetToken(FILE *in) {
             bool hasSign = false;
             bool isValid = true;
             bool skipZero = true;
-            bool isBegin = true;
             bool zeroSkipped = false;
             while((c = fgetc(in)) != EOF) {
                 // Skip leading zeros
@@ -235,18 +234,16 @@ void lexGetToken(FILE *in) {
                 } else {
                     if(skipZero == true && zeroSkipped == true) {
                         skipZero = false;
-                        // Skip all leading zeros...
-                        if(isBegin == true) {
-                            isBegin = false;
-                        // ...but leave at least one zero
-                        // in a number exponent
-                        } else if(isdigit(c) == false) {
+                        // Skip all leading zeros,
+                        // but leave at least one zero
+                        // if next character is not a number
+                        // (eg. 0.1, 0000.1, 1.E001, etc.)
+                        if(zeroSkipped == true && isdigit(c) == false) {
                             ungetc(c, in);
                             c = '0';
                         }
                     }
 
-                    isBegin = false;
                     skipZero = false;
                     zeroSkipped = false;
                 }
@@ -294,11 +291,6 @@ void lexGetToken(FILE *in) {
             }   
             
             buffer[i] = '\0';
-            if(buffer[0] == '\0') {
-                buffer[0] = '0';
-                buffer[1] = '\0';
-            }
-                
 
             if(isValid == false) {
                 fprintf(stderr, "Invalid number literal on line %d (%s)\n", linecount + 1, buffer);
