@@ -103,22 +103,31 @@ int main(int argc, char *argv[])
         }
 
         if(c == '<') {
-            if((c = fgetc(in)) != EOF && c == '=') {
-                // Less or equal operator
-                printf("<operator, '<='>\n");
-            } else if(c != '=') {
+            if((c = fgetc(in)) != EOF) {
+                if(c == '=') {
+                    // Less or equal operator
+                    printf("<operator, '<='>\n");
+                } else if(c == '<') {
+                    // Output redirection operator
+                    printf("<operator, '<<'>\n");
+                }
+            } else {
                 // Less than operator
                 ungetc(c, in);
                 printf("<operator, '<'>\n");
             }
-
             continue;
         }
 
         if(c == '>') {
-            if((c = fgetc(in)) != EOF && c == '=') {
-                // Greater or equal operator
-                printf("<operator, '>='>\n");
+            if((c = fgetc(in)) != EOF) {
+                if(c == '=') {
+                    // Greater or equal operator
+                    printf("<operator, '>='>\n");
+                } else if(c == '>') {
+                    // Input redirection operator
+                    printf("<operator, '>>'>\n");
+                }
             } else if(c != '=') {
                 // Greater than operator
                 ungetc(c, in);
