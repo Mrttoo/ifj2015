@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "lex.h"
 #include "error.h"
 
 char *keywords[] = { "int", "double", "string", "auto", "cin",
@@ -149,7 +150,7 @@ void lexGetToken(FILE *in) {
         }
 
         // TODO: Temporarily skip brackets
-        if(c == '{' || c == '}' || c == '(' || c == ')' || c == '[' || c == ']') {
+        if(c == '{' || c == '}' || c == '(' || c == ')') {
             continue;
         }
 
@@ -216,18 +217,38 @@ void lexGetToken(FILE *in) {
             i = 0;
             ungetc(c, in);
 
+            // I should reduce these variables... somehow
             bool isFloat = false;
             bool hasExponent = false;
             bool hasSign = false;
             bool isValid = true;
             bool skipZero = true;
+            bool isBegin = true;
+            bool zeroSkipped = false;
             while((c = fgetc(in)) != EOF) {
                 // Skip leading zeros
                 if(c == '0') {
-                    if(skipZero == true)
+                    if(skipZero == true) {
+                        zeroSkipped = true;
                         continue;
+                    }
                 } else {
+                    if(skipZero == true && zeroSkipped == true) {
+                        skipZero = false;
+                        // Skip all leading zeros...
+                        if(isBegin == true) {
+                            isBegin = false;
+                        // ...but leave at least one zero
+                        // in a number exponent
+                        } else if(isdigit(c) == false) {
+                            ungetc(c, in);
+                            c = '0';
+                        }
+                    }
+
+                    isBegin = false;
                     skipZero = false;
+                    zeroSkipped = false;
                 }
 
                 buffer[i++] = c;
@@ -272,11 +293,17 @@ void lexGetToken(FILE *in) {
                 }
             }   
             
+            buffer[i] = '\0';
+            if(buffer[0] == '\0') {
+                buffer[0] = '0';
+                buffer[1] = '\0';
+            }
+                
+
             if(isValid == false) {
-                fprintf(stderr, "Invalid number literal on line %d\n", linecount + 1);
+                fprintf(stderr, "Invalid number literal on line %d (%s)\n", linecount + 1, buffer);
                 exit(IFJ_LEX_ERR);
             } else {
-                buffer[i] = '\0';
                 printf("<%s, %s>\n", ((isFloat) ? "float" : "integer"),  buffer);
             }
 
