@@ -3,11 +3,12 @@
 
 #include <stdio.h>
 
-#define LEX_BUFFER_CHUNK 320000 /* Chunk size for buffer allocation */
+#define LEX_BUFFER_CHUNK 32 /* Chunk size for buffer allocation */
 
 typedef struct lex_data {
     int c;              /* Current char */
     int line;           /* Current line - 1 */
+    int bsize;          /* Current buffer size */
     FILE *source;       /* Source file stream */
     char *buffer;       /* Buffer for lexemes */ 
 } lex_data_t;
@@ -44,6 +45,6 @@ enum lex_token_type {
 
 void lexInitialize(lex_data_t *d, const char *filename);
 void lexClean(lex_data_t *d);
-
+void lexExpandBuffer(lex_data_t *d);
 
 #endif

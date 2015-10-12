@@ -25,6 +25,7 @@ void lexInitialize(lex_data_t *d, const char *filename)
 
     d->c = '\0';
     d->line = 0;
+    d->bsize = LEX_BUFFER_CHUNK;
 
     if((d->source = fopen(filename, "r")) == NULL) {
         fprintf(stderr, "%s: Unable to open file %s\n", __FUNCTION__, filename);
@@ -43,6 +44,21 @@ void lexClean(lex_data_t *d)
     d->source = NULL;
     free(d->buffer);
     d->buffer = NULL;
+}
+
+void lexExpandBuffer(lex_data_t *d)
+{
+    if(d->buffer != NULL) {
+       char *nb = realloc(d->buffer, d->bsize + LEX_BUFFER_CHUNK);
+        if(nb == NULL) {
+            free(d->buffer);
+            fprintf(stderr, "%s: Unable to resize data buffer\n", __FUNCTION__);
+            exit(IFJ_INTERNAL_ERR);
+        } else {
+            d->buffer = nb;
+            d->bsize += LEX_BUFFER_CHUNK;
+        } 
+    }
 }
 
 void lexGetToken(lex_data_t *d) { 
