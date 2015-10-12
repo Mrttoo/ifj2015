@@ -1,6 +1,17 @@
 #ifndef __LEX_H_INCLUDED
 #define __LEX_H_INCLUDED
 
+#include <stdio.h>
+
+#define LEX_BUFFER_CHUNK 320000 /* Chunk size for buffer allocation */
+
+typedef struct lex_data {
+    int c;              /* Current char */
+    int line;           /* Current line - 1 */
+    FILE *source;       /* Source file stream */
+    char *buffer;       /* Buffer for lexemes */ 
+} lex_data_t;
+
 enum lex_token_type {
     LEX_INTEGER = 256,      /* Integer */
     LEX_DOUBLE,             /* Double */
@@ -30,5 +41,9 @@ enum lex_token_type {
     LEX_OUTPUT,             /* Output redirection operator << */
 
 } lex_token_type_t;
+
+void lexInitialize(lex_data_t *d, const char *filename);
+void lexClean(lex_data_t *d);
+
 
 #endif

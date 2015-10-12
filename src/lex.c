@@ -11,191 +11,221 @@
 char *keywords[] = { "int", "double", "string", "auto", "cin",
                      "cout", "for", "if", "else", "return", NULL };
 
-void lexGetToken(FILE *in) { 
-    static int c = '\0';
-    int linecount = 0;
-    // Test buffer - TODO: Must be dynamic
-    char buffer[1024] = "\0";
+void lexInitialize(lex_data_t *d, const char *filename)
+{
+    if(d == NULL) {
+        fprintf(stderr, "%s: Uninitialized data pointer\n", __FUNCTION__);
+        exit(IFJ_INTERNAL_ERR);
+    }
+
+    if(filename == NULL) {
+        fprintf(stderr, "%s: Unitialized filename\n", __FUNCTION__);
+        exit(IFJ_INTERNAL_ERR);
+    }
+
+    d->c = '\0';
+    d->line = 0;
+
+    if((d->source = fopen(filename, "r")) == NULL) {
+        fprintf(stderr, "%s: Unable to open file %s\n", __FUNCTION__, filename);
+        exit(IFJ_INTERNAL_ERR);
+    }
+    
+    if((d->buffer = malloc(LEX_BUFFER_CHUNK)) == NULL) {
+        fprintf(stderr, "%s: Unable to allocate %d bytes for buffer\n", __FUNCTION__, LEX_BUFFER_CHUNK);
+        exit(IFJ_INTERNAL_ERR);
+    }
+}
+
+void lexClean(lex_data_t *d)
+{
+    fclose(d->source);
+    d->source = NULL;
+    free(d->buffer);
+    d->buffer = NULL;
+}
+
+void lexGetToken(lex_data_t *d) { 
     int i = 0;
  
-    while((c = fgetc(in)) != EOF) {
+    while((d->c = fgetc(d->source)) != EOF) {
         // Skip spaces and tabs
-        if(c == ' ' || c == '\t')
+        if(d->c == ' ' || d->c == '\t')
             continue;
         // Skip newlines and increase line counter
-        if(c == '\n') {
-            linecount++;
+        if(d->c == '\n') {
+            d->line++;
             continue;
         }
 
         // TODO: End of command
-        if(c == ';') {
+        if(d->c == ';') {
             continue;
         }
 
         // TODO: Command separator
-        if(c == ',') {
+        if(d->c == ',') {
             continue;
         }
 
-        if(c == '/') {
-            if((c = fgetc(in)) != EOF) {
+        if(d->c == '/') {
+            if((d->c = fgetc(d->source)) != EOF) {
                 // Skip oneline comments
-                if(c == '/') {
-                    while((c = fgetc(in)) != '\n' && c != EOF);
-                    if(c == '\n') linecount++;
+                if(d->c == '/') {
+                    while((d->c = fgetc(d->source)) != '\n' && d->c != EOF);
+                    if(d->c == '\n') d->line++;
                     continue;
                 // Skip multiline comments
-                } else if(c == '*') {
+                } else if(d->c == '*') {
                     bool starFound = false; 
-                    while((c = fgetc(in)) != EOF) {
-                        if(c == '*') {
+                    while((d->c = fgetc(d->source)) != EOF) {
+                        if(d->c == '*') {
                             starFound = true;
                             continue;
-                        } else if(starFound && c == '/') {
+                        } else if(starFound && d->c == '/') {
                             break;
-                        } else if(c == '\n') {
-                            linecount++;
+                        } else if(d->c == '\n') {
+                            d->line++;
                         }
 
                         starFound = false;
                     }
                     continue;
                 } else {
-                    ungetc(c, in);
+                    ungetc(d->c, d->source);
                 }
             }
 
             // Apparently we got division operator
-            printf("<operator, '%c'>\n", c);
+            printf("<operator, '%c'>\n", d->c);
 
             continue;
         }
 
         // Addition operator
-        if(c == '+') {
-            printf("<operator, '%c'>\n", c);
+        if(d->c == '+') {
+            printf("<operator, '%c'>\n", d->c);
             continue;
         }
 
         // Subtraction operator
-        if(c == '-') {
-            printf("<operator, '%c'>\n", c);
+        if(d->c == '-') {
+            printf("<operator, '%c'>\n", d->c);
             continue;
         }
 
         // Multiplication operator
-        if(c == '*') {
+        if(d->c == '*') {
             printf("<operator, '*'>\n");
             continue;
         }
 
-        if(c == '<') {
-            if((c = fgetc(in)) != EOF) {
-                if(c == '=') {
+        if(d->c == '<') {
+            if((d->c = fgetc(d->source)) != EOF) {
+                if(d->c == '=') {
                     // Less or equal operator
                     printf("<operator, '<='>\n");
-                } else if(c == '<') {
+                } else if(d->c == '<') {
                     // Output redirection operator
                     printf("<operator, '<<'>\n");
                 }
             } else {
                 // Less than operator
-                ungetc(c, in);
+                ungetc(d->c, d->source);
                 printf("<operator, '<'>\n");
             }
             continue;
         }
 
-        if(c == '>') {
-            if((c = fgetc(in)) != EOF) {
-                if(c == '=') {
+        if(d->c == '>') {
+            if((d->c = fgetc(d->source)) != EOF) {
+                if(d->c == '=') {
                     // Greater or equal operator
                     printf("<operator, '>='>\n");
-                } else if(c == '>') {
+                } else if(d->c == '>') {
                     // Input redirection operator
                     printf("<operator, '>>'>\n");
                 }
-            } else if(c != '=') {
+            } else if(d->c != '=') {
                 // Greater than operator
-                ungetc(c, in);
+                ungetc(d->c, d->source);
                 printf("<operator, '>'>\n");
             }
 
             continue;
         }
 
-        if(c == '=') {
-            if((c = fgetc(in)) != EOF && c == '=') {
+        if(d->c == '=') {
+            if((d->c = fgetc(d->source)) != EOF && d->c == '=') {
                 // Equals to operator
                 printf("<operator, '=='>\n");
-            } else if(c != '=') {
+            } else if(d->c != '=') {
                 // Assignment operator
-                ungetc(c, in);
+                ungetc(d->c, d->source);
                 printf("<operator, '='>\n");
             }
 
             continue;
         }
 
-        if(c == '!') {
-            if((c = fgetc(in)) != EOF && c == '=') {
+        if(d->c == '!') {
+            if((d->c = fgetc(d->source)) != EOF && d->c == '=') {
                 // Not equals to operator
                 printf("<operator, '!='>\n");
-            } else if(c != '=') {
-                ungetc(c, in);
+            } else if(d->c != '=') {
+                ungetc(d->c, d->source);
             }
 
             continue;
         }
 
         // TODO: Temporarily skip brackets
-        if(c == '{' || c == '}' || c == '(' || c == ')') {
+        if(d->c == '{' || d->c == '}' || d->c == '(' || d->c == ')') {
             continue;
         }
 
         // Get identifier (or keyword)
         // TODO: Detect keywords
         // TODO: Remove buffer output
-        if(isalpha(c) || c == '_') {
+        if(isalpha(d->c) || d->c == '_') {
             i = 0;
-            buffer[i++] = c;
-            while((c = fgetc(in)) != EOF) {
-                if(isalnum(c) || c == '_')
-                    buffer[i++] = c;
+            d->buffer[i++] = d->c;
+            while((d->c = fgetc(d->source)) != EOF) {
+                if(isalnum(d->c) || d->c == '_')
+                    d->buffer[i++] = d->c;
                 else
                     break;
             }
-            buffer[i] = '\0';
+            d->buffer[i] = '\0';
 
             // Check if lexeme is a keyword
             int ti = 0;
             bool isKeyword = false;
             for( ; keywords[ti] != NULL; ti++) {
-                if(strcmp(buffer, keywords[ti]) == 0) {
+                if(strcmp(d->buffer, keywords[ti]) == 0) {
                     isKeyword = true;
                     break;
                 }
             }
 
-            printf("<%s, %s>\n", ((isKeyword) ? "keyword" : "identificator"), buffer);
+            printf("<%s, %s>\n", ((isKeyword) ? "keyword" : "identificator"), d->buffer);
 
             continue;
         }
 
         // Get string literal
         // TODO: Remove buffer output
-        if(c == '"') {
+        if(d->c == '"') {
             i = 0;
-            buffer[i++] = c;
+            d->buffer[i++] = d->c;
             bool escape = false;
-            while((c = fgetc(in)) != EOF) {
-                if(c == '\n') {
-                    fprintf(stderr, "Unexpected end of string literal on line %d\n", linecount + 1);
+            while((d->c = fgetc(d->source)) != EOF) {
+                if(d->c == '\n') {
+                    fprintf(stderr, "Unexpected end of string literal on line %d\n", d->line + 1);
                     exit(IFJ_LEX_ERR);
-                } else if(escape == false && c == '"') {
+                } else if(escape == false && d->c == '"') {
                     break;
-                } else if(c == '\\') {
+                } else if(d->c == '\\') {
                     if(escape == true)
                         escape = false;
                     else
@@ -203,19 +233,19 @@ void lexGetToken(FILE *in) {
                 } else if(escape == true) {
                     escape = false;
                 }
-                buffer[i++] = c;
+                d->buffer[i++] = d->c;
             }
-            buffer[i++] = c;
-            buffer[i] = '\0';
-            printf("<string, %s>\n", buffer);
+            d->buffer[i++] = d->c;
+            d->buffer[i] = '\0';
+            printf("<string, %s>\n", d->buffer);
             
             continue;
         }
 
         // Get number (integer or float)
-        if(isdigit(c)) {
+        if(isdigit(d->c)) {
             i = 0;
-            ungetc(c, in);
+            ungetc(d->c, d->source);
 
             // I should reduce these variables... somehow
             bool isFloat = false;
@@ -224,9 +254,9 @@ void lexGetToken(FILE *in) {
             bool isValid = true;
             bool skipZero = true;
             bool zeroSkipped = false;
-            while((c = fgetc(in)) != EOF) {
+            while((d->c = fgetc(d->source)) != EOF) {
                 // Skip leading zeros
-                if(c == '0') {
+                if(d->c == '0') {
                     if(skipZero == true) {
                         zeroSkipped = true;
                         continue;
@@ -238,9 +268,9 @@ void lexGetToken(FILE *in) {
                         // but leave at least one zero
                         // if next character is not a number
                         // (eg. 0.1, 0000.1, 1.E001, etc.)
-                        if(zeroSkipped == true && isdigit(c) == false) {
-                            ungetc(c, in);
-                            c = '0';
+                        if(zeroSkipped == true && isdigit(d->c) == false) {
+                            ungetc(d->c, d->source);
+                            d->c = '0';
                         }
                     }
 
@@ -248,13 +278,13 @@ void lexGetToken(FILE *in) {
                     zeroSkipped = false;
                 }
 
-                buffer[i++] = c;
+                d->buffer[i++] = d->c;
                 // Number should not contain spaces
-                if(isspace(c)) {
+                if(isspace(d->c)) {
                     i--;
                     break;
                 // Parse dots
-                } else if(c == '.') {
+                } else if(d->c == '.') {
                     isValid = false;
                     if(isFloat == true) {
                         break;
@@ -262,7 +292,7 @@ void lexGetToken(FILE *in) {
                         isFloat = true;
                     }
                 // Parse exponent
-                } else if(c == 'E' || c == 'e') {
+                } else if(d->c == 'E' || d->c == 'e') {
                     isValid = false;
                     skipZero = true;
                     if(hasExponent == true) {
@@ -272,59 +302,55 @@ void lexGetToken(FILE *in) {
                         isFloat = true;
                     }
                 // Check number validity
-                } else if(isdigit(c) && isValid == false) {
+                } else if(isdigit(d->c) && isValid == false) {
                     isValid = true;
                 // Parse exponent sign
-                } else if(hasExponent == true && isValid == false && (c == '+' || c == '-')) {
+                } else if(hasExponent == true && isValid == false && (d->c == '+' || d->c == '-')) {
                     if(hasSign == true)
                         break;
                     hasSign = true;
                     skipZero = true;
                 // Skip unwanted characters
-                } else if(isdigit(c) == false) {
-                    if(isalpha(c)) 
+                } else if(isdigit(d->c) == false) {
+                    if(isalpha(d->c)) 
                         isValid = false;
-                    ungetc(c, in);
+                    ungetc(d->c, d->source);
                     i--;
                     break; 
                 }
             }   
             
-            buffer[i] = '\0';
+            d->buffer[i] = '\0';
 
             if(isValid == false) {
-                fprintf(stderr, "Invalid number literal on line %d (%s)\n", linecount + 1, buffer);
+                fprintf(stderr, "Invalid number literal on line %d (%s)\n", d->line + 1, d->buffer);
                 exit(IFJ_LEX_ERR);
             } else {
-                printf("<%s, %s>\n", ((isFloat) ? "float" : "integer"),  buffer);
+                printf("<%s, %s>\n", ((isFloat) ? "float" : "integer"),  d->buffer);
             }
 
             continue;
         }
 
-        fprintf(stderr, "Lex error: Unknown sequence on line %d (char %c)\n", linecount + 1, c);
+        fprintf(stderr, "Lex error: Unknown sequence on line %d (char %c)\n", d->line + 1, d->c);
         exit(IFJ_LEX_ERR);
     }    
 
-    printf("%d lines\n", linecount);
+    printf("%d lines\n", d->line);
 }
 
 // Main function here is only for testing purposes
 int main(int argc, char *argv[])
 {
-    FILE *in = NULL;
+    lex_data_t d;
 
-    if(argc >= 2) {
-        if((in = fopen(argv[1], "r")) == NULL) {
-            fprintf(stderr, "Unable to open file %s\n", argv[1]);
-            exit(1);
-        }
-    } else {
+    if(argc < 2) {
         printf("Usage: %s source.code\n", argv[0]);
         exit(1);
     }
 
-    lexGetToken(in);
+    lexInitialize(&d, argv[1]);
+    lexGetToken(&d);
 
-    fclose(in);
+    lexClean(&d);
 }
