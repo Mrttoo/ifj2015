@@ -9,3 +9,6 @@ ifj15: main.c
 
 lex: lex.c
 	${CC} ${CFLAGS} $^ -o $@
+
+lextest: lex
+	./lex lextest.c
