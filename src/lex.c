@@ -10,23 +10,8 @@
 char *keywords[] = { "int", "double", "string", "auto", "cin",
                      "cout", "for", "if", "else", "return", NULL };
 
-// Main function here is only for testing purposes
-int main(int argc, char *argv[])
-{
-    FILE *in = NULL;
-
-    if(argc >= 2) {
-        if((in = fopen(argv[1], "r")) == NULL) {
-            fprintf(stderr, "Unable to open file %s\n", argv[1]);
-            exit(1);
-        }
-    } else {
-        printf("Usage: %s source.code\n", argv[0]);
-        exit(1);
-    }
-    
-    int c = '\0';
-    int la = '\0';
+void lexGetToken(FILE *in) { 
+    static int c = '\0';
     int linecount = 0;
     // Test buffer - TODO: Must be dynamic
     char buffer[1024] = "\0";
@@ -53,28 +38,30 @@ int main(int argc, char *argv[])
         }
 
         if(c == '/') {
-            if((la = fgetc(in)) != EOF) {
+            if((c = fgetc(in)) != EOF) {
                 // Skip oneline comments
-                if(la == '/') {
+                if(c == '/') {
                     while((c = fgetc(in)) != '\n' && c != EOF);
                     if(c == '\n') linecount++;
                     continue;
                 // Skip multiline comments
-                } else if(la == '*') {
+                } else if(c == '*') {
                     bool starFound = false; 
                     while((c = fgetc(in)) != EOF) {
-                        if(c == '*')
+                        if(c == '*') {
                             starFound = true;
-                        else if(starFound && c == '/')
+                            continue;
+                        } else if(starFound && c == '/') {
                             break;
-                        else if(c == '\n')
+                        } else if(c == '\n') {
                             linecount++;
-                        else
-                            starFound = false;
+                        }
+
+                        starFound = false;
                     }
                     continue;
                 } else {
-                    ungetc(la, in);
+                    ungetc(c, in);
                 }
             }
 
@@ -301,8 +288,24 @@ int main(int argc, char *argv[])
     }    
 
     printf("%d lines\n", linecount);
-    fclose(in);
-
-    return 0;
 }
 
+// Main function here is only for testing purposes
+int main(int argc, char *argv[])
+{
+    FILE *in = NULL;
+
+    if(argc >= 2) {
+        if((in = fopen(argv[1], "r")) == NULL) {
+            fprintf(stderr, "Unable to open file %s\n", argv[1]);
+            exit(1);
+        }
+    } else {
+        printf("Usage: %s source.code\n", argv[0]);
+        exit(1);
+    }
+
+    lexGetToken(in);
+
+    fclose(in);
+}
