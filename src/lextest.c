@@ -10,7 +10,7 @@
  / test ** /*
 */
 
-string escaped = "Test1\"test2\"test3\"\t\n\\\"\\";
+string escaped = "Te!st1\"test2\"test3\"\t\n\\\"\\";
 int testint = 200;
 double testdouble = 300.01;
 double testexpdouble = 400E12;
@@ -39,7 +39,7 @@ int expression4 = (testint < 2);
 int expression5 = (testint > 2);
 int expression6 = (testint == 2);
 int expression7 = (testint != 2);
-
+int expression8 = (testint * 2.5 == testdouble);
 /* PRogram 3: Prace s retezci a vestavenymi funkcemi */
 int main()
 {

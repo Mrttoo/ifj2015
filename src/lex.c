@@ -420,6 +420,7 @@ int main(int argc, char *argv[])
         break;
         case LEX_LITERAL:
         case LEX_IDENTIFIER:
+        case LEX_KEYWORD:
             printf("%d [%s, %s]\n", d.line + 1, ENUM_TO_STR(t.type), t.s);
         break;
         default:
