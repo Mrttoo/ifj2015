@@ -70,7 +70,7 @@ void lexBufferInsert(lex_data_t *d, int index, char c)
     d->buffer[index] = c;
 }
 
-void lexGetToken(lex_data_t *d) { 
+int lexGetToken(lex_data_t *d, lex_token_t *t) {
     int i = 0;
  
     while((d->c = fgetc(d->source)) != EOF) {
@@ -83,14 +83,16 @@ void lexGetToken(lex_data_t *d) {
             continue;
         }
 
-        // TODO: End of command
+        // End of command
         if(d->c == ';') {
-            continue;
+            t->type = LEX_SEMICOLON;
+            return 0;
         }
 
-        // TODO: Command separator
+        // Command separator
         if(d->c == ',') {
-            continue;
+            t->type = LEX_COMMA;
+            return 0;
         }
 
         if(d->c == '/') {
@@ -121,97 +123,117 @@ void lexGetToken(lex_data_t *d) {
                 }
             }
 
-            // Apparently we got division operator
-            printf("<operator, '%c'>\n", d->c);
-
-            continue;
+            // Division operator
+            t->type = LEX_DIVISION;
+            return 0;
         }
 
         // Addition operator
         if(d->c == '+') {
-            printf("<operator, '%c'>\n", d->c);
-            continue;
+            t->type = LEX_ADDITION;
+            return 0;
         }
 
         // Subtraction operator
         if(d->c == '-') {
-            printf("<operator, '%c'>\n", d->c);
-            continue;
+            t->type = LEX_SUBTRACTION;
+            return 0;
         }
 
         // Multiplication operator
         if(d->c == '*') {
-            printf("<operator, '*'>\n");
-            continue;
+            t->type = LEX_MULTIPLICATION;
+            return 0;
         }
 
         if(d->c == '<') {
             if((d->c = fgetc(d->source)) != EOF) {
                 if(d->c == '=') {
                     // Less or equal operator
-                    printf("<operator, '<='>\n");
+                    t->type = LEX_LESSEQUAL;
+                    return 0;
                 } else if(d->c == '<') {
                     // Output redirection operator
-                    printf("<operator, '<<'>\n");
+                    t->type = LEX_OUTPUT;
+                    return 0;
                 }
-            } else {
-                // Less than operator
+
                 ungetc(d->c, d->source);
-                printf("<operator, '<'>\n");
             }
-            continue;
+              
+            // Less than operator
+            t->type = LEX_LESSTHAN;
+
+            return 0;
         }
 
         if(d->c == '>') {
             if((d->c = fgetc(d->source)) != EOF) {
                 if(d->c == '=') {
                     // Greater or equal operator
-                    printf("<operator, '>='>\n");
+                    t->type = LEX_GREATEREQUAL;
+                    return 0;
                 } else if(d->c == '>') {
                     // Input redirection operator
-                    printf("<operator, '>>'>\n");
+                    t->type = LEX_INPUT;
+                    return 0;
                 }
-            } else if(d->c != '=') {
-                // Greater than operator
-                ungetc(d->c, d->source);
-                printf("<operator, '>'>\n");
-            }
 
-            continue;
+                ungetc(d->c, d->source);
+            }
+ 
+            // Greater than operator
+            t->type = LEX_GREATERTHAN;
+
+            return 0;
         }
 
         if(d->c == '=') {
             if((d->c = fgetc(d->source)) != EOF && d->c == '=') {
                 // Equals to operator
-                printf("<operator, '=='>\n");
+                t->type = LEX_EQUALSTO;
             } else if(d->c != '=') {
                 // Assignment operator
                 ungetc(d->c, d->source);
-                printf("<operator, '='>\n");
+                t->type = LEX_ASSIGNMENT;
             }
 
-            continue;
+            return 0;
         }
 
         if(d->c == '!') {
             if((d->c = fgetc(d->source)) != EOF && d->c == '=') {
                 // Not equals to operator
-                printf("<operator, '!='>\n");
-            } else if(d->c != '=') {
-                ungetc(d->c, d->source);
+                t->type = LEX_NOTEQUALSTO;
+            } else {
+                fprintf(stderr, "Invalid operator on line %d\n", d->line + 1);
+                exit(IFJ_INTERNAL_ERR);
             }
 
-            continue;
+            return 0;
         }
 
-        // TODO: Temporarily skip brackets
-        if(d->c == '{' || d->c == '}' || d->c == '(' || d->c == ')') {
-            continue;
+        if(d->c == '{') {
+            t->type = LEX_LBRACE;
+            return 0;
+        }
+
+        if(d->c == '}') {
+            t->type = LEX_RBRACE;
+            return 0;
+        }
+
+        if(d->c == '(') {
+            t->type = LEX_LPAREN;
+            return 0;
+        }
+
+        if(d->c == ')') {
+            t->type = LEX_RPAREN;
+            return 0;
         }
 
         // Get identifier (or keyword)
-        // TODO: Detect keywords
-        // TODO: Remove buffer output
         if(isalpha(d->c) || d->c == '_') {
             i = 0;
             lexBufferInsert(d, i++, d->c);
@@ -221,6 +243,7 @@ void lexGetToken(lex_data_t *d) {
                 else
                     break;
             }
+
             lexBufferInsert(d, i, '\0');
 
             // Check if lexeme is a keyword
@@ -233,13 +256,13 @@ void lexGetToken(lex_data_t *d) {
                 }
             }
 
-            printf("<%s, %s>\n", ((isKeyword) ? "keyword" : "identificator"), d->buffer);
+            t->type = (isKeyword) ? LEX_KEYWORD : LEX_IDENTIFIER;
+            t->s = d->buffer;
 
-            continue;
+            return 0;
         }
 
         // Get string literal
-        // TODO: Remove buffer output
         if(d->c == '"') {
             i = 0;
             lexBufferInsert(d, i++, d->c);
@@ -262,9 +285,11 @@ void lexGetToken(lex_data_t *d) {
             }
             lexBufferInsert(d, i++, d->c);
             lexBufferInsert(d, i, '\0');
-            printf("<string, %s>\n", d->buffer);
-            
-            continue;
+           
+            t->type = LEX_LITERAL;
+            t->s = d->buffer;
+
+            return 0; 
         }
 
         // Get number (integer or float)
@@ -351,23 +376,32 @@ void lexGetToken(lex_data_t *d) {
                 fprintf(stderr, "Invalid number literal on line %d (%s)\n", d->line + 1, d->buffer);
                 exit(IFJ_LEX_ERR);
             } else {
-                printf("<%s, %s>\n", ((isFloat) ? "float" : "integer"),  d->buffer);
+                if(isFloat == true) {
+                    t->type = LEX_DOUBLE;
+                    t->d = atof(d->buffer);
+                } else {
+                    t->type = LEX_INTEGER;
+                    t->i = atoi(d->buffer);
+                }
             }
 
-            continue;
+            return 0;
         }
 
         fprintf(stderr, "Lex error: Unknown sequence on line %d (char %c)\n", d->line + 1, d->c);
         exit(IFJ_LEX_ERR);
     }    
 
-    printf("%d lines\n", d->line);
+    // End of file
+    return 1;
 }
 
+#ifdef IFJ_LEX_DEBUG
 // Main function here is only for testing purposes
 int main(int argc, char *argv[])
 {
     lex_data_t d;
+    lex_token_t t;
 
     if(argc < 2) {
         printf("Usage: %s source.code\n", argv[0]);
@@ -375,7 +409,24 @@ int main(int argc, char *argv[])
     }
 
     lexInitialize(&d, argv[1]);
-    lexGetToken(&d);
+
+    while(lexGetToken(&d, &t) == 0) {
+        switch(t.type) {
+        case LEX_INTEGER:
+            printf("%d [%s, %d]\n", d.line + 1, ENUM_TO_STR(t.type), t.i);
+        break;
+        case LEX_DOUBLE:
+            printf("%d [%s, %lf]\n", d.line + 1, ENUM_TO_STR(t.type), t.d);
+        break;
+        case LEX_LITERAL:
+        case LEX_IDENTIFIER:
+            printf("%d [%s, %s]\n", d.line + 1, ENUM_TO_STR(t.type), t.s);
+        break;
+        default:
+            printf("%d [%s, ]\n", d.line + 1, ENUM_TO_STR(t.type));
+        }
+    }
 
     lexClean(&d);
 }
+#endif
