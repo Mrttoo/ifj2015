@@ -303,26 +303,25 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
             bool zeroSkipped = false;
             while((d->c = fgetc(d->source)) != EOF) {
                 // Skip leading zeros
-                if(d->c == '0') {
-                    if(skipZero == true) {
+                if(skipZero == true) {
+                    if(d->c == '0') {
                         zeroSkipped = true;
                         continue;
-                    }
-                } else {
-                    if(skipZero == true && zeroSkipped == true) {
-                        skipZero = false;
-                        // Skip all leading zeros,
-                        // but leave at least one zero
-                        // if next character is not a number
-                        // (eg. 0.1, 0000.1, 1.E001, etc.)
-                        if(zeroSkipped == true && isdigit(d->c) == false) {
-                            ungetc(d->c, d->source);
-                            d->c = '0';
+                    } else {
+                        if(zeroSkipped == true) {
+                            // Skip all leading zeros,
+                            // but leave at least one zero
+                            // if next character is not a number
+                            // (eg. 0.1, 0000.1, 1.E001, etc.)
+                            if(isdigit(d->c) == false) {
+                                ungetc(d->c, d->source);
+                                d->c = '0';
+                            }
                         }
-                    }
 
-                    skipZero = false;
-                    zeroSkipped = false;
+                        skipZero = false;
+                        zeroSkipped = false;
+                    }
                 }
 
                 lexBufferInsert(d, i++, d->c);
