@@ -1,3 +1,5 @@
+#ifndef __ERROR_H_INCLUDED
+#define __ERROR_H_INCLUDED
 /* Draft for error-related header file */
 
 enum ifj_error_codes {
@@ -15,4 +17,5 @@ enum ifj_error_codes {
     IFJ_RUNTIME_OTHER_ERR   = 10, // Runtime error - other
     IFJ_INTERNAL_ERR        = 99, // Internal interpreter error
 }; 
-    
+
+#endif 
