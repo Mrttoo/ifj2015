@@ -8,9 +8,6 @@
 #include "lex.h"
 #include "error.h"
 
-char *keywords[] = { "int", "double", "string", "auto", "cin",
-                     "cout", "for", "if", "else", "return", NULL };
-
 void lexInitialize(lex_data_t *d, const char *filename)
 {
     if(d == NULL) {
@@ -397,7 +394,7 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
 }
 
 #ifdef IFJ_LEX_DEBUG
-// Main function here is only for testing purposes
+/* Used for debugging/testing */
 int main(int argc, char *argv[])
 {
     lex_data_t d;
