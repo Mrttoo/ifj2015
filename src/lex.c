@@ -14,12 +14,12 @@ char *keywords[] = { "int", "double", "string", "auto", "cin",
 void lexInitialize(lex_data_t *d, const char *filename)
 {
     if(d == NULL) {
-        fprintf(stderr, "%s: Uninitialized data pointer\n", __FUNCTION__);
+        fprintf(stderr, "%s: Uninitialized data pointer\n", __func__);
         exit(IFJ_INTERNAL_ERR);
     }
 
     if(filename == NULL) {
-        fprintf(stderr, "%s: Unitialized filename\n", __FUNCTION__);
+        fprintf(stderr, "%s: Unitialized filename\n", __func__);
         exit(IFJ_INTERNAL_ERR);
     }
 
@@ -28,12 +28,12 @@ void lexInitialize(lex_data_t *d, const char *filename)
     d->bsize = LEX_BUFFER_CHUNK;
 
     if((d->source = fopen(filename, "r")) == NULL) {
-        fprintf(stderr, "%s: Unable to open file %s\n", __FUNCTION__, filename);
+        fprintf(stderr, "%s: Unable to open file %s\n", __func__, filename);
         exit(IFJ_INTERNAL_ERR);
     }
     
     if((d->buffer = malloc(LEX_BUFFER_CHUNK)) == NULL) {
-        fprintf(stderr, "%s: Unable to allocate %d bytes for buffer\n", __FUNCTION__, LEX_BUFFER_CHUNK);
+        fprintf(stderr, "%s: Unable to allocate %d bytes for buffer\n", __func__, LEX_BUFFER_CHUNK);
         exit(IFJ_INTERNAL_ERR);
     }
 }
@@ -52,7 +52,7 @@ void lexExpandBuffer(lex_data_t *d)
        char *nb = realloc(d->buffer, d->bsize + LEX_BUFFER_CHUNK);
         if(nb == NULL) {
             free(d->buffer);
-            fprintf(stderr, "%s: Unable to resize data buffer\n", __FUNCTION__);
+            fprintf(stderr, "%s: Unable to resize data buffer\n", __func__);
             exit(IFJ_INTERNAL_ERR);
         } else {
             d->buffer = nb;
