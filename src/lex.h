@@ -37,6 +37,7 @@ typedef enum lex_token_type {
     LEX_RBRACE,             /**< Right brace } */
     LEX_INPUT,              /**< Input redirection operator >> */
     LEX_OUTPUT,             /**< Output redirection operator << */
+    LEX_EOF,                /**< End of file */
 
 } lex_token_type_t;
 

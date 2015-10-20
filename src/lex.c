@@ -67,6 +67,8 @@ void lexBufferInsert(lex_data_t *d, int index, char c)
     d->buffer[index] = c;
 }
 
+// TODO: Return code is useless here now.
+//       Probably use token type as RC?
 int lexGetToken(lex_data_t *d, lex_token_t *t) {
     int i = 0;
  
@@ -341,6 +343,7 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
                 } else if(d->c == 'E' || d->c == 'e') {
                     isValid = false;
                     skipZero = true;
+                    // TODO
                     if(hasExponent == true) {
                         break;
                     } else {
@@ -389,7 +392,8 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
     }    
 
     // End of file
-    return 1;
+    d->type = LEX_EOF;
+    return 0;
 }
 
 #ifdef IFJ_LEX_DEBUG
