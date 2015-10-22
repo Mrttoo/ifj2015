@@ -34,6 +34,7 @@
 # IFJ binaries
 ifj15
 lex
+bst
 
 # Vim swap file
 *.swp

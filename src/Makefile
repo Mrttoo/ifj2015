@@ -20,5 +20,9 @@ lexanalyze: lex.c
 	clang --analyze ${CFLAGS} $^ -o $@
 	${RM} $@
 
+# Binary Search Tree test
+bst: bst.c bst.h
+	${CC} ${CFLAGS} $^ -DIFJ_BST_DEBUG -o $@
+
 clean:
 	${RM} ${EXEC}
