@@ -52,6 +52,22 @@ bst_node_t *bst_insert_node(bst_node_t *node, int data)
     return node;
 }
 
+bst_node_t *bst_lookup_node(bst_node_t *node, int val)
+{
+    if(node == NULL) {
+        return NULL;
+    } else {
+        if(node->data == val) {
+            return node;
+        } else {
+            if(val < node->data)
+                return bst_lookup_node(node->left, val);
+            else
+                return bst_lookup_node(node->right, val);
+        }
+    }
+}
+
 #ifdef IFJ_BST_DEBUG
 
 void bst_print_tree(bst_node_t *node)
