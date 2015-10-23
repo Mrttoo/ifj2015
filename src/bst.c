@@ -69,6 +69,7 @@ bst_node_t *bst_lookup_node(bst_node_t *node, int val)
     }
 }
 
+// Tests
 #ifdef IFJ_BST_DEBUG
 
 void bst_print_tree(bst_node_t *node)
@@ -81,11 +82,27 @@ void bst_print_tree(bst_node_t *node)
     bst_print_tree(node->right);
 }
 
-#define TVC 10
+#include <math.h>
+#include <time.h>
+
+#define TVC 20
+#define GEN_ARR() srand(time(NULL)); \
+                   for(unsigned int i = 0; i < TVC; i++) { \
+                       tv[i] = (rand() % 100) - 50; \
+                   }
+
+#define PRINT_ARR() for(unsigned int i = 0; i < TVC; i++) { \
+                        printf("%d%s", tv[i], (i < TVC - 1 ? ", " : "\n")); \
+                    }
+
 int main(int argc, char *argv[])
 {
-    int tv[TVC] = { 6, 1, 3, 8, 15, 4, 65, 23, 7, 0 };
+    int tv[TVC] = { 0, };
+    int rc = 0;
     bst_node_t *root = NULL;
+
+    GEN_ARR();
+    PRINT_ARR();
 
     // Test alloc
     root = bst_new_node(10);
@@ -102,6 +119,7 @@ int main(int argc, char *argv[])
         bst_node_t *search = bst_lookup_node(root, tv[i]);
         if(search == NULL) {
             fprintf(stderr, "[FAIL] Couldn't find node with value %d\n", tv[i]);
+            rc = 1;
         } else {
             if(tv[i] == search->data) {
                 fprintf(stderr, "[PASS] Found node with correct value (%d == %d)\n",
@@ -109,6 +127,7 @@ int main(int argc, char *argv[])
             } else {
                 fprintf(stderr, "[FAIL] Found node with incorrect value (%d != %d)\n",
                         tv[i], search->data);
+                rc = 1;
             }
         }
     }
@@ -116,6 +135,6 @@ int main(int argc, char *argv[])
     // Test free (check with valgrind)
     bst_destroy_tree(root);
 
-    return 0;
+    return rc;
 }
 #endif
