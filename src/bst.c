@@ -26,14 +26,14 @@ bst_node_t *bst_new_node(int data)
     return n;
 }
 
-void bst_destroy_tree(bst_node_t *node)
+void bst_destroy(bst_node_t *node)
 {
     if(node == NULL) 
         return;
     if(node->left != NULL)
-        bst_destroy_tree(node->left);
+        bst_destroy(node->left);
     if(node->right != NULL)
-        bst_destroy_tree(node->right);
+        bst_destroy(node->right);
 
     free(node);
 }
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
     }
 
     // Test free (check with valgrind)
-    bst_destroy_tree(root);
+    bst_destroy(root);
 
     return rc;
 }

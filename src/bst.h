@@ -19,7 +19,7 @@ typedef struct bst_node {
 } bst_node_t;
 
 bst_node_t *bst_new_node(int data);
-void bst_destroy_tree(bst_node_t *node);
+void bst_destroy(bst_node_t *node);
 bst_node_t *bst_insert_node(bst_node_t *node, int data);
 bst_node_t *bst_lookup_node(bst_node_t *node, int val);
 
