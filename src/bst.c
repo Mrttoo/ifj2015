@@ -43,9 +43,10 @@ bst_node_t *bst_insert_node(bst_node_t *node, int data)
     if(node == NULL) {
         return bst_new_node(data);
     } else {
-        if(data <= node->data)
+        // Don't allow duplicates
+        if(data < node->data)
             node->left = bst_insert_node(node->left, data);
-        else
+        else if(data > node->data)
             node->right = bst_insert_node(node->right, data);
     }
 
