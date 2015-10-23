@@ -24,5 +24,8 @@ lexanalyze: lex.c
 bst: bst.c bst.h
 	${CC} ${CFLAGS} $^ -DIFJ_BST_DEBUG -o $@
 
+stack: stack.c stack.h bst.c bst.h
+	${CC} ${CFLAGS} $^ -DIFJ_STACK_DEBUG -o $@
+
 clean:
 	${RM} ${EXEC}

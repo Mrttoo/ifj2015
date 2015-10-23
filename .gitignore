@@ -35,6 +35,7 @@
 ifj15
 lex
 bst
+stack
 
 # Vim swap file
 *.swp
