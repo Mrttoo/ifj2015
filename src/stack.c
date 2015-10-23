@@ -55,12 +55,24 @@ void stack_push_node(stack_t *stack, bst_node_t *node)
     if(stack == NULL)
         return;
 
-    if(stack->free_idx == stack->size) {
-        // Resize
-        return;
-    }
+    if(stack->free_idx == stack->size)
+        stack_expand(stack, IFJ_STACK_CHUNK);
 
     stack->items[stack->free_idx++] = node;
+}
+
+void stack_expand(stack_t *stack, unsigned int inc)
+{
+    bst_node_t **n = NULL;
+
+    if((n = realloc(stack->items, sizeof *n * (stack->size + inc))) == NULL) {
+        free(stack->items);
+        fprintf(stderr, "Unable to allocate memory for stack expansion\n");
+        exit(IFJ_INTERNAL_ERR);
+    }
+
+    stack->items = n;
+    stack->size += inc;
 }
 
 // Tests
@@ -127,7 +139,7 @@ int main(int argc, char *argv[])
     bst_node_t **bst_arr = NULL;
 
     bst_arr = stack_debug_bst_array();
-    stack = stack_init(10);
+    stack = stack_init(5);
 
     for(unsigned int i = 0; i < BST_ARRAY_SIZE; i++) {
         stack_push_node(stack, bst_arr[i]);
