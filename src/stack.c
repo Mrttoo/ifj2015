@@ -81,9 +81,12 @@ bst_node_t *stack_pop_node(stack_t *stack)
 
 #include <math.h>
 #include <time.h>
+#include <stdbool.h>
+#include <string.h>
 
 #define BST_ARRAY_SIZE 10
-bst_node_t **stack_debug_bst_array()
+
+bst_node_t **debug_stack_bst_array()
 {
     bst_node_t **arr = malloc(sizeof *arr * BST_ARRAY_SIZE);
 
@@ -108,7 +111,7 @@ bst_node_t **stack_debug_bst_array()
     return arr; 
 }
 
-void stack_debug_bst_array_destroy(bst_node_t **arr)
+void debug_stack_bst_array_destroy(bst_node_t **arr)
 {
     for(unsigned int i = 0; i < BST_ARRAY_SIZE; i++) {
         bst_destroy(arr[i]);
@@ -118,44 +121,68 @@ void stack_debug_bst_array_destroy(bst_node_t **arr)
     arr = NULL;
 }
 
-void stack_debug_print_bst(bst_node_t *node)
+void debug_stack_print_bst(bst_node_t *node)
 {
     if(node == NULL)
         return;
 
-    stack_debug_print_bst(node->left);
+    debug_stack_print_bst(node->left);
     printf("%s, ", node->key);
-    stack_debug_print_bst(node->right);
+    debug_stack_print_bst(node->right);
 }
 
-void stack_debug_print(stack_t *stack)
+void debug_stack_print(stack_t *stack)
 {
     for(unsigned int i = 0; i < stack->free_idx; i++) {
-        printf("[stack #%d] ", i);
-        stack_debug_print_bst(stack->items[i]);
+        printf("[Stack #%d] ", i);
+        debug_stack_print_bst(stack->items[i]);
         printf("\n");       
     }
 }
 
+bool debug_stack_bst_compare(bst_node_t *n1, bst_node_t *n2)
+{
+    if(n1 == NULL && n2 == NULL)
+        return true;
+
+    if(strcmp(n1->key, n2->key) != 0)
+        return false;
+
+    return (debug_stack_bst_compare(n1->left, n2->left) && 
+            debug_stack_bst_compare(n1->right, n2->right));
+}
 int main(int argc, char *argv[])
 {
     stack_t *stack = NULL;
     bst_node_t **bst_arr = NULL;
+    bst_node_t *tmp = NULL;
 
-    bst_arr = stack_debug_bst_array();
+    bst_arr = debug_stack_bst_array();
     stack = stack_init(5);
 
     for(unsigned int i = 0; i < BST_ARRAY_SIZE; i++) {
+        printf("Stack #%d\n", i);
+        printf("Push nodes: ");
+        debug_stack_print_bst(bst_arr[i]);
         stack_push_node(stack, bst_arr[i]);
+        printf("\n\n");
     }
 
-    stack_debug_print(stack);
-    stack_pop_node(stack);
-    printf("********\n");
-    stack_debug_print(stack);
+    puts("Final stack: ");
+    debug_stack_print(stack);
+
+    printf("\nEquality tests: \n");
+    for(int i = BST_ARRAY_SIZE - 1; i >= 0; i--) {
+        tmp = stack_pop_node(stack);
+        if(debug_stack_bst_compare(tmp, bst_arr[i]) == true)
+            printf("[Stack #%d] PASS - BSTs are equal\n", i);
+        else
+            printf("[Stack #%d] FAIL - BSTs are not equal\n", i);
+    }
 
     stack_destroy(stack);
-    stack_debug_bst_array_destroy(bst_arr);
+    debug_stack_bst_array_destroy(bst_arr);
+
     return 0;
 }
 
