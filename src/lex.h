@@ -55,15 +55,6 @@ char *lex_token_strings[] = {
 #endif
 
 /**
-  * @brief Keywords table
-*/
-static const char *keywords[] = {
-    "int",  "double", "string", "auto", "cin",
-    "cout", "for",    "if",     "else", "return", 
-    NULL 
-};
-
-/**
   * @brief Persistent storage for lexical analyser
 */
 typedef struct lex_data {

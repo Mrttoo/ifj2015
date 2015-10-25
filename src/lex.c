@@ -8,6 +8,15 @@
 #include "lex.h"
 #include "error.h"
 
+/**
+  * @brief Keywords table
+*/
+const char *keywords[] = {
+    "int",  "double", "string", "auto", "cin",
+    "cout", "for",    "if",     "else", "return",
+    NULL
+};
+
 void lexInitialize(lex_data_t *d, const char *filename)
 {
     if(d == NULL) {
