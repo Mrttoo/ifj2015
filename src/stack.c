@@ -92,13 +92,16 @@ bst_node_t **stack_debug_bst_array()
         exit(IFJ_INTERNAL_ERR);
     }
 
+    char *strarr[] = { "id1", "i", "_str", "auto123", "STRING", "arr", "aRR",
+                             "aRr", "_i", "x123_34", "insert" };
+    const int strasize = 11;
     srand(time(NULL));
 
     for(unsigned int i = 0; i < BST_ARRAY_SIZE; i++) {
-        arr[i] = bst_new_node(rand() % 30);
+        arr[i] = bst_new_node(strarr[rand() % strasize]);
 
         for(unsigned int j = 0; j < ((rand() % 30) + 10); j++) {
-           arr[i] = bst_insert_node(arr[i], (rand() % 100) - 50); 
+           arr[i] = bst_insert_node(arr[i], strarr[rand() % strasize]); 
         } 
     }
 
@@ -121,7 +124,7 @@ void stack_debug_print_bst(bst_node_t *node)
         return;
 
     stack_debug_print_bst(node->left);
-    printf("%d, ", node->data);
+    printf("%s, ", node->key);
     stack_debug_print_bst(node->right);
 }
 
