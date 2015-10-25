@@ -151,6 +151,7 @@ bool debug_stack_bst_compare(bst_node_t *n1, bst_node_t *n2)
     return (debug_stack_bst_compare(n1->left, n2->left) && 
             debug_stack_bst_compare(n1->right, n2->right));
 }
+
 int main(int argc, char *argv[])
 {
     stack_t *stack = NULL;
