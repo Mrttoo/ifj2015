@@ -39,3 +39,6 @@ stack
 
 # Vim swap file
 *.swp
+
+# Core dumps
+core.*

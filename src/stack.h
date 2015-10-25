@@ -18,5 +18,6 @@ stack_t *stack_init(unsigned int init_size);
 void stack_destroy(stack_t *stack);
 void stack_push_node(stack_t *stack, bst_node_t *node);
 void stack_expand(stack_t *stack, unsigned int inc);
+bst_node_t *stack_pop_node(stack_t *stack);
 
 #endif

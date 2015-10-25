@@ -25,13 +25,6 @@ stack_t *stack_init(unsigned int init_size)
     stack->size = init_size;
     stack->free_idx = 0;
 
-    /*for(unsigned int i = 0; i < init_size; i++) {
-        if((stack->items[i] = malloc(sizeof *(stack->items[i]))) == NULL) {
-            fprintf(stderr, "Unable to allocate memory for stack array items\n");
-            exit(IFJ_INTERNAL_ERR);
-        }
-    }*/
-
     for(unsigned int i = 0; i < init_size; i++) {
         stack->items[i] = NULL;
     }
@@ -73,6 +66,14 @@ void stack_expand(stack_t *stack, unsigned int inc)
 
     stack->items = n;
     stack->size += inc;
+}
+
+bst_node_t *stack_pop_node(stack_t *stack)
+{
+    if(stack == NULL || stack->free_idx == 0)
+        return NULL;
+
+    return stack->items[--(stack->free_idx)];
 }
 
 // Tests
@@ -126,7 +127,7 @@ void stack_debug_print_bst(bst_node_t *node)
 
 void stack_debug_print(stack_t *stack)
 {
-    for(unsigned int i = 0; i < stack->size; i++) {
+    for(unsigned int i = 0; i < stack->free_idx; i++) {
         printf("[stack #%d] ", i);
         stack_debug_print_bst(stack->items[i]);
         printf("\n");       
@@ -145,6 +146,9 @@ int main(int argc, char *argv[])
         stack_push_node(stack, bst_arr[i]);
     }
 
+    stack_debug_print(stack);
+    stack_pop_node(stack);
+    printf("********\n");
     stack_debug_print(stack);
 
     stack_destroy(stack);
