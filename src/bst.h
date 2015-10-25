@@ -15,12 +15,12 @@
 typedef struct bst_node {
     struct bst_node *left;
     struct bst_node *right;
-    int data;    
+    char *key;
 } bst_node_t;
 
-bst_node_t *bst_new_node(int data);
+bst_node_t *bst_new_node(char *key);
 void bst_destroy(bst_node_t *node);
-bst_node_t *bst_insert_node(bst_node_t *node, int data);
-bst_node_t *bst_lookup_node(bst_node_t *node, int val);
+bst_node_t *bst_insert_node(bst_node_t *node, char *key);
+bst_node_t *bst_lookup_node(bst_node_t *node, char *key);
 
 #endif

@@ -21,7 +21,7 @@ lexanalyze: lex.c
 	${RM} $@
 
 # Binary Search Tree test
-bst: bst.c bst.h
+bst: bst.c bst.h util.c util.h
 	${CC} ${CFLAGS} $^ -DIFJ_BST_DEBUG -o $@
 
 stack: stack.c stack.h bst.c bst.h
