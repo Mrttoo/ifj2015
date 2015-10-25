@@ -159,7 +159,7 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
 
                 ungetc(d->c, d->source);
             }
-              
+
             // Less than operator
             t->type = LEX_LESSTHAN;
 
@@ -389,10 +389,10 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
 
         fprintf(stderr, "Lex error: Unknown sequence on line %d (char %c)\n", d->line + 1, d->c);
         exit(IFJ_LEX_ERR);
-    }    
+    }
 
     // End of file
-    d->type = LEX_EOF;
+    t->type = LEX_EOF;
     return 0;
 }
 
@@ -422,6 +422,10 @@ int main(int argc, char *argv[])
         case LEX_IDENTIFIER:
         case LEX_KEYWORD:
             printf("%d [%s, %s]\n", d.line + 1, ENUM_TO_STR(t.type), t.s);
+        break;
+        case LEX_EOF:
+            printf("%d [%s, ]\n", d.line + 1, ENUM_TO_STR(t.type));
+            exit(0);
         break;
         default:
             printf("%d [%s, ]\n", d.line + 1, ENUM_TO_STR(t.type));

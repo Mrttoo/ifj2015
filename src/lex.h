@@ -50,14 +50,14 @@ char *lex_token_strings[] = {
     "LEX_GREATEREQUAL", "LEX_LESSTHAN", "LEX_LESSEQUAL",    "LEX_SEMICOLON",
     "LEX_COMMA",        "LEX_EQUALSTO", "LEX_NOTEQUALSTO",  "LEX_LPAREN",
     "LEX_RPAREN",       "LEX_LBRACE",   "LEX_RBRACE",       "LEX_INPUT",
-    "LEX_OUTPUT"
+    "LEX_OUTPUT",       "LEX_EOF"
 };
 #endif
 
 /**
   * @brief Keywords table
 */
-const char *keywords[] = {
+static const char *keywords[] = {
     "int",  "double", "string", "auto", "cin",
     "cout", "for",    "if",     "else", "return", 
     NULL 
