@@ -1,6 +1,3 @@
-/**
-  * Stack draft for symbol table
-*/
 #ifndef __STACK_H_INCLUDED
 #define __STACK_H_INCLUDED
 
@@ -8,16 +5,63 @@
 
 #define IFJ_STACK_CHUNK 5
 
+/**
+  * @brief Structure for stack implementation
+*/
 typedef struct {
-    unsigned int size;
-    unsigned int free_idx;
-    bst_node_t **items;
+    unsigned int size;      /**< Current stack size */
+    unsigned int free_idx;  /**< Next free stack index */
+    bst_node_t **items;     /**< Array of BSTs */
 } stack_t;
 
+/**
+  * @brief Initializes stack, allocates init_size
+  *        array items and returns pointer to
+  *        allocated stack
+  *
+  * @param init_size Initial stack size
+  * @return Pointer to allocated stack
+*/
 stack_t *stack_init(unsigned int init_size);
+
+/**
+  * @brief Deallocates stack item array and stack iself
+  * @details Function doesn't deallocate item array members,
+  *          this does BST 'destructor', since stack doesn't
+  *          allocate memory for each item, just assigns
+  *          existing pointers into array
+  *
+  * @param stack Pointer to stack
+*/
 void stack_destroy(stack_t *stack);
+
+/**
+  * @brief Pushes BST at the top of a stack
+  * @details Function doesn't copy memory assigned to BST,
+  *          but it simply assigns its pointer into stack array.
+  *          If stack is full, function stack_expand() is called
+  * @see stack_expand()
+  *
+  * @param stack Pointer to stack
+  * @param node Pointer to BST
+*/
 void stack_push_node(stack_t *stack, bst_node_t *node);
+
+/**
+  * @brief Expands stack
+  * @details Allocates inc more items for stack item array
+  *
+  * @param stack Pointer to stack
+  * @param inc Increment of items to allocate
+*/
 void stack_expand(stack_t *stack, unsigned int inc);
+
+/**
+  * @brief Returns node from the top of a stack
+  *
+  * @param stack Pointer to stack
+  * @return Pointer to popped item
+*/
 bst_node_t *stack_pop_node(stack_t *stack);
 
 #endif
