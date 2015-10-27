@@ -14,16 +14,16 @@ typedef enum lex_token_type {
     LEX_DOUBLE,             /**< Double */
     LEX_STRING,             /**< String */
     LEX_IDENTIFIER,         /**< Identifier */
-    LEX_KW_INT,
-    LEX_KW_DOUBLE,
-    LEX_KW_STRING,
-    LEX_KW_AUTO,
-    LEX_KW_CIN,
-    LEX_KW_COUT,
-    LEX_KW_FOR,
-    LEX_KW_IF,
-    LEX_KW_ELSE,
-    LEX_KW_RETURN,
+    LEX_KW_INT,             /**< Keyword: int */
+    LEX_KW_DOUBLE,          /**< Keyword: double */
+    LEX_KW_STRING,          /**< Keyword: string */
+    LEX_KW_AUTO,            /**< Keyword: auto */
+    LEX_KW_CIN,             /**< Keyword: cin */
+    LEX_KW_COUT,            /**< Keyword: cout */
+    LEX_KW_FOR,             /**< Keyword: for */
+    LEX_KW_IF,              /**< Keyword: if */
+    LEX_KW_ELSE,            /**< Keyword: else */
+    LEX_KW_RETURN,          /**< Keyword: return */
     LEX_LITERAL,            /**< String literal */
     LEX_ASSIGNMENT,         /**< Assignment operator = */
     LEX_MULTIPLICATION,     /**< Multiplication operator * */
@@ -53,7 +53,7 @@ typedef enum lex_token_type {
 */
 typedef struct lex_kw {
     char *kw;               /**< Keyword string */
-    lex_token_type_t type;i /**< Keyword type from lex_token_type_t enum */
+    lex_token_type_t type;  /**< Keyword type from lex_token_type_t enum */
 } lex_kw_t;
 
 /**
