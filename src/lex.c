@@ -11,10 +11,18 @@
 /**
   * @brief Keywords table
 */
-const char *keywords[] = {
-    "int",  "double", "string", "auto", "cin",
-    "cout", "for",    "if",     "else", "return",
-    NULL
+const lex_kw_t keywords[] = {
+    { "int",    LEX_KW_INT },
+    { "double", LEX_KW_DOUBLE },
+    { "string", LEX_KW_STRING },
+    { "auto",   LEX_KW_AUTO },
+    { "cin",    LEX_KW_CIN },
+    { "cout",   LEX_KW_COUT },
+    { "for",    LEX_KW_FOR },
+    { "if",     LEX_KW_IF },
+    { "else",   LEX_KW_ELSE },
+    { "return", LEX_KW_RETURN },
+    { NULL,     LEX_ENUM_SIZE }
 };
 
 void lexInitialize(lex_data_t *d, const char *filename)
@@ -257,14 +265,14 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
             // Check if lexeme is a keyword
             int ti = 0;
             bool isKeyword = false;
-            for( ; keywords[ti] != NULL; ti++) {
-                if(strcmp(d->buffer, keywords[ti]) == 0) {
+            for( ; keywords[ti].kw != NULL; ti++) {
+                if(strcmp(d->buffer, keywords[ti].kw) == 0) {
                     isKeyword = true;
                     break;
                 }
             }
 
-            t->type = (isKeyword) ? LEX_KEYWORD : LEX_IDENTIFIER;
+            t->type = (isKeyword) ? keywords[ti].type : LEX_IDENTIFIER;
             t->s = d->buffer;
 
             return 0;
@@ -407,6 +415,19 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
 
 #ifdef IFJ_LEX_DEBUG
 /* Used for debugging/testing */
+char *lex_token_strings[] = {
+    "LEX_INTEGER",      "LEX_DOUBLE",    "LEX_STRING",       "LEX_IDENTIFIER",
+    "LEX_KW_INT",       "LEX_KW_DOUBLE", "LEX_KW_STRING",    "LEX_KW_AUTO",
+    "LEX_KW_CIN",       "LEX_KW_COUT",   "LEX_KW_FOR",       "LEX_KW_IF",
+    "LEX_KW_ELSE",      "LEX_KW_RETURN",
+    "LEX_LITERAL",      "LEX_ASSIGNMENT","LEX_MULTIPLICATION",
+    "LEX_DIVISION",     "LEX_ADDITION",  "LEX_SUBTRACTION",  "LEX_GREATERTHAN",
+    "LEX_GREATEREQUAL", "LEX_LESSTHAN",  "LEX_LESSEQUAL",    "LEX_SEMICOLON",
+    "LEX_COMMA",        "LEX_EQUALSTO",  "LEX_NOTEQUALSTO",  "LEX_LPAREN",
+    "LEX_RPAREN",       "LEX_LBRACE",    "LEX_RBRACE",       "LEX_INPUT",
+    "LEX_OUTPUT",       "LEX_EOF",
+};
+
 int main(int argc, char *argv[])
 {
     lex_data_t d;
@@ -429,7 +450,16 @@ int main(int argc, char *argv[])
         break;
         case LEX_LITERAL:
         case LEX_IDENTIFIER:
-        case LEX_KEYWORD:
+        case LEX_KW_INT:
+        case LEX_KW_DOUBLE:
+        case LEX_KW_STRING:
+        case LEX_KW_AUTO:
+        case LEX_KW_CIN:
+        case LEX_KW_COUT:
+        case LEX_KW_FOR:
+        case LEX_KW_IF:
+        case LEX_KW_ELSE:
+        case LEX_KW_RETURN:
             printf("%d [%s, %s]\n", d.line + 1, ENUM_TO_STR(t.type), t.s);
         break;
         case LEX_EOF:

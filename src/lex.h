@@ -14,7 +14,16 @@ typedef enum lex_token_type {
     LEX_DOUBLE,             /**< Double */
     LEX_STRING,             /**< String */
     LEX_IDENTIFIER,         /**< Identifier */
-    LEX_KEYWORD,            /**< Keyword */
+    LEX_KW_INT,
+    LEX_KW_DOUBLE,
+    LEX_KW_STRING,
+    LEX_KW_AUTO,
+    LEX_KW_CIN,
+    LEX_KW_COUT,
+    LEX_KW_FOR,
+    LEX_KW_IF,
+    LEX_KW_ELSE,
+    LEX_KW_RETURN,
     LEX_LITERAL,            /**< String literal */
     LEX_ASSIGNMENT,         /**< Assignment operator = */
     LEX_MULTIPLICATION,     /**< Multiplication operator * */
@@ -31,28 +40,21 @@ typedef enum lex_token_type {
     LEX_NOTEQUALSTO,        /**< Inequality operator != */
     LEX_LPAREN,             /**< Left parenthesis ( */
     LEX_RPAREN,             /**< Right parenthesis ) */
-//    LEX_LBRACKET,           /* Left bracket [ */
-//    LEX_RBRACKET,           /* Right bracket ] */
     LEX_LBRACE,             /**< Left brace { */
     LEX_RBRACE,             /**< Right brace } */
     LEX_INPUT,              /**< Input redirection operator >> */
     LEX_OUTPUT,             /**< Output redirection operator << */
     LEX_EOF,                /**< End of file */
-
+    LEX_ENUM_SIZE
 } lex_token_type_t;
 
-#ifdef IFJ_LEX_DEBUG
-/* Used for debugging/testing as string output for lex_token_type_t */
-char *lex_token_strings[] = {
-    "LEX_INTEGER",      "LEX_DOUBLE",   "LEX_STRING",       "LEX_IDENTIFIER",
-    "LEX_KEYWORD",      "LEX_LITERAL",  "LEX_ASSIGNMENT",   "LEX_MULTIPLICATION",
-    "LEX_DIVISION",     "LEX_ADDITION", "LEX_SUBTRACTION",  "LEX_GREATERTHAN",
-    "LEX_GREATEREQUAL", "LEX_LESSTHAN", "LEX_LESSEQUAL",    "LEX_SEMICOLON",
-    "LEX_COMMA",        "LEX_EQUALSTO", "LEX_NOTEQUALSTO",  "LEX_LPAREN",
-    "LEX_RPAREN",       "LEX_LBRACE",   "LEX_RBRACE",       "LEX_INPUT",
-    "LEX_OUTPUT",       "LEX_EOF"
-};
-#endif
+/**
+  * @brief Structure for keywords data
+*/
+typedef struct lex_kw {
+    char *kw;               /**< Keyword string */
+    lex_token_type_t type;i /**< Keyword type from lex_token_type_t enum */
+} lex_kw_t;
 
 /**
   * @brief Persistent storage for lexical analyser
