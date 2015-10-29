@@ -64,4 +64,13 @@ void stack_expand(stack_t *stack, unsigned int inc);
 */
 bst_node_t *stack_pop_node(stack_t *stack);
 
+/**
+  * @brief Returns node from the top of a stack
+  *        without removing it from the stack
+  *
+  * @param stack Pointer to stack
+  * @return Pointer to returned item
+*/
+bst_node_t *stack_get_top_node(stack_t *stack);
+
 #endif

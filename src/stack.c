@@ -76,6 +76,14 @@ bst_node_t *stack_pop_node(stack_t *stack)
     return stack->items[--(stack->free_idx)];
 }
 
+bst_node_t *stack_get_top_node(stack_t *stack)
+{
+    if(stack == NULL || stack->free_idx == 0)
+        return NULL;
+
+    return stack->items[stack->free_idx];
+}
+
 // Tests
 #ifdef IFJ_STACK_DEBUG
 

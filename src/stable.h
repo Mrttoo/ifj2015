@@ -1,6 +1,8 @@
 #ifndef __STABLE_H_INCLUDED
 #define __STABLE_H_INCLUDED
 
+#include <stdbool.h>
+
 #include "stack.h"
 
 typedef struct {
@@ -9,6 +11,5 @@ typedef struct {
 
 stable_t *stable_init();
 void stable_destroy(stable_t *stable);
-
 
 #endif
