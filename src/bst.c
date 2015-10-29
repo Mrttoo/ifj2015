@@ -12,7 +12,7 @@
 #include "error.h"
 #include "util.h"
 
-bst_node_t *bst_new_node(char *key)
+bst_node_t *bst_new_node(char *key, bst_data_t *data)
 {
     bst_node_t *n = malloc(sizeof *n);
 
@@ -24,6 +24,8 @@ bst_node_t *bst_new_node(char *key)
     n->left = NULL;
     n->right = NULL;
     n->key = ifj_strdup(key);
+    if(data != NULL)
+        memcpy(&n->data, data, sizeof *data);
 
     return n;
 }
@@ -41,17 +43,17 @@ void bst_destroy(bst_node_t *node)
     free(node);
 }
 
-bst_node_t *bst_insert_node(bst_node_t *node, char *key)
+bst_node_t *bst_insert_node(bst_node_t *node, char *key, bst_data_t *data)
 {
     if(node == NULL) {
-        return bst_new_node(key);
+        return bst_new_node(key, data);
     } else {
         // Don't allow duplicates
         int sres = strcmp(key, node->key);
         if(sres < 0)
-            node->left = bst_insert_node(node->left, key);
+            node->left = bst_insert_node(node->left, key, data);
         else if(sres > 0)
-            node->right = bst_insert_node(node->right, key);
+            node->right = bst_insert_node(node->right, key, data);
     }
 
     return node;
@@ -104,13 +106,13 @@ int main(int argc, char *argv[])
                    "num", "i", "I", "key", "asdf3", "tea23", "_2314", NULL };
     int rc = 0;
     bst_node_t *root = NULL;
-
+    bst_data_t data = { .type = LEX_EOF, .value.i = 1 };
     // Test alloc
-    root = bst_new_node("j");
+    root = bst_new_node("j", &data);
 
     // Test insert
     for(unsigned int i = 0; ta[i] != NULL; i++)
-        root = bst_insert_node(root, ta[i]);
+        root = bst_insert_node(root, ta[i], &data);
 
     // Print tree
     debug_bst_print_tree(root);
@@ -124,8 +126,8 @@ int main(int argc, char *argv[])
             rc = 1;
         } else {
             if(strcmp(ta[i], search->key) == 0) {
-                fprintf(stderr, "[PASS] Found node with correct value (%s == %s)\n",
-                        ta[i], search->key);
+                fprintf(stderr, "[PASS] Found node with correct value (%s == %s) (%d)\n",
+                        ta[i], search->key, search->data.value.i);
             } else {
                 fprintf(stderr, "[FAIL] Found node with incorrect value (%s != %s)\n",
                         ta[i], search->key);

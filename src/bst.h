@@ -32,12 +32,12 @@ typedef struct bst_node {
   * @param key Key for BST node
   * @return Allocated BST node
 */
-bst_node_t *bst_new_node(char *key);
+bst_node_t *bst_new_node(char *key, bst_data_t *data);
 
 /**
   * @brief Recursively deallocates all nodes
   *        and their keys from given node
-  *
+ *
   * @param node Node to deallocate
 */
 void bst_destroy(bst_node_t *node);
@@ -48,7 +48,7 @@ void bst_destroy(bst_node_t *node);
   * @param node Pointer to BST
   * @param key Node key
 */
-bst_node_t *bst_insert_node(bst_node_t *node, char *key);
+bst_node_t *bst_insert_node(bst_node_t *node, char *key, bst_data_t *data);
 
 /**
   * @brief Searches for node with given key in BST

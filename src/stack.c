@@ -101,10 +101,10 @@ bst_node_t **debug_stack_bst_array()
     srand(time(NULL));
 
     for(unsigned int i = 0; i < BST_ARRAY_SIZE; i++) {
-        arr[i] = bst_new_node(strarr[rand() % strasize]);
+        arr[i] = bst_new_node(strarr[rand() % strasize], NULL);
 
         for(unsigned int j = 0; j < ((rand() % 30) + 10); j++) {
-           arr[i] = bst_insert_node(arr[i], strarr[rand() % strasize]); 
+           arr[i] = bst_insert_node(arr[i], strarr[rand() % strasize], NULL); 
         } 
     }
 
