@@ -41,6 +41,7 @@ void bst_destroy(bst_node_t *node)
 
     free(node->key);
     free(node);
+    node = NULL;
 }
 
 bst_node_t *bst_insert_node(bst_node_t *node, char *key, bst_data_t *data)

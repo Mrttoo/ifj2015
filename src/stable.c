@@ -35,7 +35,7 @@ void stable_insert(stable_t *stable, char *key, bst_data_t *data, bool new_scope
         if(n == NULL) {
             stable_insert(stable, key, data, true);
         } else {
-            bst_insert_node(n, key, data);
+            stable->stack->items[stable->stack->free_idx - 1] = bst_insert_node(n, key, data);
         }
     }
 }
@@ -84,12 +84,15 @@ int main()
     data.value.d = 20.5;
     stable_insert(stable, keys[0], &data, true);
 
-    bst_node_t *node = stack_pop_node(stable->stack);
+    int it = stable->stack->free_idx - 1;
+    bst_node_t *node = stable->stack->items[it];
+
     while(node != NULL) {
         printf("[Scope] ");
         dbg_bst_print(node);
         printf("\n");
-        node = stack_pop_node(stable->stack);
+        if(--it < 0) break;
+        node = stable->stack->items[it];
     }
 
     stable_destroy(stable);
