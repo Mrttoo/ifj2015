@@ -10,6 +10,7 @@ typedef struct {
 } stable_t;
 
 stable_t *stable_init();
+void stable_insert(stable_t *stable, char *key, bst_data_t *data, bool new_scope);
 void stable_destroy(stable_t *stable);
 
 #endif
