@@ -37,6 +37,7 @@ lex
 bst
 stack
 stable
+syntax
 
 # Vim swap file
 *.swp
