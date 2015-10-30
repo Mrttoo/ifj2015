@@ -81,7 +81,7 @@ bst_node_t *stack_get_top_node(stack_t *stack)
     if(stack == NULL || stack->free_idx == 0)
         return NULL;
 
-    return stack->items[stack->free_idx];
+    return stack->items[stack->free_idx - 1];
 }
 
 // Tests
