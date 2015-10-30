@@ -32,10 +32,11 @@ void stable_insert(stable_t *stable, char *key, bst_data_t *data, bool new_scope
         stack_push_node(stable->stack, n);
     } else {
         n = stack_get_top_node(stable->stack);
-        if(n == NULL)
+        if(n == NULL) {
             stable_insert(stable, key, data, true);
-        else
+        } else {
             bst_insert_node(n, key, data);
+        }
     }
 }
 
@@ -74,15 +75,18 @@ int main()
     bst_data_t data = { .type = LEX_DOUBLE, .value.d = 13.2 };
     char *keys[] = { "string", "auto", "cin", "_test", "_a123", NULL };
 
+    // Insert variables for first scope
     for(unsigned int i = 0; keys[i] != NULL; i++) {
         stable_insert(stable, keys[i], &data, false);
     }
 
+    // Insert a new scope with one variable
     data.value.d = 20.5;
     stable_insert(stable, keys[0], &data, true);
 
     bst_node_t *node = stack_pop_node(stable->stack);
     while(node != NULL) {
+        printf("[Scope] ");
         dbg_bst_print(node);
         printf("\n");
         node = stack_pop_node(stable->stack);
