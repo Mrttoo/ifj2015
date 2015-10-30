@@ -7,6 +7,21 @@ all: ${EXEC}
 ifj15: main.c
 	${CC} ${CFLAGS} $^ -o $@
 
+util.o: util.c util.h
+	${CC} ${CFLAGS} -c $^
+
+lex.o: lex.c lex.h
+	${CC} ${CFLAGS} -c $^
+
+bst.o: bst.c bst.h util.o
+	${CC} ${CFLAGS} -c $^
+
+stack.o: stack.c stack.h bst.o util.o
+	${CC} ${CFLAGS} -c $^
+
+stable.o: stable.c stable.h stack.o bst.o
+	${CC} ${CFLAGS} -c $^
+
 # Create binary for lex testing/debugging
 lex: lex.c lex.h
 	${CC} ${CFLAGS} $^ -DIFJ_LEX_DEBUG -o $@
@@ -21,14 +36,17 @@ lexanalyze: lex.c
 	${RM} $@
 
 # Binary Search Tree test
-bst: bst.c bst.h util.c util.h
+bst: bst.c bst.h util.o
 	${CC} ${CFLAGS} $^ -DIFJ_BST_DEBUG -o $@
 
-stack: stack.c stack.h bst.c bst.h util.c util.h
+stack: stack.c stack.h bst.o util.o
 	${CC} ${CFLAGS} $^ -DIFJ_STACK_DEBUG -o $@
 
-stable: stable.c stable.h stack.c stack.h bst.c bst.h util.c util.h
+stable: stable.c stable.h stack.o bst.o util.o
 	${CC} ${CFLAGS} $^ -DIFJ_STABLE_DEBUG -o $@
 
+syntax: syntax.c syntax.h error.h lex.o
+	${CC} ${CFLAGS} -DIFJ_SYNTAX_DEBUG $^ -o $@
+
 clean:
-	${RM} ${EXEC}
+	${RM} ${EXEC} *.o
