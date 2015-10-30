@@ -273,7 +273,7 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
             }
 
             t->type = (isKeyword) ? keywords[ti].type : LEX_IDENTIFIER;
-            t->s = d->buffer;
+            t->val = d->buffer;
 
             return 0;
         }
@@ -301,9 +301,9 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
             }
             lexBufferInsert(d, i++, d->c);
             lexBufferInsert(d, i, '\0');
-           
+
             t->type = LEX_LITERAL;
-            t->s = d->buffer;
+            t->val = d->buffer;
 
             return 0; 
         }
@@ -384,7 +384,7 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
                     i--;
                     break; 
                 }
-            }   
+            }
 
             lexBufferInsert(d, i, '\0'); 
 
@@ -394,11 +394,11 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
             } else {
                 if(isFloat == true) {
                     t->type = LEX_DOUBLE;
-                    t->d = atof(d->buffer);
                 } else {
                     t->type = LEX_INTEGER;
-                    t->i = atoi(d->buffer);
                 }
+
+                t->val = d->buffer;
             }
 
             return 0;
@@ -443,11 +443,7 @@ int main(int argc, char *argv[])
     while(lexGetToken(&d, &t) == 0) {
         switch(t.type) {
         case LEX_INTEGER:
-            printf("%d [%s, %d]\n", d.line + 1, ENUM_TO_STR(t.type), t.i);
-        break;
         case LEX_DOUBLE:
-            printf("%d [%s, %lf]\n", d.line + 1, ENUM_TO_STR(t.type), t.d);
-        break;
         case LEX_LITERAL:
         case LEX_IDENTIFIER:
         case LEX_KW_INT:
@@ -460,7 +456,7 @@ int main(int argc, char *argv[])
         case LEX_KW_IF:
         case LEX_KW_ELSE:
         case LEX_KW_RETURN:
-            printf("%d [%s, %s]\n", d.line + 1, ENUM_TO_STR(t.type), t.s);
+            printf("%d [%s, %s]\n", d.line + 1, ENUM_TO_STR(t.type), t.val);
         break;
         case LEX_EOF:
             printf("%d [%s, ]\n", d.line + 1, ENUM_TO_STR(t.type));

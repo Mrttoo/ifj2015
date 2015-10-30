@@ -73,11 +73,12 @@ typedef struct lex_data {
 */
 typedef struct lex_token {
     lex_token_type_t type;
-    union {
-        double d;   /* Double */
-        int i;      /* Integer */
-        char *s;    /* String */
-    };
+    char *val;
+//    union {
+//        double d;   /* Double */
+//        int i;      /* Integer */
+//        char *s;    /* String */
+//    };
 } lex_token_t;
 
 /**
