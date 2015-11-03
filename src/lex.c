@@ -260,6 +260,7 @@ int lex_get_token(lex_data_t *d, lex_token_t *t) {
                     break;
             }
 
+            ungetc(d->c, d->source);
             lex_buffer_insert(d, i, '\0');
 
             // Check if lexeme is a keyword
