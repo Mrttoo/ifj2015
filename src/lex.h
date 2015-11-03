@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 
-#define ENUM_TO_STR(x) lex_token_strings[x - 256]
 #define LEX_BUFFER_CHUNK 32 /* Chunk size for buffer allocation */
 
 /**

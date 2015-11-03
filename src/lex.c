@@ -415,6 +415,7 @@ int lex_get_token(lex_data_t *d, lex_token_t *t) {
 }
 
 #ifdef IFJ_LEX_DEBUG
+#define ENUM_TO_STR(x) lex_token_strings[x - 256]
 /* Used for debugging/testing */
 char *lex_token_strings[] = {
     "LEX_INTEGER",      "LEX_DOUBLE",    "LEX_STRING",       "LEX_IDENTIFIER",
