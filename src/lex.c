@@ -52,7 +52,7 @@ void lex_initialize(lex_data_t *d, const char *filename)
     }
 }
 
-void lex_clean(lex_data_t *d)
+void lex_destroy(lex_data_t *d)
 {
     fclose(d->source);
     d->source = NULL;
@@ -467,6 +467,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    lex_clean(&d);
+    lex_destroy(&d);
 }
 #endif

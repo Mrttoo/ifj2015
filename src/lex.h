@@ -95,7 +95,7 @@ void lex_initialize(lex_data_t *d, const char *filename);
   *
   * @param d Pointer to lex_data_t structure
 */
-void lex_clean(lex_data_t *d);
+void lex_destroy(lex_data_t *d);
 
 /**
   * @brief Expands buffer in lex_data_t structure by
