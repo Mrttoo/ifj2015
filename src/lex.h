@@ -87,7 +87,7 @@ typedef struct lex_token {
   * @param d Pointer to lex_data_t structure
   * @param filename Filename of input source file
 */
-void lexInitialize(lex_data_t *d, const char *filename);
+void lex_initialize(lex_data_t *d, const char *filename);
 
 /**
   * @brief Cleans buffers and allocated memory
@@ -95,7 +95,7 @@ void lexInitialize(lex_data_t *d, const char *filename);
   *
   * @param d Pointer to lex_data_t structure
 */
-void lexClean(lex_data_t *d);
+void lex_clean(lex_data_t *d);
 
 /**
   * @brief Expands buffer in lex_data_t structure by
@@ -103,19 +103,19 @@ void lexClean(lex_data_t *d);
   *
   * @param d Pointer to lex_data_t structure
 */
-void lexExpandBuffer(lex_data_t *d);
+void lex_expand_buffer(lex_data_t *d);
 
 /**
   * @brief Inserts char c into buffer d->buffer
   * @details If buffer size is not enough for saving
-  *          byte c, function calls lexExpandBuffer
-  * @see lexExpandBuffer()
+  *          byte c, function calls lex_expand_buffer
+  * @see lex_expand_buffer()
   *
   * @param d Pointer to lex_data_t structure
   * @param index Buffer index
   * @param c Character to save
 */
-void lexBufferInsert(lex_data_t *d, int index, char c);
+void lex_buffer_insert(lex_data_t *d, int index, char c);
 
 /**
   * @brief Returns token from source file
@@ -129,6 +129,6 @@ void lexBufferInsert(lex_data_t *d, int index, char c);
   *          contain new token in case of success.
   * @return 0 on success, 1 on EOF or error
 */
-int lexGetToken(lex_data_t *d, lex_token_t *t);
+int lex_get_token(lex_data_t *d, lex_token_t *t);
 
 #endif

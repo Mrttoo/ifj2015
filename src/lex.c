@@ -25,7 +25,7 @@ const lex_kw_t keywords[] = {
     { NULL,     LEX_ENUM_SIZE }
 };
 
-void lexInitialize(lex_data_t *d, const char *filename)
+void lex_initialize(lex_data_t *d, const char *filename)
 {
     if(d == NULL) {
         fprintf(stderr, "%s: Uninitialized data pointer\n", __func__);
@@ -52,7 +52,7 @@ void lexInitialize(lex_data_t *d, const char *filename)
     }
 }
 
-void lexClean(lex_data_t *d)
+void lex_clean(lex_data_t *d)
 {
     fclose(d->source);
     d->source = NULL;
@@ -60,7 +60,7 @@ void lexClean(lex_data_t *d)
     d->buffer = NULL;
 }
 
-void lexExpandBuffer(lex_data_t *d)
+void lex_expand_buffer(lex_data_t *d)
 {
     if(d->buffer != NULL) {
        char *nb = realloc(d->buffer, d->bsize + LEX_BUFFER_CHUNK);
@@ -75,10 +75,10 @@ void lexExpandBuffer(lex_data_t *d)
     }
 }
 
-void lexBufferInsert(lex_data_t *d, int index, char c)
+void lex_buffer_insert(lex_data_t *d, int index, char c)
 {
     if((index + 1) > d->bsize) {
-        lexExpandBuffer(d);
+        lex_expand_buffer(d);
     }
 
     d->buffer[index] = c;
@@ -86,7 +86,7 @@ void lexBufferInsert(lex_data_t *d, int index, char c)
 
 // TODO: Return code is useless here now.
 //       Probably use token type as RC?
-int lexGetToken(lex_data_t *d, lex_token_t *t) {
+int lex_get_token(lex_data_t *d, lex_token_t *t) {
     int i = 0;
  
     while((d->c = fgetc(d->source)) != EOF) {
@@ -252,15 +252,15 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
         // Get identifier (or keyword)
         if(isalpha(d->c) || d->c == '_') {
             i = 0;
-            lexBufferInsert(d, i++, d->c);
+            lex_buffer_insert(d, i++, d->c);
             while((d->c = fgetc(d->source)) != EOF) {
                 if(isalnum(d->c) || d->c == '_')
-                    lexBufferInsert(d, i++, d->c);
+                    lex_buffer_insert(d, i++, d->c);
                 else
                     break;
             }
 
-            lexBufferInsert(d, i, '\0');
+            lex_buffer_insert(d, i, '\0');
 
             // Check if lexeme is a keyword
             int ti = 0;
@@ -281,7 +281,7 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
         // Get string literal
         if(d->c == '"') {
             i = 0;
-            lexBufferInsert(d, i++, d->c);
+            lex_buffer_insert(d, i++, d->c);
             bool escape = false;
             while((d->c = fgetc(d->source)) != EOF) {
                 if(d->c == '\n') {
@@ -297,10 +297,10 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
                 } else if(escape == true) {
                     escape = false;
                 }
-                lexBufferInsert(d, i++, d->c);
+                lex_buffer_insert(d, i++, d->c);
             }
-            lexBufferInsert(d, i++, d->c);
-            lexBufferInsert(d, i, '\0');
+            lex_buffer_insert(d, i++, d->c);
+            lex_buffer_insert(d, i, '\0');
 
             t->type = LEX_LITERAL;
             t->val = d->buffer;
@@ -343,7 +343,7 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
                     }
                 }
 
-                lexBufferInsert(d, i++, d->c);
+                lex_buffer_insert(d, i++, d->c);
                 // Number should not contain spaces
                 if(isspace(d->c)) {
                     i--;
@@ -386,7 +386,7 @@ int lexGetToken(lex_data_t *d, lex_token_t *t) {
                 }
             }
 
-            lexBufferInsert(d, i, '\0'); 
+            lex_buffer_insert(d, i, '\0'); 
 
             if(isValid == false) {
                 fprintf(stderr, "Invalid number literal on line %d (%s)\n", d->line + 1, d->buffer);
@@ -438,9 +438,9 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    lexInitialize(&d, argv[1]);
+    lex_initialize(&d, argv[1]);
 
-    while(lexGetToken(&d, &t) == 0) {
+    while(lex_get_token(&d, &t) == 0) {
         switch(t.type) {
         case LEX_INTEGER:
         case LEX_DOUBLE:
@@ -467,6 +467,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    lexClean(&d);
+    lex_clean(&d);
 }
 #endif
