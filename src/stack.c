@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
     printf("\nEquality tests: \n");
     for(int i = BST_ARRAY_SIZE - 1; i >= 0; i--) {
         tmp = stack_pop_node(stack);
-        if(debug_stack_bst_compare(tmp, bst_arr[i]) == true)
+        if(debug_stack_bst_compare(tmp, bst_arr[i]))
             printf("[Stack #%d] PASS - BSTs are equal\n", i);
         else
             printf("[Stack #%d] FAIL - BSTs are not equal\n", i);

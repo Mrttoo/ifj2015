@@ -45,7 +45,7 @@ void lex_initialize(lex_data_t *d, const char *filename)
         fprintf(stderr, "%s: Unable to open file %s\n", __func__, filename);
         exit(IFJ_INTERNAL_ERR);
     }
-    
+
     if((d->buffer = malloc(LEX_BUFFER_CHUNK)) == NULL) {
         fprintf(stderr, "%s: Unable to allocate %d bytes for buffer\n", __func__, LEX_BUFFER_CHUNK);
         exit(IFJ_INTERNAL_ERR);
@@ -288,14 +288,14 @@ int lex_get_token(lex_data_t *d, lex_token_t *t) {
                 if(d->c == '\n') {
                     fprintf(stderr, "Unexpected end of string literal on line %d\n", d->line + 1);
                     exit(IFJ_LEX_ERR);
-                } else if(escape == false && d->c == '"') {
+                } else if(!escape && d->c == '"') {
                     break;
                 } else if(d->c == '\\') {
-                    if(escape == true)
+                    if(escape)
                         escape = false;
                     else
                         escape = true;
-                } else if(escape == true) {
+                } else if(escape) {
                     escape = false;
                 }
                 lex_buffer_insert(d, i++, d->c);
@@ -323,17 +323,17 @@ int lex_get_token(lex_data_t *d, lex_token_t *t) {
             bool zeroSkipped = false;
             while((d->c = fgetc(d->source)) != EOF) {
                 // Skip leading zeros
-                if(skipZero == true) {
+                if(skipZero) {
                     if(d->c == '0') {
                         zeroSkipped = true;
                         continue;
                     } else {
-                        if(zeroSkipped == true) {
+                        if(zeroSkipped) {
                             // Skip all leading zeros,
                             // but leave at least one zero
                             // if next character is not a number
                             // (eg. 0.1, 0000.1, 1.E001, etc.)
-                            if(isdigit(d->c) == false) {
+                            if(!isdigit(d->c)) {
                                 ungetc(d->c, d->source);
                                 d->c = '0';
                             }
@@ -352,7 +352,7 @@ int lex_get_token(lex_data_t *d, lex_token_t *t) {
                 // Parse dots
                 } else if(d->c == '.') {
                     isValid = false;
-                    if(isFloat == true) {
+                    if(isFloat) {
                         break;
                     } else {
                         isFloat = true;
@@ -362,23 +362,23 @@ int lex_get_token(lex_data_t *d, lex_token_t *t) {
                     isValid = false;
                     skipZero = true;
                     // TODO
-                    if(hasExponent == true) {
+                    if(hasExponent) {
                         break;
                     } else {
                         hasExponent = true;
                         isFloat = true;
                     }
                 // Check number validity
-                } else if(isdigit(d->c) && isValid == false) {
+                } else if(isdigit(d->c) && !isValid) {
                     isValid = true;
                 // Parse exponent sign
-                } else if(hasExponent == true && isValid == false && (d->c == '+' || d->c == '-')) {
-                    if(hasSign == true)
+                } else if(hasExponent && !isValid && (d->c == '+' || d->c == '-')) {
+                    if(hasSign)
                         break;
                     hasSign = true;
                     skipZero = true;
                 // Skip unwanted characters
-                } else if(isdigit(d->c) == false) {
+                } else if(!isdigit(d->c)) {
                     if(isalpha(d->c)) 
                         isValid = false;
                     ungetc(d->c, d->source);
@@ -389,11 +389,11 @@ int lex_get_token(lex_data_t *d, lex_token_t *t) {
 
             lex_buffer_insert(d, i, '\0'); 
 
-            if(isValid == false) {
+            if(!isValid) {
                 fprintf(stderr, "Invalid number literal on line %d (%s)\n", d->line + 1, d->buffer);
                 exit(IFJ_LEX_ERR);
             } else {
-                if(isFloat == true) {
+                if(isFloat) {
                     t->type = LEX_DOUBLE;
                 } else {
                     t->type = LEX_INTEGER;

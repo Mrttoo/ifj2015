@@ -27,7 +27,7 @@ void stable_insert(stable_t *stable, char *key, bst_data_t *data, bool new_scope
 
     bst_node_t *n = NULL;
 
-    if(new_scope == true) {
+    if(new_scope) {
         n = bst_new_node(key, data);
         stack_push_node(stable->stack, n);
     } else {
