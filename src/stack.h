@@ -8,7 +8,7 @@
 /**
   * @brief Structure for stack implementation
 */
-typedef struct {
+typedef struct stack {
     unsigned int size;      /**< Current stack size */
     unsigned int free_idx;  /**< Next free stack index */
     bst_node_t **items;     /**< Array of BSTs */

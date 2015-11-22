@@ -4,14 +4,16 @@
 
 #include "syntax.h"
 #include "lex.h"
+#include "stable.h"
 #include "error.h"
 
 #define ENUM_TO_STR(x) lex_token_strings[x - 256]
 
 /* Global variables */
-lex_data_t lex_data;
-lex_token_t current_token;
-
+lex_data_t lex_data;        /* Data for lexical analyser */
+lex_token_t current_token;  /* Currently processed token */
+stable_t symbol_table;      /* Symbol table */
+stable_data_t symbol_data;  /* Currently processed symbol table item */
 
 /* Token array for debugging */
 char *lex_token_strings[] = {

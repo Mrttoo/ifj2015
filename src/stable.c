@@ -20,7 +20,7 @@ stable_t *stable_init()
    return stable;
 }
 
-void stable_insert(stable_t *stable, char *key, bst_data_t *data, bool new_scope)
+void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope)
 {
     if(stable == NULL)
         return;
@@ -72,7 +72,7 @@ void dbg_bst_print(bst_node_t *node)
 int main()
 {
     stable_t *stable = stable_init();
-    bst_data_t data = { .type = LEX_DOUBLE, .value.d = 13.2 };
+    stable_data_t data = { .type = LEX_DOUBLE, .value.d = 13.2 };
     char *keys[] = { "string", "auto", "cin", "_test", "_a123", NULL };
 
     // Insert variables for first scope

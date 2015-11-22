@@ -12,7 +12,7 @@
 #include "error.h"
 #include "util.h"
 
-bst_node_t *bst_new_node(char *key, bst_data_t *data)
+bst_node_t *bst_new_node(char *key, stable_data_t *data)
 {
     bst_node_t *n = malloc(sizeof *n);
 
@@ -44,7 +44,7 @@ void bst_destroy(bst_node_t *node)
     node = NULL;
 }
 
-bst_node_t *bst_insert_node(bst_node_t *node, char *key, bst_data_t *data)
+bst_node_t *bst_insert_node(bst_node_t *node, char *key, stable_data_t *data)
 {
     if(node == NULL) {
         return bst_new_node(key, data);
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
                    "num", "i", "I", "key", "asdf3", "tea23", "_2314", NULL };
     int rc = 0;
     bst_node_t *root = NULL;
-    bst_data_t data = { .type = LEX_EOF, .value.i = 1 };
+    stable_data_t data = { .type = LEX_EOF, .value.i = 1 };
     // Test alloc
     root = bst_new_node("j", &data);
 

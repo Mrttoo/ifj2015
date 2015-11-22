@@ -1,17 +1,9 @@
 #ifndef __BST_H_INCLUDED
 #define __BST_H_INCLUDED
 
+#include <stdbool.h>
 #include "lex.h"
-
-// TODO
-typedef struct bst_data {
-    lex_token_type_t type;
-    union {
-        char *s;
-        int i;
-        double d;
-    } value;
-} bst_data_t;
+#include "stable.h"
 
 /**
   * @brief Structure for BST node
@@ -19,7 +11,7 @@ typedef struct bst_data {
 typedef struct bst_node {
     struct bst_node *left;   /**< Pointer to left BST child */
     struct bst_node *right;  /**< Pointer to right BST child */
-    bst_data_t data;         /**< Node data */
+    stable_data_t data;      /**< Node data */
     char *key;               /**< Node key */
 } bst_node_t;
 
@@ -32,7 +24,7 @@ typedef struct bst_node {
   * @param key Key for BST node
   * @return Allocated BST node
 */
-bst_node_t *bst_new_node(char *key, bst_data_t *data);
+bst_node_t *bst_new_node(char *key, stable_data_t *data);
 
 /**
   * @brief Recursively deallocates all nodes
@@ -48,7 +40,7 @@ void bst_destroy(bst_node_t *node);
   * @param node Pointer to BST
   * @param key Node key
 */
-bst_node_t *bst_insert_node(bst_node_t *node, char *key, bst_data_t *data);
+bst_node_t *bst_insert_node(bst_node_t *node, char *key, stable_data_t *data);
 
 /**
   * @brief Searches for node with given key in BST
