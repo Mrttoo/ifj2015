@@ -69,17 +69,22 @@ void declr_list()
 // Rule <funcDeclr> -> <typeSpec> ID ( <params> ) ;
 void syntax_func_declr()
 {
+    bool insert = false;
+    // Clean symbol data variable and set things we know so far
     stable_clean_data(&symbol_data);
+    symbol_data.func.defined = false;
+    symbol_data.type = STABLE_FUNCTION;
 
     if(!syntax_type_spec())
         syntax_error("type expected");
 
-    symbol_data.type = STABLE_FUNCTION;
+    // We got function's return type
     symbol_data.func.rtype = syntax_data.dtype;
 
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("identifier expected");
 
+    // Now we got ID
     symbol_data.id = syntax_data.id;
 
     if(!syntax_match(LEX_LPAREN))
@@ -91,6 +96,12 @@ void syntax_func_declr()
 
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
 
+    // Insert function declaration into global symbol table
+    if(!stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
+        insert = true;
+        stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
+    }
+
     if(current_token.type == LEX_SEMICOLON && syntax_match(LEX_SEMICOLON)) {
         symbol_data.func.defined = false;
     } else if(current_token.type == LEX_LBRACE) {
@@ -100,20 +111,39 @@ void syntax_func_declr()
         syntax_error("; or { expected");
     }
 
+    // Check for redefinitions or add a missing definition
     if(stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
+        // We already have a function with current name, but this one is not a function - throw an error
         if(ptr_data->type != STABLE_FUNCTION) {
             syntax_error("Redefined identifier '%s'", symbol_data.id);
         } else if(ptr_data->type == STABLE_FUNCTION) {
+            // Compare function parameters
             if(stable_compare_param_arrays(&symbol_data, ptr_data) &&
                symbol_data.func.rtype == ptr_data->func.rtype) {
-
+                // Function is not defined yet - add params array and set appropriate flag
+                if(!ptr_data->func.defined && symbol_data.func.defined) {
+                    ptr_data->func.defined = true;
+                    ptr_data->func.params = symbol_data.func.params;
+                    return;
+                } else {
+                    // We got second definition of same functions - throw an error
+                    if(symbol_data.func.defined)
+                        syntax_error_ec(IFJ_DEF_ERR, "Multiple definitions of function '%s'", symbol_data.id);
+                }
             } else {
-                syntax_error_ec(IFJ_DEF_ERR, "Function '%s' redefined with wrong parameters and/or return type\n", symbol_data.id);
+                syntax_error_ec(IFJ_DEF_ERR, "Function '%s' redefined with wrong parameters and/or return type", symbol_data.id);
             }
         }
-    }
 
-    stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
+        if(!insert) {
+            free(symbol_data.id);
+            symbol_data.id = NULL;
+        }
+        free(symbol_data.func.params);
+        symbol_data.func.params = NULL;
+    } else {
+        fprintf(stderr, "%s: %d - We should never get here.", __func__, __LINE__);
+    }
 }
 
 // Rule <typeSpec> -> int | double | string
@@ -172,6 +202,7 @@ bool syntax_param_item()
         syntax_error("expected identifier");
 
     stable_insert_func_param(&symbol_data, syntax_data.dtype, syntax_data.id);
+    syntax_data.id = NULL;
 
     return true;
 }
