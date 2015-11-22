@@ -8,6 +8,9 @@
 
 void stable_init(stable_t *stable)
 {
+   if(stable == NULL)
+        return;
+
    stable->stack = stack_init(IFJ_STACK_CHUNK);
 }
 

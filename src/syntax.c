@@ -393,12 +393,15 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    stable_init(&symbol_table);
     lex_initialize(&lex_data, argv[1]);
 
     lex_get_token(&lex_data, &current_token);
     syntax_program();
 
     lex_destroy(&lex_data);
+    stable_destroy(&symbol_table);
+
     return 0;
 }
 

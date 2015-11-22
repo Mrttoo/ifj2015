@@ -63,8 +63,29 @@ typedef struct stable_data {
     };
 } stable_data_t;
 
+/**
+  * @brief Initializes symbol table
+  *
+  * @param stable Valid pointer to symbol table
+*/
 void stable_init(stable_t *stable);
+
+/**
+  * @brief Inserts data node with specified key into symbol table
+  *
+  * @param stable Valid pointer to symbol table
+  * @param key Data node key
+  * @param data Valid pointer to data node
+  * @param new_scope When true, data node will be inserted in a new scope.
+                     If the symbol table is empty, new_scope is true by default.
+*/
 void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope);
+
+/**
+  * @brief Destroys symbol table
+  *
+  * @param stable Pointer to symbol table
+*/
 void stable_destroy(stable_t *stable);
 
 #endif

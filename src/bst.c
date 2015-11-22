@@ -24,6 +24,7 @@ bst_node_t *bst_new_node(char *key, stable_data_t *data)
     n->left = NULL;
     n->right = NULL;
     n->key = ifj_strdup(key);
+    data->id = n->key;
     if(data != NULL)
         memcpy(&n->data, data, sizeof *data);
 
