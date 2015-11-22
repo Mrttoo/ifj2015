@@ -16,7 +16,7 @@ typedef struct syntax_data {
     stable_data_type_t dtype;
 } syntax_data_t;
 
-static inline void syntax_error(lex_data_t *ld, char *format, ...)
+static inline void throw_syntax_error(int ec, lex_data_t *ld, char *format, ...)
 {
     va_list args;
 
@@ -26,7 +26,7 @@ static inline void syntax_error(lex_data_t *ld, char *format, ...)
     fprintf(stderr, "\n");
     va_end(args);
 
-    exit(IFJ_SYNTAX_ERR);
+    exit(ec);
 }
 
 /* Functions for recursive descent algorithm */

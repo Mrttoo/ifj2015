@@ -9,6 +9,8 @@
 #include "util.h"
 
 #define ENUM_TO_STR(x) lex_token_strings[x - 256]
+#define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, &lex_data, __VA_ARGS__);
+#define syntax_error_ec(ec, ...) throw_syntax_error(ec, &lex_data, __VA_ARGS__);
 
 /* Global variables */
 lex_data_t lex_data;        /* Data for lexical analyser */
@@ -52,7 +54,7 @@ void syntax_program()
 {
     declr_list();
     if(!syntax_match(LEX_EOF))
-        syntax_error(&lex_data, "expected end of file");
+        syntax_error("expected end of file");
 }
 
 // Rule: <declrList> -> <funcDeclr> <declrList> | <empty>
@@ -70,22 +72,22 @@ void syntax_func_declr()
     stable_clean_data(&symbol_data);
 
     if(!syntax_type_spec())
-        syntax_error(&lex_data, "type expected");
+        syntax_error("type expected");
 
     symbol_data.type = STABLE_FUNCTION;
     symbol_data.func.rtype = syntax_data.dtype;
 
     if(!syntax_match(LEX_IDENTIFIER))
-        syntax_error(&lex_data, "identifier expected");
+        syntax_error("identifier expected");
 
     symbol_data.id = syntax_data.id;
 
     if(!syntax_match(LEX_LPAREN))
-        syntax_error(&lex_data, "( expected");
+        syntax_error("( expected");
 
     syntax_params();
     if(!syntax_match(LEX_RPAREN))
-        syntax_error(&lex_data, ") expected");
+        syntax_error(") expected");
 
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
 
@@ -95,14 +97,23 @@ void syntax_func_declr()
         syntax_compound_statement();
         symbol_data.func.defined = true;
     } else {
-        syntax_error(&lex_data, "; or { expected");
+        syntax_error("; or { expected");
     }
 
-    if(stable_search(&symbol_table, symbol_data.id, NULL))
-        syntax_error(&lex_data, "Redefined identifier %s", symbol_data.id);
+    if(stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
+        if(ptr_data->type != STABLE_FUNCTION) {
+            syntax_error("Redefined identifier '%s'", symbol_data.id);
+        } else if(ptr_data->type == STABLE_FUNCTION) {
+            if(stable_compare_param_arrays(&symbol_data, ptr_data) &&
+               symbol_data.func.rtype == ptr_data->func.rtype) {
 
+            } else {
+                syntax_error_ec(IFJ_DEF_ERR, "Function '%s' redefined with wrong parameters and/or return type\n", symbol_data.id);
+            }
+        }
+    }
 
-    stable_insert(&symbol_table, symbol_data.id, &symbol_data, false);
+    stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
 }
 
 // Rule <typeSpec> -> int | double | string
@@ -139,7 +150,7 @@ void syntax_params()
         gotComma = false;
         if(current_token.type != LEX_COMMA &&
            current_token.type != LEX_RPAREN) {
-            syntax_error(&lex_data, "expected , or )");
+            syntax_error("expected , or )");
         } else {
             if(syntax_match(LEX_COMMA))
                 gotComma = true; 
@@ -147,7 +158,7 @@ void syntax_params()
     }
 
     if(gotComma) {
-        syntax_error(&lex_data, "unexpected ,");
+        syntax_error("unexpected ,");
     }
 }
 
@@ -158,7 +169,7 @@ bool syntax_param_item()
         return false;
 
     if(!syntax_match(LEX_IDENTIFIER))
-        syntax_error(&lex_data, "expected identifier");
+        syntax_error("expected identifier");
 
     stable_insert_func_param(&symbol_data, syntax_data.dtype, syntax_data.id);
 
@@ -188,7 +199,7 @@ bool syntax_statement()
         // assignStmt
         syntax_assign_statement();
         if(!syntax_match(LEX_SEMICOLON))
-           syntax_error(&lex_data, "; expected");
+           syntax_error("; expected");
     } else {
         rc = false;
     }
@@ -200,20 +211,20 @@ void syntax_compound_statement()
 {
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     if(!syntax_match(LEX_LBRACE))
-        syntax_error(&lex_data, "{ expected");
+        syntax_error("{ expected");
 
     syntax_var_declr_list();
     syntax_stmt_list();
 
     if(!syntax_match(LEX_RBRACE))
-        syntax_error(&lex_data, "} expected");
+        syntax_error("} expected");
 }
 
 void syntax_var_declr_list()
 {
     if(syntax_var_declr(false)) {
         if(!syntax_match(LEX_SEMICOLON))
-            syntax_error(&lex_data, "; expected");
+            syntax_error("; expected");
 
         syntax_var_declr_list();
     }
@@ -238,14 +249,14 @@ bool syntax_var_declr(bool mandatory_init)
 void syntax_var_declr_item(bool mandatory_init)
 {
     if(!syntax_match(LEX_IDENTIFIER))
-        syntax_error(&lex_data, "identifier expected");
+        syntax_error("identifier expected");
 
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     if(current_token.type == LEX_ASSIGNMENT) {
         syntax_match(LEX_ASSIGNMENT);
         syntax_expression();
     } else if(mandatory_init) {
-        syntax_error(&lex_data, "initialization expected");
+        syntax_error("initialization expected");
     }
 }
 
@@ -268,17 +279,17 @@ void syntax_expression()
 void syntax_if_statement()
 {
     if(!syntax_match(LEX_LPAREN))
-        syntax_error(&lex_data, "( expected");
+        syntax_error("( expected");
 
     syntax_expression();
 
     if(!syntax_match(LEX_RPAREN))
-        syntax_error(&lex_data, ") expected");
+        syntax_error(") expected");
 
     syntax_compound_statement();
 
     if(!syntax_match(LEX_KW_ELSE))
-        syntax_error(&lex_data, "'else' expected");
+        syntax_error("'else' expected");
 
     syntax_compound_statement();
 }
@@ -286,22 +297,22 @@ void syntax_if_statement()
 void syntax_for_statement()
 {
     if(!syntax_match(LEX_LPAREN))
-        syntax_error(&lex_data, "( expected");
+        syntax_error("( expected");
 
     syntax_var_declr(true);
 
     if(!syntax_match(LEX_SEMICOLON))
-        syntax_error(&lex_data, "; expected");
+        syntax_error("; expected");
 
     syntax_expression();
 
     if(!syntax_match(LEX_SEMICOLON))
-        syntax_error(&lex_data, "; expected");
+        syntax_error("; expected");
 
     syntax_assign_statement();
 
     if(!syntax_match(LEX_RPAREN))
-        syntax_error(&lex_data, ") expected");
+        syntax_error(") expected");
 
     syntax_compound_statement();
 }
@@ -309,10 +320,10 @@ void syntax_for_statement()
 void syntax_assign_statement()
 {
     if(!syntax_match(LEX_IDENTIFIER))
-        syntax_error(&lex_data, "identifier expected");
+        syntax_error("identifier expected");
 
     if(!syntax_match(LEX_ASSIGNMENT))
-        syntax_error(&lex_data, "= expected");
+        syntax_error("= expected");
 
     syntax_expression();
 }
@@ -322,21 +333,21 @@ void syntax_call_statement()
     syntax_call_params(false);
 
     if(!syntax_match(LEX_RPAREN))
-        syntax_error(&lex_data, ") expected");
+        syntax_error(") expected");
 }
 
 void syntax_call_params(bool require_param)
 {
     if(current_token.type != LEX_RPAREN) {
         if(!syntax_call_param())
-            syntax_error(&lex_data, "param expected");
+            syntax_error("param expected");
 
         if(current_token.type == LEX_COMMA) {
             syntax_match(LEX_COMMA);
             syntax_call_params(true);
         }
     } else if(require_param) {
-        syntax_error(&lex_data, "param expected");
+        syntax_error("param expected");
     }
 }
 
@@ -361,21 +372,21 @@ void syntax_return_statement()
         syntax_expression();
 
     if(!syntax_match(LEX_SEMICOLON))
-        syntax_error(&lex_data, "; expected");
+        syntax_error("; expected");
 }
 
 void syntax_cin_statement()
 {
     if(!syntax_match(LEX_INPUT))
-        syntax_error(&lex_data, ">> expected");
+        syntax_error(">> expected");
 
     if(!syntax_match(LEX_IDENTIFIER))
-        syntax_error(&lex_data, "identifier expected");
+        syntax_error("identifier expected");
 
     syntax_cin_args();
 
     if(!syntax_match(LEX_SEMICOLON))
-        syntax_error(&lex_data, "; expected");
+        syntax_error("; expected");
 }
 
 void syntax_cin_args()
@@ -383,7 +394,7 @@ void syntax_cin_args()
     if(current_token.type == LEX_INPUT) {
         syntax_match(LEX_INPUT);
         if(!syntax_match(LEX_IDENTIFIER))
-            syntax_error(&lex_data, "identifier expected");
+            syntax_error("identifier expected");
 
         if(current_token.type != LEX_SEMICOLON)
             syntax_cin_args();
@@ -393,15 +404,15 @@ void syntax_cin_args()
 void syntax_cout_statement()
 {
     if(!syntax_match(LEX_OUTPUT))
-        syntax_error(&lex_data, "<< expected");
+        syntax_error("<< expected");
 
     if(!syntax_call_param())
-        syntax_error(&lex_data, "param expected");
+        syntax_error("param expected");
 
     syntax_cout_args();
 
     if(!syntax_match(LEX_SEMICOLON))
-        syntax_error(&lex_data, "; expected");
+        syntax_error("; expected");
 }
 
 void syntax_cout_args()
@@ -409,7 +420,7 @@ void syntax_cout_args()
     if(current_token.type == LEX_OUTPUT) {
         syntax_match(LEX_OUTPUT);
         if(!syntax_call_param())
-            syntax_error(&lex_data, "param expected");
+            syntax_error("param expected");
 
         if(current_token.type != LEX_SEMICOLON)
             syntax_cout_args();
