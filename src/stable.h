@@ -35,9 +35,9 @@ typedef struct stable_variable {
     bool initialized;
     stable_data_type_t dtype;
     union {
-        char  *sval;
-        int    ival;
-        double dval;
+        char  *s;
+        int    i;
+        double d;
     } val;
 } stable_variable_t;
 
@@ -60,10 +60,10 @@ typedef struct stable_data {
     union {
         stable_variable_t var;
         stable_function_t func;
-    } data;
+    };
 } stable_data_t;
 
-stable_t *stable_init();
+void stable_init(stable_t *stable);
 void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope);
 void stable_destroy(stable_t *stable);
 

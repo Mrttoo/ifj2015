@@ -6,18 +6,9 @@
 #include "stack.h"
 #include "bst.h"
 
-stable_t *stable_init()
+void stable_init(stable_t *stable)
 {
-    stable_t *stable = malloc(sizeof *stable);
-
-    if(stable == NULL) {
-        fprintf(stderr, "Unable to allocate memory for symbol table\n");
-        exit(IFJ_INTERNAL_ERR);
-    }
-
    stable->stack = stack_init(IFJ_STACK_CHUNK);
-
-   return stable;
 }
 
 void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope)
@@ -53,8 +44,6 @@ void stable_destroy(stable_t *stable)
     }
 
     stack_destroy(stable->stack);
-    free(stable);
-    stable = NULL;
 }
 
 #ifdef IFJ_STABLE_DEBUG
@@ -65,36 +54,37 @@ void dbg_bst_print(bst_node_t *node)
         return;
 
     dbg_bst_print(node->left);
-    printf("%s (%lf), ", node->key, node->data.value.d);
+    printf("%s (%lf), ", node->key, node->data.var.val.d);
     dbg_bst_print(node->right);
 }
 
 int main()
 {
-    stable_t *stable = stable_init();
-    stable_data_t data = { .type = LEX_DOUBLE, .value.d = 13.2 };
+    stable_t stable;
+    stable_data_t data = { .type = STABLE_DOUBLE, .var.val.d = 13.2 };
     char *keys[] = { "string", "auto", "cin", "_test", "_a123", NULL };
 
+    stable_init(&stable);
     // Insert variables for first scope
     for(unsigned int i = 0; keys[i] != NULL; i++) {
-        stable_insert(stable, keys[i], &data, false);
+        stable_insert(&stable, keys[i], &data, false);
     }
 
     // Insert a new scope with one variable
-    data.value.d = 20.5;
-    stable_insert(stable, keys[0], &data, true);
+    data.var.val.d = 20.5;
+    stable_insert(&stable, keys[0], &data, true);
 
-    int it = stable->stack->free_idx - 1;
-    bst_node_t *node = stable->stack->items[it];
+    int it = stable.stack->free_idx - 1;
+    bst_node_t *node = stable.stack->items[it];
 
     while(node != NULL) {
         printf("[Scope] ");
         dbg_bst_print(node);
         printf("\n");
         if(--it < 0) break;
-        node = stable->stack->items[it];
+        node = stable.stack->items[it];
     }
 
-    stable_destroy(stable);
+    stable_destroy(&stable);
 }
 #endif
