@@ -8,7 +8,13 @@
 #include <stdbool.h>
 
 #include "lex.h"
+#include "stable.h"
 #include "error.h"
+
+typedef struct syntax_data {
+    char *id;
+    stable_data_type_t dtype;
+} syntax_data_t;
 
 static inline void syntax_error(lex_data_t *ld, char *format, ...)
 {

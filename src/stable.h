@@ -32,34 +32,43 @@ typedef enum {
   * @brief Symbol table data structure for variable
 */
 typedef struct stable_variable {
-    bool initialized;
-    stable_data_type_t dtype;
+    bool initialized;               /**< Is variable initialized? */
+    stable_data_type_t dtype;       /**< Data type */
     union {
-        char  *s;
-        int    i;
-        double d;
-    } val;
+        char  *s;                   /**< String */
+        int    i;                   /**< Integer */
+        double d;                   /**< Double */
+    } val;                          /**< Variable value */
 } stable_variable_t;
+
+/**
+  * @brief Structure for symbol table function parameters
+*/
+typedef struct stable_function_param {
+    stable_data_type_t dtype;   /**< Parameter data type */
+    char *id;                   /**< Parameter ID */
+} stable_function_param_t;
 
 /**
   * @brief Symbol table data structure for function
 */
 typedef struct stable_function {
-    bool defined;
-    stable_data_type_t dtype;
-    unsigned int nparam;
-
+    bool defined;                       /**< Is function defined? */
+    stable_data_type_t rtype;           /**< Return data type */
+    unsigned int nparam;                /**< Number of parameters */
+    unsigned int maxparam;              /**< Current max parameters which can be saved into params array */
+    stable_function_param_t *params;    /**< Parameters array */
 } stable_function_t;
 
 /**
   * @brief Symbol table data structure
 */
 typedef struct stable_data {
-    char *id;
-    stable_type_t type;
+    char *id;                       /**< Symbol ID */
+    stable_type_t type;             /**< Symbol type */
     union {
-        stable_variable_t var;
-        stable_function_t func;
+        stable_variable_t var;      /**< Variable data structure */
+        stable_function_t func;     /**< Function data structure */
     };
 } stable_data_t;
 
@@ -82,10 +91,48 @@ void stable_init(stable_t *stable);
 void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope);
 
 /**
+  * @brief Inserts function parameter into function parameters array in
+  *        symbol table data structure
+  *
+  * @param data Pointer to data structure
+  * @param dtype Data type of function parameter
+  * @param id Identifier of function parameter (only assigns pointer, doesn't copy content)
+*/
+void stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, char *id);
+
+/**
+  * @brief Sets some values of data structure to their defaults
+  *
+  * @param data Pointer to data structure
+*/
+void stable_clean_data(stable_data_t *data);
+
+/**
+  * @brief Searches for key in symbol table
+  *
+  * @param stable Pointer to symbol table
+  * @param key Searched key
+  * @param result Pointer to data structure pointer. Can be NULL - in this case
+  *        function only returns true/false without assigning found node
+  *        to this pointer
+  *
+  * @return True if node with specified key is found, false otherwise.
+*/
+bool stable_search(stable_t *stable, char *key, stable_data_t **result);
+
+/**
   * @brief Destroys symbol table
   *
   * @param stable Pointer to symbol table
 */
 void stable_destroy(stable_t *stable);
 
+/**
+  * @brief Destroys data in data structure stable_data_t
+  * @details Function is called from bst_destroy() function
+  * @see bst_destroy()
+  *
+  * @param data Pointer to data structure
+*/
+void stable_destroy_data(stable_data_t *data);
 #endif

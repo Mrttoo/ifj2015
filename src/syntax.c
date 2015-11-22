@@ -6,12 +6,14 @@
 #include "lex.h"
 #include "stable.h"
 #include "error.h"
+#include "util.h"
 
 #define ENUM_TO_STR(x) lex_token_strings[x - 256]
 
 /* Global variables */
 lex_data_t lex_data;        /* Data for lexical analyser */
 lex_token_t current_token;  /* Currently processed token */
+syntax_data_t syntax_data;  /* Data for syntax analyser */
 stable_t symbol_table;      /* Symbol table */
 stable_data_t symbol_data;  /* Currently processed symbol table item */
 
@@ -33,6 +35,10 @@ bool syntax_match(lex_token_type_t predict_token)
 {
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     if(current_token.type == predict_token) {
+        if(current_token.type == LEX_IDENTIFIER) {
+            syntax_data.id = ifj_strdup(current_token.val);
+        }
+
         lex_get_token(&lex_data, &current_token);
         return true;
     }
@@ -60,44 +66,66 @@ void declr_list()
 // Rule <funcDeclr> -> <typeSpec> ID ( <params> ) ;
 void syntax_func_declr()
 {
+    stable_clean_data(&symbol_data);
+
     if(!syntax_type_spec())
         syntax_error(&lex_data, "type expected");
+
+    symbol_data.type = STABLE_FUNCTION;
+    symbol_data.func.rtype = syntax_data.dtype;
 
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error(&lex_data, "identifier expected");
 
+    symbol_data.id = syntax_data.id;
+    if(stable_search(&symbol_table, symbol_data.id, NULL))
+        syntax_error(&lex_data, "Redefined identifier %s", symbol_data.id);
+
+
     if(!syntax_match(LEX_LPAREN))
         syntax_error(&lex_data, "( expected");
- 
 
     syntax_params();
     if(!syntax_match(LEX_RPAREN))
         syntax_error(&lex_data, ") expected");
 
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
+
     if(current_token.type == LEX_SEMICOLON && syntax_match(LEX_SEMICOLON)) {
-        return;
+        symbol_data.func.defined = false;
     } else if(current_token.type == LEX_LBRACE) {
         syntax_compound_statement();
+        symbol_data.func.defined = true;
     } else {
         syntax_error(&lex_data, "; or { expected");
     }
+
+    stable_insert(&symbol_table, symbol_data.id, &symbol_data, false);
 }
 
 // Rule <typeSpec> -> int | double | string
 bool syntax_type_spec()
 {
+    bool rc = true;
+
     switch(current_token.type) {
     case LEX_KW_INT:
+        syntax_data.dtype = STABLE_INT;
+    break;
     case LEX_KW_STRING:
+        syntax_data.dtype = STABLE_STRING;
+    break;
     case LEX_KW_DOUBLE:
-        lex_get_token(&lex_data, &current_token);
+        syntax_data.dtype = STABLE_DOUBLE;
     break;
     default:
-        return false;
+        rc = false;
     }
 
-    return true;
+    if(rc)
+        lex_get_token(&lex_data, &current_token);
+
+    return rc;
 }
 
 // Rule <params> -> <paramItem> | <paramItem>, <params>
@@ -129,6 +157,8 @@ bool syntax_param_item()
 
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error(&lex_data, "expected identifier");
+
+    stable_insert_func_param(&symbol_data, syntax_data.dtype, syntax_data.id);
 
     return true;
 }

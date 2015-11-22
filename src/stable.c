@@ -34,6 +34,66 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_sc
     }
 }
 
+void stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, char *id)
+{
+    if(data->func.params == NULL) {
+        data->func.params = malloc(sizeof *(data->func.params) * 5);
+        if(data->func.params == NULL) {
+            fprintf(stderr, "%s: Unable to allocate memory for function parameters array\n", __func__);
+            exit(IFJ_INTERNAL_ERR);
+        }
+    }
+
+    if(data->func.nparam + 1 >= data->func.maxparam) {
+        stable_function_param_t *tmp = realloc(data->func.params, sizeof *tmp + data->func.maxparam + 5);
+        if(tmp == NULL) {
+            fprintf(stderr, "%s: Unable to expand funtion parameters array\n", __func__);
+            exit(IFJ_INTERNAL_ERR);
+        } else {
+            data->func.maxparam += 5;
+        }
+    }
+
+    data->func.params[data->func.nparam].dtype = dtype;
+    data->func.params[data->func.nparam].id = id;
+    data->func.nparam++;
+}
+
+void stable_clean_data(stable_data_t *data)
+{
+    if(data == NULL)
+        return;
+
+    if(data->type == STABLE_FUNCTION) {
+        data->func.defined = false;
+        data->func.nparam = 0;
+        data->func.maxparam = 5;
+        data->func.params = NULL;
+    } else if(data->type == STABLE_VARIABLE) {
+        data->var.initialized = false;
+    }
+
+    data->type = STABLE_UNDEFINED;
+}
+
+bool stable_search(stable_t *stable, char *key, stable_data_t **result)
+{
+    if(stable == NULL || key == NULL)
+        return false;
+
+    bool rc = false;
+    bst_node_t *node = stack_get_top_node(stable->stack);
+    node = bst_lookup_node(node, key);
+
+    if(node != NULL) {
+        rc = true;
+        if(result != NULL)
+            *result = &(node->data);
+    }
+
+    return rc;
+}
+
 void stable_destroy(stable_t *stable)
 {
     if(stable == NULL)
@@ -47,6 +107,17 @@ void stable_destroy(stable_t *stable)
     }
 
     stack_destroy(stable->stack);
+}
+
+void stable_destroy_data(stable_data_t *data)
+{
+    if(data->type == STABLE_FUNCTION) {
+        free(data->func.params);
+        data->func.params = NULL;
+    }
+
+    free(data->id);
+    data->id = NULL;
 }
 
 #ifdef IFJ_STABLE_DEBUG
