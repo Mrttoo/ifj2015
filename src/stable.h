@@ -74,6 +74,8 @@ typedef struct stable_data {
 
 /**
   * @brief Initializes symbol table
+  * @details Function also initializes first stack item
+  *          which contains global symbol table
   *
   * @param stable Valid pointer to symbol table
 */

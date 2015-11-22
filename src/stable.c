@@ -11,7 +11,8 @@ void stable_init(stable_t *stable)
    if(stable == NULL)
         return;
 
-   stable->stack = stack_init(IFJ_STACK_CHUNK);
+    stable->stack = stack_init(IFJ_STACK_CHUNK);
+    stable_insert(stable, "@global", NULL, true);
 }
 
 void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope)
@@ -111,6 +112,9 @@ void stable_destroy(stable_t *stable)
 
 void stable_destroy_data(stable_data_t *data)
 {
+    if(data == NULL)
+        return;
+
     if(data->type == STABLE_FUNCTION) {
         free(data->func.params);
         data->func.params = NULL;

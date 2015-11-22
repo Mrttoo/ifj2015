@@ -25,7 +25,9 @@ bst_node_t *bst_new_node(char *key, stable_data_t *data)
     n->right = NULL;
     n->key = ifj_strdup(key);
     if(data != NULL)
-        memcpy(&n->data, data, sizeof *data);
+        memcpy(&(n->data), data, sizeof *data);
+    else
+        n->data.type = STABLE_UNDEFINED;
 
     return n;
 }
@@ -39,7 +41,9 @@ void bst_destroy(bst_node_t *node)
     if(node->right != NULL)
         bst_destroy(node->right);
 
-    stable_destroy_data(&(node->data));
+    if(node->data.type != STABLE_UNDEFINED)
+        stable_destroy_data(&(node->data));
+
     free(node->key);
     free(node);
     node = NULL;

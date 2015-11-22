@@ -16,6 +16,7 @@ lex_token_t current_token;  /* Currently processed token */
 syntax_data_t syntax_data;  /* Data for syntax analyser */
 stable_t symbol_table;      /* Symbol table */
 stable_data_t symbol_data;  /* Currently processed symbol table item */
+stable_data_t *ptr_data;    /* Pointer for updating/accessing data in symbol table */
 
 /* Token array for debugging */
 char *lex_token_strings[] = {
@@ -78,9 +79,6 @@ void syntax_func_declr()
         syntax_error(&lex_data, "identifier expected");
 
     symbol_data.id = syntax_data.id;
-    if(stable_search(&symbol_table, symbol_data.id, NULL))
-        syntax_error(&lex_data, "Redefined identifier %s", symbol_data.id);
-
 
     if(!syntax_match(LEX_LPAREN))
         syntax_error(&lex_data, "( expected");
@@ -99,6 +97,10 @@ void syntax_func_declr()
     } else {
         syntax_error(&lex_data, "; or { expected");
     }
+
+    if(stable_search(&symbol_table, symbol_data.id, NULL))
+        syntax_error(&lex_data, "Redefined identifier %s", symbol_data.id);
+
 
     stable_insert(&symbol_table, symbol_data.id, &symbol_data, false);
 }
