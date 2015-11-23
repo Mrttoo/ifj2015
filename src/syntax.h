@@ -14,6 +14,7 @@
 typedef struct syntax_data {
     char *id;
     stable_data_type_t dtype;
+    bool scope;
 } syntax_data_t;
 
 static inline void throw_syntax_error(int ec, lex_data_t *ld, char *format, ...)

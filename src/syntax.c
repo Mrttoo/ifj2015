@@ -55,6 +55,25 @@ void syntax_program()
     declr_list();
     if(!syntax_match(LEX_EOF))
         syntax_error("expected end of file");
+
+    // Check for mandatory program components
+    // 1. Every program has to have main function with prototype
+    // int main()
+    if(stable_search_global(&symbol_table, "main", &ptr_data)) {
+        if(ptr_data->type != STABLE_FUNCTION)
+            syntax_error_ec(IFJ_DEF_ERR, "Symbol 'main' is not a function");
+
+        if(!ptr_data->func.defined)
+            syntax_error_ec(IFJ_DEF_ERR, "Missing definition of function 'main'");
+
+        if(ptr_data->func.rtype != STABLE_INT)
+            syntax_error_ec(IFJ_DEF_ERR, "Function 'main' has wrong return type (should be int)");
+
+        if(ptr_data->func.nparam != 0)
+            syntax_error_ec(IFJ_DEF_ERR, "Function 'main' has invalid count of arguments (0 expected)");
+    } else {
+        syntax_error_ec(IFJ_DEF_ERR, "Undefined function 'main'");
+    }
 }
 
 // Rule: <declrList> -> <funcDeclr> <declrList> | <empty>
@@ -124,6 +143,7 @@ void syntax_func_declr()
                 if(!ptr_data->func.defined && symbol_data.func.defined) {
                     ptr_data->func.defined = true;
                     ptr_data->func.params = symbol_data.func.params;
+                    symbol_data.func.params = NULL;
                     return;
                 } else {
                     // We got second definition of same functions - throw an error
@@ -138,9 +158,9 @@ void syntax_func_declr()
         if(!insert) {
             free(symbol_data.id);
             symbol_data.id = NULL;
+            free(symbol_data.func.params);
+            symbol_data.func.params = NULL;
         }
-        free(symbol_data.func.params);
-        symbol_data.func.params = NULL;
     } else {
         fprintf(stderr, "%s: %d - We should never get here.", __func__, __LINE__);
     }
