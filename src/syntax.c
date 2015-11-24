@@ -12,6 +12,8 @@
 #define ENUM_TO_STR(x) lex_token_strings[x - 256]
 #define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, &lex_data, __VA_ARGS__);
 #define syntax_error_ec(ec, ...) throw_syntax_error(ec, &lex_data, __VA_ARGS__);
+#define stable_clean_data(x) stable_clean_data_struct(x, false);
+#define stable_clean_data_all(x) stable_clean_data_struct(x, true);
 
 /* Global variables */
 lex_data_t lex_data;        /* Data for lexical analyser */
@@ -51,6 +53,11 @@ bool syntax_match(lex_token_type_t predict_token)
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     if(current_token.type == predict_token) {
         if(current_token.type == LEX_IDENTIFIER) {
+            if(syntax_data.id != NULL) {
+                free(syntax_data.id);
+                syntax_data.id = NULL;
+            }
+
             syntax_data.id = ifj_strdup(current_token.val);
         }
 
@@ -107,7 +114,9 @@ void declr_list()
 // Rule <funcDeclr> -> <typeSpec> ID ( <params> ) ;
 void syntax_func_declr()
 {
+    bool clean_params = true;
     // Clean symbol data variable and set things we know so far
+    stable_data_t local_data;
     stable_clean_data(&symbol_data);
     symbol_data.func.defined = false;
     symbol_data.type = STABLE_FUNCTION;
@@ -122,7 +131,7 @@ void syntax_func_declr()
         syntax_error("identifier expected");
 
     // Now we got ID
-    symbol_data.id = syntax_data.id;
+    symbol_data.id = ifj_strdup(syntax_data.id);
 
     if(!syntax_match(LEX_LPAREN))
         syntax_error("( expected");
@@ -134,13 +143,23 @@ void syntax_func_declr()
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
 
     // Insert function declaration into global symbol table
-    if(!stable_search_global(&symbol_table, symbol_data.id, &ptr_data))
-        stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
+    if(!stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
+       stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
+       clean_params = false;
+    }
 
     if(current_token.type == LEX_SEMICOLON && syntax_match(LEX_SEMICOLON)) {
         symbol_data.func.defined = false;
     } else if(current_token.type == LEX_LBRACE) {
+        // TODO
+        stable_function_param_t *tmp = symbol_data.func.params;
+        local_data = symbol_data;
+        symbol_data.id = NULL;
+        symbol_data.func.params = NULL;
+        stable_clean_data(&symbol_data);
         syntax_compound_statement();
+        symbol_data = local_data;
+        symbol_data.func.params = tmp;
         symbol_data.func.defined = true;
     } else {
         syntax_error("; or { expected");
@@ -158,9 +177,6 @@ void syntax_func_declr()
                 // Function is not defined yet - add params array and set appropriate flag
                 if(!ptr_data->func.defined && symbol_data.func.defined) {
                     ptr_data->func.defined = true;
-                    ptr_data->func.params = symbol_data.func.params;
-                    symbol_data.func.params = NULL;
-                    return;
                 } else {
                     // We got second definition of same functions - throw an error
                     if(symbol_data.func.defined)
@@ -174,7 +190,7 @@ void syntax_func_declr()
         fprintf(stderr, "%s: %d - We should never get here.", __func__, __LINE__);
     }
 
-    stable_clean_data(&symbol_data);
+    stable_clean_data_struct(&symbol_data, clean_params);
 }
 
 // Rule <typeSpec> -> int | double | string
@@ -225,6 +241,7 @@ void syntax_params()
             if(syntax_match(LEX_COMMA))
                 gotComma = true; 
         }
+        stable_clean_data(&local_var);
     }
 
     if(gotComma) {

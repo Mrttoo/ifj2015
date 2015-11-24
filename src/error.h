@@ -1,6 +1,7 @@
 #ifndef __ERROR_H_INCLUDED
 #define __ERROR_H_INCLUDED
 /* Draft for error-related header file */
+#include <assert.h>
 
 enum ifj_error_codes {
     IFJ_OK                  = 0,  // Everything is ok

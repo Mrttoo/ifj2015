@@ -88,12 +88,18 @@ void stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, cha
     data->func.nparam++;
 }
 
-void stable_clean_data(stable_data_t *data)
+void stable_clean_data_struct(stable_data_t *data, bool params)
 {
     if(data == NULL)
         return;
 
     if(data->type == STABLE_FUNCTION) {
+        if(params) {
+            for(unsigned int i = 0; i < data->func.nparam; i++) {
+                free(data->func.params[i].id);
+                data->func.params[i].id = NULL;
+            }
+        }
         data->func.defined = false;
         data->func.nparam = 0;
         data->func.maxparam = 5;

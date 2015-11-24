@@ -131,7 +131,7 @@ void stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, cha
   *
   * @param data Pointer to data structure
 */
-void stable_clean_data(stable_data_t *data);
+void stable_clean_data_struct(stable_data_t *data, bool params);
 
 /**
   * @brief Searches for key in symbol table for current scope
