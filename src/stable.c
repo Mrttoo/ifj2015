@@ -17,6 +17,17 @@ void stable_init(stable_t *stable)
     stable_insert(stable, "@global", NULL, true);
 }
 
+bst_node_t *stable_get_global(stable_t *stable)
+{
+    if(stable->stack->size == 0 || stable->stack->items[0] == NULL || 
+       strcmp(stable->stack->items[0]->key, "@global") != 0) {
+        fprintf(stderr, "%s: Couldn't find @global symbol table on stack, maybe unitialized stack?\n", __func__);
+        exit(IFJ_INTERNAL_ERR);
+    }
+
+    return stable->stack->items[0];
+}
+
 void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope)
 {
     if(stable == NULL)
@@ -192,6 +203,7 @@ bool stable_compare_param_arrays(stable_data_t *a1, stable_data_t *a2)
 
     return true;
 }
+
 #ifdef IFJ_STABLE_DEBUG
 
 void dbg_bst_print(bst_node_t *node)

@@ -52,4 +52,13 @@ bst_node_t *bst_insert_node(bst_node_t *node, char *key, stable_data_t *data);
 */
 bst_node_t *bst_lookup_node(bst_node_t *node, char *key);
 
+/**
+  * @brief Executes function func for each node of BST node
+  *
+  * @param node Pointer to BST node
+  * @param func Pointer to function with prototype:
+  *        void function(bst_node_t *node);
+*/
+void bst_foreach_func(bst_node_t *node, void (*func)(bst_node_t *node));
+
 #endif

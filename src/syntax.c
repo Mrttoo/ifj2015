@@ -7,6 +7,7 @@
 #include "stable.h"
 #include "error.h"
 #include "util.h"
+#include "bst.h"
 
 #define ENUM_TO_STR(x) lex_token_strings[x - 256]
 #define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, &lex_data, __VA_ARGS__);
@@ -33,6 +34,17 @@ char *lex_token_strings[] = {
     "LEX_RPAREN",       "LEX_LBRACE",    "LEX_RBRACE",       "LEX_INPUT",
     "LEX_OUTPUT",       "LEX_EOF",
 };
+
+void syntax_check_func_def(bst_node_t *node)
+{
+    if(node == NULL)
+        return;
+
+    if(node->data.type == STABLE_FUNCTION) {
+        if(!node->data.func.defined)
+            syntax_error_ec(IFJ_DEF_ERR, "Missing definition of function '%s'", node->data.id);
+    }
+}
 
 bool syntax_match(lex_token_type_t predict_token)
 {
@@ -74,6 +86,11 @@ void syntax_program()
     } else {
         syntax_error_ec(IFJ_DEF_ERR, "Undefined function 'main'");
     }
+
+    // 2. Every function declaration must have appropriate definition
+    bst_node_t *st_global = stable_get_global(&symbol_table);
+
+    bst_foreach_func(st_global, syntax_check_func_def);
 }
 
 // Rule: <declrList> -> <funcDeclr> <declrList> | <empty>
@@ -287,6 +304,7 @@ bool syntax_var_declr(bool mandatory_init)
 
     if(current_token.type == LEX_KW_AUTO) {
         syntax_match(LEX_KW_AUTO);
+        // TODO: Should throw IFJ_TYPE_DETECT_ERR
         syntax_var_declr_item(true);
     } else if(syntax_type_spec()) {
         syntax_var_declr_item(mandatory_init);

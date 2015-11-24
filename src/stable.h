@@ -5,6 +5,7 @@
 
 /* Forward declarations to remove circular dependencies */
 typedef struct stack stack_t;
+typedef struct bst_node bst_node_t;
 
 typedef struct {
     stack_t *stack;
@@ -80,6 +81,17 @@ typedef struct stable_data {
   * @param stable Valid pointer to symbol table
 */
 void stable_init(stable_t *stable);
+
+/**
+  * @brief Returns pointer to global symbol table BST
+  * @details Symbol table must have @global BST as the first item
+  *          otherwise function throws internal error
+  * @see stable_init()
+  *
+  * @param stable Valid pointer to symbol table
+  * @return Pointer to global symbol table BST
+*/
+bst_node_t *stable_get_global(stable_t *stable);
 
 /**
   * @brief Inserts data node with specified key into symbol table

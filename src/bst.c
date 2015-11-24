@@ -82,6 +82,16 @@ bst_node_t *bst_lookup_node(bst_node_t *node, char *key)
     }
 }
 
+void bst_foreach_func(bst_node_t *node, void (*func)(bst_node_t *node))
+{
+    if(node == NULL || func == NULL)
+        return;
+
+    bst_foreach_func(node->left, func);
+    func(node);
+    bst_foreach_func(node->right, func);
+}
+
 // Tests
 #ifdef IFJ_BST_DEBUG
 
