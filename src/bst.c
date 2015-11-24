@@ -24,9 +24,20 @@ bst_node_t *bst_new_node(char *key, stable_data_t *data)
     n->left = NULL;
     n->right = NULL;
     n->key = ifj_strdup(key);
-    if(data != NULL)
+    if(data != NULL) {
         memcpy(&(n->data), data, sizeof *data);
-    else
+        n->data.id = n->key;
+        // If a symbol is a function, copy its parameters as well
+        if(data->type == STABLE_FUNCTION && data->func.nparam > 0) {
+            n->data.func.params = malloc(sizeof *(n->data.func.params) * data->func.nparam);
+            if(n->data.func.params == NULL) {
+                fprintf(stderr, "Unable to allocate memory for function params");
+                exit(IFJ_INTERNAL_ERR);
+            } else {
+                memcpy(n->data.func.params, data->func.params, sizeof *(data->func.params) * data->func.nparam);
+            }
+        }
+    } else
         n->data.type = STABLE_UNDEFINED;
 
     return n;

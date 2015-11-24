@@ -30,6 +30,13 @@ static inline void throw_syntax_error(int ec, lex_data_t *ld, char *format, ...)
     exit(ec);
 }
 
+/**
+  * @brief Checks if given node is a symbol of defined function
+  *
+  * @param node Pointer to BST symbol node
+*/
+void syntax_check_func_def(bst_node_t *node);
+
 /* Functions for recursive descent algorithm */
 void syntax_program();
 void declr_list();
@@ -41,7 +48,7 @@ bool syntax_statement();
 void syntax_compound_statement();
 void syntax_var_declr_list();
 bool syntax_var_declr(bool mandatory_init);
-void syntax_var_declr_item(bool mandatory_init);
+void syntax_var_declr_item(bool mandatory_init, bool is_auto);
 void syntax_stmt_list();
 void syntax_expression();
 void syntax_if_statement();

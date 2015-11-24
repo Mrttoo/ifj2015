@@ -40,7 +40,7 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_sc
         stack_push_node(stable->stack, n);
     } else {
         n = stack_get_top_node(stable->stack);
-        if(n == NULL) {
+        if(n == NULL || (n->data.id != NULL && strcmp(n->data.id, "@global") == 0)) {
             stable_insert(stable, key, data, true);
         } else {
             stable->stack->items[stable->stack->free_idx - 1] = bst_insert_node(n, key, data);
@@ -79,11 +79,12 @@ void stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, cha
             exit(IFJ_INTERNAL_ERR);
         } else {
             data->func.maxparam += 5;
+            data->func.params = tmp;
         }
     }
 
     data->func.params[data->func.nparam].dtype = dtype;
-    data->func.params[data->func.nparam].id = id;
+    data->func.params[data->func.nparam].id = ifj_strdup(id);
     data->func.nparam++;
 }
 
@@ -96,11 +97,14 @@ void stable_clean_data(stable_data_t *data)
         data->func.defined = false;
         data->func.nparam = 0;
         data->func.maxparam = 5;
+        free(data->func.params);
         data->func.params = NULL;
     } else if(data->type == STABLE_VARIABLE) {
         data->var.initialized = false;
     }
 
+    free(data->id);
+    data->id = NULL;
     data->type = STABLE_UNDEFINED;
 }
 
@@ -166,13 +170,20 @@ void stable_destroy_data(stable_data_t *data)
     if(data == NULL)
         return;
 
+    printf("[DESTROYING] %s\n", data->id);
+
     if(data->type == STABLE_FUNCTION) {
+        for(unsigned int i = 0; i < data->func.nparam; i++) {
+            free(data->func.params[i].id);
+            data->func.params[i].id = NULL;
+        }
+
         free(data->func.params);
         data->func.params = NULL;
     }
 
-    free(data->id);
-    data->id = NULL;
+    //free(data->id);
+    //data->id = NULL;
 }
 
 bool stable_compare_param_arrays(stable_data_t *a1, stable_data_t *a2)

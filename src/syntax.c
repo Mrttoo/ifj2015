@@ -64,6 +64,8 @@ bool syntax_match(lex_token_type_t predict_token)
 // Rule: <program> -> <declrList> EOF
 void syntax_program()
 {
+    symbol_data.id = NULL;
+
     declr_list();
     if(!syntax_match(LEX_EOF))
         syntax_error("expected end of file");
@@ -105,7 +107,6 @@ void declr_list()
 // Rule <funcDeclr> -> <typeSpec> ID ( <params> ) ;
 void syntax_func_declr()
 {
-    bool insert = false;
     // Clean symbol data variable and set things we know so far
     stable_clean_data(&symbol_data);
     symbol_data.func.defined = false;
@@ -133,10 +134,8 @@ void syntax_func_declr()
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
 
     // Insert function declaration into global symbol table
-    if(!stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
-        insert = true;
+    if(!stable_search_global(&symbol_table, symbol_data.id, &ptr_data))
         stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
-    }
 
     if(current_token.type == LEX_SEMICOLON && syntax_match(LEX_SEMICOLON)) {
         symbol_data.func.defined = false;
@@ -171,16 +170,11 @@ void syntax_func_declr()
                 syntax_error_ec(IFJ_DEF_ERR, "Function '%s' redefined with wrong parameters and/or return type", symbol_data.id);
             }
         }
-
-        if(!insert) {
-            free(symbol_data.id);
-            symbol_data.id = NULL;
-            free(symbol_data.func.params);
-            symbol_data.func.params = NULL;
-        }
     } else {
         fprintf(stderr, "%s: %d - We should never get here.", __func__, __LINE__);
     }
+
+    stable_clean_data(&symbol_data);
 }
 
 // Rule <typeSpec> -> int | double | string
@@ -212,8 +206,17 @@ bool syntax_type_spec()
 void syntax_params()
 {
     bool gotComma = false;
+    bool new_scope = true;
+    stable_data_t local_var = { .type = STABLE_UNDEFINED };
+    stable_clean_data(&local_var);
+    local_var.type = STABLE_VARIABLE;
 
     while(syntax_param_item()) {
+        local_var.var.dtype = syntax_data.dtype;
+        local_var.id = syntax_data.id;
+        stable_insert(&symbol_table, syntax_data.id, &local_var, new_scope);
+        syntax_data.id = NULL;
+        new_scope = false;
         gotComma = false;
         if(current_token.type != LEX_COMMA &&
            current_token.type != LEX_RPAREN) {
@@ -239,7 +242,6 @@ bool syntax_param_item()
         syntax_error("expected identifier");
 
     stable_insert_func_param(&symbol_data, syntax_data.dtype, syntax_data.id);
-    syntax_data.id = NULL;
 
     return true;
 }
@@ -305,9 +307,9 @@ bool syntax_var_declr(bool mandatory_init)
     if(current_token.type == LEX_KW_AUTO) {
         syntax_match(LEX_KW_AUTO);
         // TODO: Should throw IFJ_TYPE_DETECT_ERR
-        syntax_var_declr_item(true);
+        syntax_var_declr_item(true, true);
     } else if(syntax_type_spec()) {
-        syntax_var_declr_item(mandatory_init);
+        syntax_var_declr_item(mandatory_init, false);
     } else {
         rc = false;
     }
@@ -315,7 +317,7 @@ bool syntax_var_declr(bool mandatory_init)
     return rc;
 }
 
-void syntax_var_declr_item(bool mandatory_init)
+void syntax_var_declr_item(bool mandatory_init, bool is_auto)
 {
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("identifier expected");
@@ -325,7 +327,11 @@ void syntax_var_declr_item(bool mandatory_init)
         syntax_match(LEX_ASSIGNMENT);
         syntax_expression();
     } else if(mandatory_init) {
-        syntax_error("initialization expected");
+        if(is_auto) {
+            syntax_error_ec(IFJ_TYPE_DETECT_ERR, "missing initialization for 'auto' variable");
+        } else {
+            syntax_error("initialization expected");
+        }
     }
 }
 
