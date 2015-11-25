@@ -126,8 +126,10 @@ void stable_insert_global(stable_t *stable, char *key, stable_data_t *data);
   * @param data Pointer to data structure
   * @param dtype Data type of function parameter
   * @param id Identifier of function parameter (only assigns pointer, doesn't copy content)
+  *
+  * @return False when passed ID is already in params array or when stable/data is NULL, true otherwise
 */
-void stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, char *id);
+bool stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, char *id);
 
 /**
   * @brief Sets some values of data structure to their defaults
@@ -148,6 +150,19 @@ void stable_clean_data_struct(stable_data_t *data, bool params);
   * @return True if node with specified key is found, false otherwise.
 */
 bool stable_search_scope(stable_t *stable, char *key, stable_data_t **result);
+
+/**
+  * @brief Searches for key in symbol table for all non-global scopes
+  *
+  * @param stable Pointer to symbol table
+  * @param key Searched key
+  * @param result Pointer to data structure pointer. Can be NULL - in this case
+  *        function only returns true/false without assigning found node
+  *        to this pointer
+  *
+  * @return True if node with specified key is found, false otherwise.
+*/
+bool stable_search_scopes(stable_t *stable, char *key, stable_data_t **result);
 
 /**
   * @brief Searches for key in global symbol table

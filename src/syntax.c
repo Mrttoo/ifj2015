@@ -50,6 +50,13 @@ void syntax_check_func_def(bst_node_t *node)
 
 void syntax_insert_builtins()
 {
+    /* Functions:
+     *  int length(string s);
+     *  string substr(string s, int i, int n);
+     *  string concat(string s1, string s2);
+     *  int find(string s, string search);
+     *  string sort(string s);
+    */
     stable_function_param_t params[][5] = {
         {
             { .dtype = STABLE_STRING, .id = "s" },
@@ -92,8 +99,13 @@ void syntax_insert_builtins()
         func[i].func.nparam = 0;
         func[i].func.params = NULL;
 
-        for(unsigned int j = 0; params[i][j].id != NULL; j++)
-            stable_insert_func_param(&(func[i]), params[i][j].dtype, params[i][j].id);
+        for(unsigned int j = 0; params[i][j].id != NULL; j++) {
+            if(!stable_insert_func_param(&(func[i]), params[i][j].dtype, params[i][j].id)) {
+                fprintf(stderr, "%s: Duplicate parameter '%s' of built-in function '%s'\n",
+                        __func__, params[i][j].id, func[i].id);
+                exit(IFJ_INTERNAL_ERR);
+            }
+        }
 
         stable_insert_global(&symbol_table, func[i].id, &func[i]);
         free(func[i].func.params);
@@ -320,7 +332,9 @@ bool syntax_param_item()
         syntax_error("expected identifier");
 
     // Add function parameter pair (type and ID) into symbol_data params array
-    stable_insert_func_param(&symbol_data, syntax_data.dtype, syntax_data.id);
+    if(!stable_insert_func_param(&symbol_data, syntax_data.dtype, syntax_data.id)) {
+        syntax_error("duplicate function parameter '%s'", syntax_data.id);
+    }
 
     return true;
 }
@@ -414,7 +428,8 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
 
     symbol_data.id = ifj_strdup(syntax_data.id);
 
-    if(stable_search_all(&symbol_table, symbol_data.id, &ptr_data)) {
+    if(stable_search_scope(&symbol_table, symbol_data.id, &ptr_data) ||
+       stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
         if(ptr_data->type == STABLE_FUNCTION) {
             syntax_error("'%s' is a function", ptr_data->id);
         } else {

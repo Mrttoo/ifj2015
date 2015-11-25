@@ -36,6 +36,11 @@ static inline void throw_syntax_error(int ec, lex_data_t *ld, char *format, ...)
 */
 void syntax_check_func_def(bst_node_t *node);
 
+/**
+  * @brief Adds built-in functions into global symbol table
+*/
+void syntax_insert_builtins();
+
 /* Functions for recursive descent algorithm */
 void syntax_program();
 void declr_list();

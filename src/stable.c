@@ -67,8 +67,11 @@ void stable_insert_global(stable_t *stable, char *key, stable_data_t *data)
     stable->stack->items[0] = bst_insert_node(stable->stack->items[0], key, data);
 }
 
-void stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, char *id)
+bool stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, char *id)
 {
+    if(data == NULL || id == NULL)
+        return false;
+
     if(data->func.params == NULL) {
         data->func.params = malloc(sizeof *(data->func.params) * 5);
         if(data->func.params == NULL) {
@@ -90,9 +93,16 @@ void stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, cha
         }
     }
 
+    for(unsigned int i = 0; i < data->func.nparam; i++) {
+        if(strcmp(data->func.params[i].id, id) == 0)
+            return false;
+    }
+
     data->func.params[data->func.nparam].dtype = dtype;
     data->func.params[data->func.nparam].id = ifj_strdup(id);
     data->func.nparam++;
+
+    return true;
 }
 
 void stable_clean_data_struct(stable_data_t *data, bool params)
@@ -128,6 +138,23 @@ bool stable_search_scope(stable_t *stable, char *key, stable_data_t **result)
 
     bst_node_t *node = stack_get_top_node(stable->stack);
     node = bst_lookup_node(node, key);
+
+    // Skip first stack item, which is global symbol table
+    if(node != NULL) {
+        if(result != NULL)
+             *result = &(node->data);
+
+        return true;
+    }
+
+    return false;
+}
+bool stable_search_scopes(stable_t *stable, char *key, stable_data_t **result)
+{
+    if(stable == NULL || key == NULL)
+        return false;
+
+    bst_node_t *node = NULL;
 
     // Skip first stack item, which is global symbol table
     for(int i = stable->stack->free_idx - 1; i > 0; i--) {
@@ -169,7 +196,7 @@ bool stable_search_global(stable_t *stable, char *key, stable_data_t **result)
 
 bool stable_search_all(stable_t *stable, char *key, stable_data_t **result)
 {
-    return (stable_search_global(stable, key, result) || stable_search_scope(stable, key, result));
+    return (stable_search_global(stable, key, result) || stable_search_scopes(stable, key, result));
 }
 
 void stable_destroy_scope(stable_t *stable)
