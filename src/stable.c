@@ -75,10 +75,12 @@ void stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, cha
             fprintf(stderr, "%s: Unable to allocate memory for function parameters array\n", __func__);
             exit(IFJ_INTERNAL_ERR);
         }
+
+        data->func.maxparam = 5;
     }
 
     if(data->func.nparam + 1 >= data->func.maxparam) {
-        stable_function_param_t *tmp = realloc(data->func.params, sizeof *tmp + data->func.maxparam + 5);
+        stable_function_param_t *tmp = realloc(data->func.params, sizeof *tmp * (data->func.maxparam + 5));
         if(tmp == NULL) {
             fprintf(stderr, "%s: Unable to expand funtion parameters array\n", __func__);
             exit(IFJ_INTERNAL_ERR);
