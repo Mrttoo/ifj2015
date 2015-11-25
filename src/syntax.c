@@ -48,6 +48,59 @@ void syntax_check_func_def(bst_node_t *node)
     }
 }
 
+void syntax_insert_builtins()
+{
+    stable_function_param_t params[][5] = {
+        {
+            { .dtype = STABLE_STRING, .id = "s" },
+            { .id = NULL }
+        },
+        {
+            { .dtype = STABLE_STRING, .id = "s" },
+            { .dtype = STABLE_INT,    .id = "i" },
+            { .dtype = STABLE_INT,    .id = "n" },
+            { .id = NULL }
+        },
+        {
+            { .dtype = STABLE_STRING, .id = "s1" },
+            { .dtype = STABLE_STRING, .id = "s2" },
+            { .id = NULL }
+        },
+        {
+            { .dtype = STABLE_STRING, .id = "s" },
+            { .dtype = STABLE_STRING, .id = "search" },
+            { .id = NULL }
+        },
+        {
+            { .dtype = STABLE_STRING, .id = "s" },
+            { .id = NULL }
+        }
+    };
+
+    stable_data_t func[] = {
+        { .id = "length", .func.rtype = STABLE_INT },
+        { .id = "substr", .func.rtype = STABLE_STRING },
+        { .id = "concat", .func.rtype = STABLE_STRING },
+        { .id = "find",   .func.rtype = STABLE_INT },
+        { .id = "sort",   .func.rtype = STABLE_STRING },
+        { .id = NULL }
+    };
+
+    for(unsigned int i = 0; func[i].id != NULL; i++) {
+        func[i].type = STABLE_FUNCTION;
+        func[i].func.defined = true;
+        func[i].func.nparam = 0;
+        func[i].func.params = NULL;
+
+        for(unsigned int j = 0; params[i][j].id != NULL; j++)
+            stable_insert_func_param(&(func[i]), params[i][j].dtype, params[i][j].id);
+
+        stable_insert_global(&symbol_table, func[i].id, &func[i]);
+        free(func[i].func.params);
+        func[i].func.params = NULL;
+    }
+}
+
 bool syntax_match(lex_token_type_t predict_token)
 {
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
@@ -71,6 +124,7 @@ bool syntax_match(lex_token_type_t predict_token)
 // Rule: <program> -> <declrList> EOF
 void syntax_program()
 {
+    syntax_insert_builtins();
     symbol_data.id = NULL;
 
     declr_list();
@@ -265,6 +319,7 @@ bool syntax_param_item()
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("expected identifier");
 
+    // Add function parameter pair (type and ID) into symbol_data params array
     stable_insert_func_param(&symbol_data, syntax_data.dtype, syntax_data.id);
 
     return true;
