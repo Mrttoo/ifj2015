@@ -82,6 +82,9 @@ typedef struct stable_data {
 */
 void stable_init(stable_t *stable);
 
+void stable_new_scope(stable_t *stable);
+
+
 /**
   * @brief Returns pointer to global symbol table BST
   * @details Symbol table must have @global BST as the first item
@@ -159,6 +162,11 @@ bool stable_search_scope(stable_t *stable, char *key, stable_data_t **result);
 */
 
 bool stable_search_global(stable_t *stable, char *key, stable_data_t **result);
+
+
+bool stable_search_all(stable_t *stable, char *key, stable_data_t **result);
+void stable_destroy_scope(stable_t *stable);
+
 /**
   * @brief Destroys symbol table
   *

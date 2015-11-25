@@ -98,8 +98,10 @@ void syntax_program()
 
     // 2. Every function declaration must have appropriate definition
     bst_node_t *st_global = stable_get_global(&symbol_table);
-
     bst_foreach_func(st_global, syntax_check_func_def);
+
+    free(syntax_data.id);
+    syntax_data.id = NULL;
 }
 
 // Rule: <declrList> -> <funcDeclr> <declrList> | <empty>
@@ -120,6 +122,7 @@ void syntax_func_declr()
     stable_clean_data(&symbol_data);
     symbol_data.func.defined = false;
     symbol_data.type = STABLE_FUNCTION;
+    stable_new_scope(&symbol_table);
 
     if(!syntax_type_spec())
         syntax_error("type expected");
@@ -144,22 +147,36 @@ void syntax_func_declr()
 
     // Insert function declaration into global symbol table
     if(!stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
-       stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
-       clean_params = false;
+        stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
+        clean_params = false;
     }
 
     if(current_token.type == LEX_SEMICOLON && syntax_match(LEX_SEMICOLON)) {
         symbol_data.func.defined = false;
     } else if(current_token.type == LEX_LBRACE) {
-        // TODO
-        stable_function_param_t *tmp = symbol_data.func.params;
+        // We got function definition - insert its parameters
+        // into current scope, so we can use them in following
+        // compound statement
+        stable_data_t func_param = { .type = STABLE_VARIABLE };
+        for(unsigned int i = 0; i < symbol_data.func.nparam; i++) {
+            func_param.id = symbol_data.func.params[i].id;
+            func_param.var.dtype = symbol_data.func.params[i].dtype;
+
+            stable_insert(&symbol_table, func_param.id, &func_param, false);
+        }
+
+        // Save current function data
         local_data = symbol_data;
+        // Clean global variable
         symbol_data.id = NULL;
         symbol_data.func.params = NULL;
         stable_clean_data(&symbol_data);
-        syntax_compound_statement();
+
+        // Check following compound statement
+        syntax_compound_statement(true);
+
+        // Restore global variable and set definition flag to true
         symbol_data = local_data;
-        symbol_data.func.params = tmp;
         symbol_data.func.defined = true;
     } else {
         syntax_error("; or { expected");
@@ -187,7 +204,7 @@ void syntax_func_declr()
             }
         }
     } else {
-        fprintf(stderr, "%s: %d - We should never get here.", __func__, __LINE__);
+        fprintf(stderr, "[ERROR] %s: %d - Function was not found in symbol table after insert.", __func__, __LINE__);
     }
 
     stable_clean_data_struct(&symbol_data, clean_params);
@@ -222,17 +239,8 @@ bool syntax_type_spec()
 void syntax_params()
 {
     bool gotComma = false;
-    bool new_scope = true;
-    stable_data_t local_var = { .type = STABLE_UNDEFINED };
-    stable_clean_data(&local_var);
-    local_var.type = STABLE_VARIABLE;
 
     while(syntax_param_item()) {
-        local_var.var.dtype = syntax_data.dtype;
-        local_var.id = syntax_data.id;
-        stable_insert(&symbol_table, syntax_data.id, &local_var, new_scope);
-        syntax_data.id = NULL;
-        new_scope = false;
         gotComma = false;
         if(current_token.type != LEX_COMMA &&
            current_token.type != LEX_RPAREN) {
@@ -241,7 +249,6 @@ void syntax_params()
             if(syntax_match(LEX_COMMA))
                 gotComma = true; 
         }
-        stable_clean_data(&local_var);
     }
 
     if(gotComma) {
@@ -266,15 +273,18 @@ bool syntax_param_item()
 bool syntax_statement()
 {
     bool rc = true;
-
+    // TODO: Add var declaration
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     // compoundStmt
     if(current_token.type == LEX_LBRACE) {
-        syntax_compound_statement();
+        stable_new_scope(&symbol_table);
+        syntax_compound_statement(true);
     // ifStmt
     } else if(syntax_match(LEX_KW_IF)) {
+        stable_new_scope(&symbol_table);
         syntax_if_statement();
     } else if(syntax_match(LEX_KW_FOR)) {
+        stable_new_scope(&symbol_table);
         syntax_for_statement();
     } else if(syntax_match(LEX_KW_RETURN)) {
         syntax_return_statement();
@@ -294,7 +304,7 @@ bool syntax_statement()
     return rc;
 }
 
-void syntax_compound_statement()
+void syntax_compound_statement(bool del_scope)
 {
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     if(!syntax_match(LEX_LBRACE))
@@ -305,6 +315,9 @@ void syntax_compound_statement()
 
     if(!syntax_match(LEX_RBRACE))
         syntax_error("} expected");
+
+    if(del_scope)
+        stable_destroy_scope(&symbol_table);
 }
 
 void syntax_var_declr_list()
@@ -315,6 +328,8 @@ void syntax_var_declr_list()
 
         syntax_var_declr_list();
     }
+
+    stable_clean_data(&symbol_data);
 }
 
 bool syntax_var_declr(bool mandatory_init)
@@ -323,7 +338,6 @@ bool syntax_var_declr(bool mandatory_init)
 
     if(current_token.type == LEX_KW_AUTO) {
         syntax_match(LEX_KW_AUTO);
-        // TODO: Should throw IFJ_TYPE_DETECT_ERR
         syntax_var_declr_item(true, true);
     } else if(syntax_type_spec()) {
         syntax_var_declr_item(mandatory_init, false);
@@ -336,13 +350,29 @@ bool syntax_var_declr(bool mandatory_init)
 
 void syntax_var_declr_item(bool mandatory_init, bool is_auto)
 {
+    stable_clean_data(&symbol_data);
+    symbol_data.type = STABLE_VARIABLE;
+    symbol_data.var.initialized = false;
+
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("identifier expected");
+
+    symbol_data.id = ifj_strdup(syntax_data.id);
+
+    if(stable_search_all(&symbol_table, symbol_data.id, &ptr_data)) {
+        if(ptr_data->type == STABLE_FUNCTION) {
+            syntax_error("'%s' is a function", ptr_data->id);
+        } else {
+            syntax_error("redeclared variable '%s'", symbol_data.id);
+        }
+    }
 
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     if(current_token.type == LEX_ASSIGNMENT) {
         syntax_match(LEX_ASSIGNMENT);
+        // TODO: Waiting for LR parser
         syntax_expression();
+        symbol_data.var.initialized = true;
     } else if(mandatory_init) {
         if(is_auto) {
             syntax_error_ec(IFJ_TYPE_DETECT_ERR, "missing initialization for 'auto' variable");
@@ -350,6 +380,8 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
             syntax_error("initialization expected");
         }
     }
+
+    stable_insert(&symbol_table, symbol_data.id, &symbol_data, false);
 }
 
 void syntax_stmt_list()
@@ -359,7 +391,7 @@ void syntax_stmt_list()
     }
 }
 
-// TODO: !!!!
+// TODO: Waiting for LR parser
 void syntax_expression()
 {
     syntax_match(LEX_IDENTIFIER);
@@ -378,12 +410,12 @@ void syntax_if_statement()
     if(!syntax_match(LEX_RPAREN))
         syntax_error(") expected");
 
-    syntax_compound_statement();
+    syntax_compound_statement(false);
 
     if(!syntax_match(LEX_KW_ELSE))
         syntax_error("'else' expected");
 
-    syntax_compound_statement();
+    syntax_compound_statement(true);
 }
 
 void syntax_for_statement()
@@ -406,13 +438,19 @@ void syntax_for_statement()
     if(!syntax_match(LEX_RPAREN))
         syntax_error(") expected");
 
-    syntax_compound_statement();
+    syntax_compound_statement(true);
 }
 
 void syntax_assign_statement()
 {
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("identifier expected");
+
+    if(!stable_search_all(&symbol_table, syntax_data.id, &ptr_data)) {
+        syntax_error("undeclared variable '%s'", syntax_data.id);
+    } else if(ptr_data->type != STABLE_VARIABLE) {
+        syntax_error("'%s' is not a variable", syntax_data.id);
+    }
 
     if(!syntax_match(LEX_ASSIGNMENT))
         syntax_error("= expected");

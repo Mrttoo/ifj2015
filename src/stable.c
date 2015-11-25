@@ -28,6 +28,11 @@ bst_node_t *stable_get_global(stable_t *stable)
     return stable->stack->items[0];
 }
 
+void stable_new_scope(stable_t *stable)
+{
+    stable_insert(stable, "@scope", NULL, true);
+}
+
 void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope)
 {
     if(stable == NULL)
@@ -119,17 +124,21 @@ bool stable_search_scope(stable_t *stable, char *key, stable_data_t **result)
     if(stable == NULL || key == NULL)
         return false;
 
-    bool rc = false;
     bst_node_t *node = stack_get_top_node(stable->stack);
     node = bst_lookup_node(node, key);
 
-    if(node != NULL) {
-        rc = true;
-        if(result != NULL)
-            *result = &(node->data);
+    // Skip first stack item, which is global symbol table
+    for(int i = stable->stack->free_idx - 1; i > 0; i--) {
+        node = bst_lookup_node(stable->stack->items[i], key);
+        if(node != NULL) {
+            if(result != NULL)
+                *result = &(node->data);
+
+            return true;
+        }
     }
 
-    return rc;
+    return false;
 }
 
 bool stable_search_global(stable_t *stable, char *key, stable_data_t **result)
@@ -156,6 +165,23 @@ bool stable_search_global(stable_t *stable, char *key, stable_data_t **result)
     return rc;
 }
 
+bool stable_search_all(stable_t *stable, char *key, stable_data_t **result)
+{
+    return (stable_search_global(stable, key, result) || stable_search_scope(stable, key, result));
+}
+
+void stable_destroy_scope(stable_t *stable)
+{
+    if(stable == NULL)
+        return;
+
+    bst_node_t *node = stack_pop_node(stable->stack);
+
+    if(node != NULL) {
+        bst_destroy(node);
+    }
+}
+
 void stable_destroy(stable_t *stable)
 {
     if(stable == NULL)
@@ -176,7 +202,7 @@ void stable_destroy_data(stable_data_t *data)
     if(data == NULL)
         return;
 
-    printf("[DESTROYING] %s\n", data->id);
+    printf("[DESTROYING] %s (%s)\n", data->id, (data->type == STABLE_FUNCTION) ? "function" : "variable");
 
     if(data->type == STABLE_FUNCTION) {
         for(unsigned int i = 0; i < data->func.nparam; i++) {

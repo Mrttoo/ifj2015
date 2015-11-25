@@ -38,9 +38,10 @@ bst_node_t *bst_new_node(char *key, stable_data_t *data)
                 memcpy(n->data.func.params, data->func.params, sizeof *(data->func.params) * data->func.nparam);
             }
         }
-
-    } else
+    } else {
         n->data.type = STABLE_UNDEFINED;
+        n->data.id = n->key;
+    }
 
     return n;
 }
