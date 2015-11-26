@@ -1,5 +1,5 @@
 /*Po pouziti funkcie sort treba uvolnit pamat vrateneho prvku*/
-
+//#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "util.h"
