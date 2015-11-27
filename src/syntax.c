@@ -57,7 +57,7 @@ void syntax_insert_builtins()
      *  int find(string s, string search);
      *  string sort(string s);
     */
-    stable_function_param_t params[][5] = {
+    stable_function_param_t params[][4] = {
         {
             { .dtype = STABLE_STRING, .id = "s" },
             { .id = NULL }
@@ -551,6 +551,7 @@ void syntax_call_params(bool require_param)
     }
 }
 
+// TODO: Can be an expression
 bool syntax_call_param()
 {
     switch(current_token.type) {
@@ -585,6 +586,12 @@ void syntax_cin_statement()
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("identifier expected");
 
+    if(!stable_search_scopes(&symbol_table, syntax_data.id, &ptr_data)) {
+        syntax_error("undefined variable '%s'", syntax_data.id);
+    } else if(ptr_data->type != STABLE_VARIABLE) {
+        syntax_error("symbol '%s' is not a variable", syntax_data.id);
+    }
+
     syntax_cin_args();
 
     if(!syntax_match(LEX_SEMICOLON))
@@ -597,6 +604,12 @@ void syntax_cin_args()
         syntax_match(LEX_INPUT);
         if(!syntax_match(LEX_IDENTIFIER))
             syntax_error("identifier expected");
+
+        if(!stable_search_scopes(&symbol_table, syntax_data.id, &ptr_data)) {
+            syntax_error("undefined variable '%s'", syntax_data.id);
+        } else if(ptr_data->type != STABLE_VARIABLE) {
+            syntax_error("symbol '%s' is not a variable", syntax_data.id);
+        }
 
         if(current_token.type != LEX_SEMICOLON)
             syntax_cin_args();
