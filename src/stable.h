@@ -82,8 +82,13 @@ typedef struct stable_data {
 */
 void stable_init(stable_t *stable);
 
+/**
+  * @brief Initializes new scope on top of symbol table
+  *        with first item @scope
+  *
+  * @param stable Pointer to symbol table
+*/
 void stable_new_scope(stable_t *stable);
-
 
 /**
   * @brief Returns pointer to global symbol table BST
@@ -178,8 +183,24 @@ bool stable_search_scopes(stable_t *stable, char *key, stable_data_t **result);
 
 bool stable_search_global(stable_t *stable, char *key, stable_data_t **result);
 
-
+/**
+  * @brief Searches for key in a whole symbol table (global and local)
+  *
+  * @param stable Pointer to symbol table
+  * @param key Searched key
+  * @param result Pointer to data structure pointer. Can be NULL - in this case
+  *        function only returns true/false without assigning found node
+  *        to this pointer
+  *
+  * @return True if node with specified key is found, false otherwise.
+*/
 bool stable_search_all(stable_t *stable, char *key, stable_data_t **result);
+
+/**
+  * @brief Destroys the most recent scope (on top of a symbol table)
+  *
+  * @param Pointer to symbol table
+*/
 void stable_destroy_scope(stable_t *stable);
 
 /**
@@ -198,6 +219,15 @@ void stable_destroy(stable_t *stable);
 */
 void stable_destroy_data(stable_data_t *data);
 
-
+/**
+  * @brief Compares function parameters saved in two stable_data_t structures
+  * @detail Function compares both values - data types and identifiers
+  *
+  * @param a1 Pointer to first symbol table data structure
+  * @param a2 Pointer to second symmbol table data structure
+  * @return True when both data structures have identic function parameter arrays,
+  *         false otherwise
+*/
 bool stable_compare_param_arrays(stable_data_t *a1, stable_data_t *a2);
+
 #endif
