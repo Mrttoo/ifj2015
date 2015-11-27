@@ -568,8 +568,10 @@ bool syntax_call_param()
 }
 void syntax_return_statement()
 {
-    if(current_token.type != LEX_SEMICOLON)
-        syntax_expression();
+    if(current_token.type == LEX_SEMICOLON)
+        syntax_error("expression expected");
+
+    syntax_expression();
 
     if(!syntax_match(LEX_SEMICOLON))
         syntax_error("; expected");
