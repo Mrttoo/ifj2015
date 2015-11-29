@@ -48,5 +48,8 @@ stable: stable.c stable.h stack.o bst.o util.o
 syntax: syntax.c syntax.h error.h lex.o stable.o stack.o bst.o util.o
 	${CC} ${CFLAGS} -DIFJ_SYNTAX_DEBUG $^ -o $@
 
+intfuncs: interpret_funcs.c interpret_funcs.h syntax.h error.h
+	${CC} ${CFLAGS} -DIFJ_INTERPRET_FUNCS_DEBUG $^ -o $@
+
 clean:
 	${RM} ${EXEC} *.o
