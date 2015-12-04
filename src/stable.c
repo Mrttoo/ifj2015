@@ -32,9 +32,11 @@ void stable_init(stable_t *stable)
     }
 
     s_it->node = NULL;
+    s_it->next = NULL;
     it->item_list.first = s_it;
     it->item_list.last = s_it;
     it->item_list.active = s_it;
+    it->next = NULL;
 
     stable->first = stable->last = stable->active = it;
 }
@@ -97,6 +99,7 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
         }
 
         it->node = n;
+        it->next = NULL;
 
         // We have empty list
         if(stable->active->item_list.first == NULL) {

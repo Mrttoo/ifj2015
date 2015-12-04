@@ -645,7 +645,15 @@ void syntax_cout_args()
 }
 
 #ifdef IFJ_SYNTAX_DEBUG
+void dbg_syntax_print_bst(bst_node_t *node)
+{
+    if(node == NULL)
+        return;
 
+    dbg_syntax_print_bst(node->left);
+    printf("%s\n", node->key);
+    dbg_syntax_print_bst(node->right);
+}
 void dbg_syntax_print_stable(stable_t *t)
 {
     if(t == NULL || t->first == NULL)
@@ -653,9 +661,19 @@ void dbg_syntax_print_stable(stable_t *t)
 
     // Skip global symbol table
     stable_item_t *it = t->first->next;
+    stable_symbol_list_item_t *sit = NULL;
+    int s = 0;
 
     while(it != NULL) {
-
+        sit = it->item_list.first;
+        while(sit != NULL) {
+            printf("SCOPE #%d\n", ++s);
+            dbg_syntax_print_bst(sit->node);
+            sit = sit->next;
+        }
+        s = 0;
+        puts("----------");
+        it = it->next;
     }
 }
 
@@ -672,6 +690,8 @@ int main(int argc, char *argv[])
     lex_get_token(&lex_data, &current_token);
     syntax_program();
 
+    puts("SYMBOL TABLE DUMP");
+    dbg_syntax_print_stable(&t_stable);
     lex_destroy(&lex_data);
     stable_destroy(&t_stable);
 
