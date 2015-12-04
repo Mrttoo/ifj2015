@@ -352,6 +352,9 @@ bool syntax_statement()
         syntax_data.new_scope = true;
         syntax_compound_statement(true);
     // ifStmt
+    } else if(syntax_var_declr(false)) {
+        if(!syntax_match(LEX_SEMICOLON))
+            syntax_error("; expected");
     } else if(syntax_match(LEX_KW_IF)) {
         syntax_data.new_scope = true;
         syntax_if_statement();
@@ -371,6 +374,7 @@ bool syntax_statement()
            syntax_error("; expected");
     } else {
         rc = false;
+        stable_clean_data(&symbol_data);
     }
 
     return rc;
@@ -383,7 +387,7 @@ void syntax_compound_statement(bool del_scope)
         syntax_error("{ expected");
 
     // TODO
-    syntax_var_declr_list();
+    //syntax_var_declr_list();
     syntax_stmt_list();
 
     if(!syntax_match(LEX_RBRACE))
