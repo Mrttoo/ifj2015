@@ -14,6 +14,7 @@ void stable_init(stable_t *stable)
    if(stable == NULL)
         return;
 
+    // Init first symbol table item as a global symbol table
     stable_item_t *it = malloc(sizeof *it);
 
     if(it == NULL) {
@@ -52,11 +53,6 @@ bst_node_t *stable_get_global(stable_t *stable)
     return stable->first->item_list.first->node;
 }
 
-void stable_new_scope(stable_t *stable)
-{
-    //stable_insert(stable, "@scope", NULL, true);
-}
-
 void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data_t *syntax_data)
 {
     if(stable == NULL || stable->active == NULL)
@@ -69,6 +65,7 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
         syntax_data->new_scope = false;
         printf("NEW SCOPE FOR KEY %s\n", key);
         if(syntax_data->function_scope) {
+            // Create new function scope (new item in stable_t list)
             syntax_data->function_scope = false;
             printf("NEW LIST FOR KEY %s\n", key);
             stable_item_t *it = malloc(sizeof *it);
@@ -77,18 +74,26 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
                 exit(IFJ_INTERNAL_ERR);
             }
 
+            // It's a function item
             it->type = STABLE_TYPE_FUNC;
+            // Add it to the end of our symbol table list
+            // and set it as an active item
             stable->last->next = it;
             stable->last = it;
             stable->active = it;
+            // Initialize scope list
             it->item_list.first = NULL;
             it->item_list.last = NULL;
             it->item_list.active = NULL;
+            // Set next list item pointer to NULL
             it->next = NULL;
+            // Initialize scope array...
             it->scopes = stack_init(IFJ_STACK_CHUNK);
+            // ...and current scope to NULL
             it->active_scope = NULL;
         }
 
+        // Create new scope
         n = bst_new_node(key, data);
 
         stable_symbol_list_item_t *it = NULL;
@@ -101,7 +106,7 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
         it->node = n;
         it->next = NULL;
 
-        // We have empty list
+        // Insert it into the scope list and set it as an active scope
         if(stable->active->item_list.first == NULL) {
             stable->active->item_list.first = it;
             stable->active->item_list.last = it;
@@ -112,21 +117,27 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
 
         stable->active->item_list.active = it;
 
+        // Push currently active scope into scope stack
         if(stable->active->active_scope != NULL)
             stack_push_node(stable->active->scopes, stable->active->active_scope);
         stable->active->active_scope = it;
     } else {
+        // If active 'outer' scope is a global scope
+        // force creation of 'inner' function scope 
         if(stable->active->type == STABLE_TYPE_GLOBAL) {
             puts("GLOBAL SYMBOL TABLE IS ACTIVE");
             syntax_data->new_scope = true;
             stable_insert(stable, key, data, syntax_data);
         }
 
+        // If we don't have any active 'outer' (function) or 'inner' (block) scope
+        // force it's creation
         if(stable->active->active_scope == NULL || stable->active->item_list.active == NULL) {
             puts("NO SCOPE IS ACTIVE");
             syntax_data->new_scope = true;
             stable_insert(stable, key, data, syntax_data);
         } else {
+            // Or just insert symbol into active scope symbol table
             printf("INSERTING NODE %s INTO EXISTING TREE\n", key);
             stable->active->item_list.active->node = bst_insert_node(stable->active->item_list.active->node, key, data);
             stable->active->active_scope = stable->active->item_list.active;
