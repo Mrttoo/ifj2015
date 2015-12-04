@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include "stack.h"
-#include "bst.h"
+#include "stable.h"
 #include "error.h"
 
 stack_t *stack_init(unsigned int init_size)
@@ -43,7 +43,7 @@ void stack_destroy(stack_t *stack)
     stack = NULL;
 }
 
-void stack_push_node(stack_t *stack, bst_node_t *node)
+void stack_push_node(stack_t *stack, stable_symbol_list_item_t *node)
 {
     if(stack == NULL)
         return;
@@ -56,7 +56,7 @@ void stack_push_node(stack_t *stack, bst_node_t *node)
 
 void stack_expand(stack_t *stack, unsigned int inc)
 {
-    bst_node_t **n = NULL;
+    stable_symbol_list_item_t **n = NULL;
 
     if((n = realloc(stack->items, sizeof *n * (stack->size + inc))) == NULL) {
         free(stack->items);
@@ -68,7 +68,7 @@ void stack_expand(stack_t *stack, unsigned int inc)
     stack->size += inc;
 }
 
-bst_node_t *stack_pop_node(stack_t *stack)
+stable_symbol_list_item_t *stack_pop_node(stack_t *stack)
 {
     if(stack == NULL || stack->free_idx == 0)
         return NULL;
@@ -76,7 +76,7 @@ bst_node_t *stack_pop_node(stack_t *stack)
     return stack->items[--(stack->free_idx)];
 }
 
-bst_node_t *stack_get_top_node(stack_t *stack)
+stable_symbol_list_item_t *stack_get_top_node(stack_t *stack)
 {
     if(stack == NULL || stack->free_idx == 0)
         return NULL;

@@ -6,10 +6,39 @@
 /* Forward declarations to remove circular dependencies */
 typedef struct stack stack_t;
 typedef struct bst_node bst_node_t;
+typedef struct syntax_data syntax_data_t;
 
-typedef struct {
-    stack_t *stack;
+typedef struct stable {
+    struct stable_item *first;
+    struct stable_item *last;
+    struct stable_item *active;
 } stable_t;
+
+typedef enum {
+    STABLE_TYPE_GLOBAL = 0,
+    STABLE_TYPE_FUNC,
+    STABLE_TYPE_BLOCK
+} stable_item_type_t;
+
+typedef struct stable_symbol_list {
+    struct stable_symbol_list_item *first;
+    struct stable_symbol_list_item *last;
+    struct stable_symbol_list_item *active;
+} stable_symbol_list_t;
+
+typedef struct stable_symbol_list_item {
+    struct stable_symbol_list_item *next;
+    bst_node_t *node;
+} stable_symbol_list_item_t;
+
+typedef struct stable_item {
+    struct stable_item *next;
+    stable_item_type_t type;
+    stable_symbol_list_t item_list;
+    stack_t *scopes;
+    stable_symbol_list_item_t *active_scope;
+} stable_item_t;
+
 
 /**
   * @brief Type of symbol table item
@@ -110,7 +139,7 @@ bst_node_t *stable_get_global(stable_t *stable);
   * @param new_scope When true, data node will be inserted in a new scope.
                      If the symbol table is empty, new_scope is true by default.
 */
-void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope);
+void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data_t *syntax_data);
 
 /**
   * @brief Inserts given data node into global symbol table
@@ -197,11 +226,11 @@ bool stable_search_global(stable_t *stable, char *key, stable_data_t **result);
 bool stable_search_all(stable_t *stable, char *key, stable_data_t **result);
 
 /**
-  * @brief Destroys the most recent scope (on top of a symbol table)
+  * @brief Pops the most recent scope from symbol table
   *
   * @param Pointer to symbol table
 */
-void stable_destroy_scope(stable_t *stable);
+void stable_pop_scope(stable_t *stable);
 
 /**
   * @brief Destroys symbol table

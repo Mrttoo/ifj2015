@@ -5,13 +5,14 @@
 
 #define IFJ_STACK_CHUNK 5
 
+typedef struct stable_symbol_list_item stable_symbol_list_item_t; 
 /**
   * @brief Structure for stack implementation
 */
 typedef struct stack {
     unsigned int size;      /**< Current stack size */
     unsigned int free_idx;  /**< Next free stack index */
-    bst_node_t **items;     /**< Array of BSTs */
+    struct stable_symbol_list_item **items;     /**< Array of BSTs */
 } stack_t;
 
 /**
@@ -45,7 +46,7 @@ void stack_destroy(stack_t *stack);
   * @param stack Pointer to stack
   * @param node Pointer to BST
 */
-void stack_push_node(stack_t *stack, bst_node_t *node);
+void stack_push_node(stack_t *stack, stable_symbol_list_item_t *node);
 
 /**
   * @brief Expands stack
@@ -62,7 +63,7 @@ void stack_expand(stack_t *stack, unsigned int inc);
   * @param stack Pointer to stack
   * @return Pointer to popped item
 */
-bst_node_t *stack_pop_node(stack_t *stack);
+stable_symbol_list_item_t *stack_pop_node(stack_t *stack);
 
 /**
   * @brief Returns node from the top of a stack
@@ -71,6 +72,6 @@ bst_node_t *stack_pop_node(stack_t *stack);
   * @param stack Pointer to stack
   * @return Pointer to returned item
 */
-bst_node_t *stack_get_top_node(stack_t *stack);
+stable_symbol_list_item_t *stack_get_top_node(stack_t *stack);
 
 #endif
