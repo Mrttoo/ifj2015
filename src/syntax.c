@@ -382,6 +382,7 @@ void syntax_compound_statement(bool del_scope)
     if(!syntax_match(LEX_LBRACE))
         syntax_error("{ expected");
 
+    // TODO
     syntax_var_declr_list();
     syntax_stmt_list();
 
@@ -390,6 +391,8 @@ void syntax_compound_statement(bool del_scope)
 
     if(!syntax_data.new_scope)
         stable_pop_scope(&t_stable);
+    else
+        syntax_data.new_scope = false;
 }
 
 void syntax_var_declr_list()
@@ -483,11 +486,13 @@ void syntax_if_statement()
     if(!syntax_match(LEX_RPAREN))
         syntax_error(") expected");
 
+    syntax_data.new_scope = true;
     syntax_compound_statement(false);
 
     if(!syntax_match(LEX_KW_ELSE))
         syntax_error("'else' expected");
 
+    syntax_data.new_scope = true;
     syntax_compound_statement(true);
 }
 

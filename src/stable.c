@@ -262,7 +262,7 @@ bool stable_search_scopes(stable_t *stable, char *key, stable_data_t **result)
 
     bst_node_t *node = NULL;
 
-    printf("Num of scopes: %d\n", stable->active->scopes->free_idx);
+    printf("[SEARCH %s] Num of scopes: %d\n", key, stable->active->scopes->free_idx);
     for(int i = stable->active->scopes->free_idx - 1; i >= 0; i--) {
         printf("Tree %d: \n", i);
         node = bst_lookup_node(stable->active->scopes->items[i]->node, key);
