@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "stable.h"
+#include "syntax.h"
 #include "error.h"
 #include "stack.h"
 #include "bst.h"
@@ -13,42 +14,119 @@ void stable_init(stable_t *stable)
    if(stable == NULL)
         return;
 
-    stable->stack = stack_init(IFJ_STACK_CHUNK);
-    stable_insert(stable, "@global", NULL, true);
+    stable_item_t *it = malloc(sizeof *it);
+
+    if(it == NULL) {
+        fprintf(stderr, "%s: Couldn't allocate memory for symbol table\n", __func__);
+        exit(IFJ_INTERNAL_ERR);
+    }
+
+    it->type = STABLE_TYPE_GLOBAL;
+    it->next = NULL;
+    it->scopes = NULL;
+
+    stable_symbol_list_item_t *s_it = malloc(sizeof *s_it);
+    if(s_it == NULL) {
+        fprintf(stderr, "%s: Couldn't allocate memory for global symbol table\n", __func__);
+        exit(IFJ_INTERNAL_ERR);
+    }
+
+    s_it->node = NULL;
+    it->item_list.first = s_it;
+    it->item_list.last = s_it;
+    it->item_list.active = s_it;
+
+    stable->first = stable->last = stable->active = it;
 }
 
 bst_node_t *stable_get_global(stable_t *stable)
 {
-    if(stable->stack->size == 0 || stable->stack->items[0] == NULL || 
-       strcmp(stable->stack->items[0]->key, "@global") != 0) {
-        fprintf(stderr, "%s: Couldn't find @global symbol table on stack, maybe unitialized stack?\n", __func__);
+    if(stable == NULL || stable->first == NULL || stable->first->type != STABLE_TYPE_GLOBAL ||
+       stable->first->item_list.first == NULL) {
+        fprintf(stderr, "%s: Couldn't find global symbol table on stack, maybe unitialized stack?\n", __func__);
         exit(IFJ_INTERNAL_ERR);
     }
 
-    return stable->stack->items[0];
+    return stable->first->item_list.first->node;
 }
 
 void stable_new_scope(stable_t *stable)
 {
-    stable_insert(stable, "@scope", NULL, true);
+    //stable_insert(stable, "@scope", NULL, true);
 }
 
-void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope)
+void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data_t *syntax_data)
 {
-    if(stable == NULL)
+    if(stable == NULL || stable->active == NULL)
         return;
 
     bst_node_t *n = NULL;
 
-    if(new_scope) {
+    // Oh my god, this is disgusting...
+    if(syntax_data->new_scope) {
+        syntax_data->new_scope = false;
+        printf("NEW SCOPE FOR KEY %s\n", key);
+        if(syntax_data->function_scope) {
+            syntax_data->function_scope = false;
+            printf("NEW LIST FOR KEY %s\n", key);
+            stable_item_t *it = malloc(sizeof *it);
+            if(it == NULL) {
+                fprintf(stderr, "%s: Unable to allocate memory for list item\n", __func__);
+                exit(IFJ_INTERNAL_ERR);
+            }
+
+            it->type = STABLE_TYPE_FUNC;
+            stable->last->next = it;
+            stable->last = it;
+            stable->active = it;
+            it->item_list.first = NULL;
+            it->item_list.last = NULL;
+            it->item_list.active = NULL;
+            it->next = NULL;
+            it->scopes = stack_init(IFJ_STACK_CHUNK);
+            it->active_scope = NULL;
+        }
+
         n = bst_new_node(key, data);
-        stack_push_node(stable->stack, n);
-    } else {
-        n = stack_get_top_node(stable->stack);
-        if(n == NULL || (n->data.id != NULL && strcmp(n->data.id, "@global") == 0)) {
-            stable_insert(stable, key, data, true);
+
+        stable_symbol_list_item_t *it = NULL;
+
+        if((it = malloc(sizeof *it)) == NULL) {
+            fprintf(stderr, "%s: Unable to allocate memory for list item\n", __func__);
+            exit(IFJ_INTERNAL_ERR);
+        }
+
+        it->node = n;
+
+        // We have empty list
+        if(stable->active->item_list.first == NULL) {
+            stable->active->item_list.first = it;
+            stable->active->item_list.last = it;
         } else {
-            stable->stack->items[stable->stack->free_idx - 1] = bst_insert_node(n, key, data);
+            stable->active->item_list.last->next = it;
+            stable->active->item_list.last = it;
+        }
+
+        stable->active->item_list.active = it;
+
+        if(stable->active->active_scope != NULL)
+            stack_push_node(stable->active->scopes, stable->active->active_scope);
+        stable->active->active_scope = it;
+    } else {
+        if(stable->active->type == STABLE_TYPE_GLOBAL) {
+            puts("GLOBAL SYMBOL TABLE IS ACTIVE");
+            syntax_data->new_scope = true;
+            stable_insert(stable, key, data, syntax_data);
+        }
+
+        if(stable->active->active_scope == NULL || stable->active->item_list.active == NULL) {
+            puts("NO SCOPE IS ACTIVE");
+            syntax_data->new_scope = true;
+            stable_insert(stable, key, data, syntax_data);
+        } else {
+            printf("INSERTING NODE %s INTO EXISTING TREE\n", key);
+            stable->active->item_list.active->node = bst_insert_node(stable->active->item_list.active->node, key, data);
+            stable->active->active_scope = stable->active->item_list.active;
         }
     }
 }
@@ -58,13 +136,13 @@ void stable_insert_global(stable_t *stable, char *key, stable_data_t *data)
     if(stable == NULL || key == NULL)
         return;
 
-    if(stable->stack->size == 0 || stable->stack->items[0] == NULL || 
-       strcmp(stable->stack->items[0]->key, "@global") != 0) {
+    if(stable == NULL || stable->first == NULL || stable->first->type != STABLE_TYPE_GLOBAL ||
+       stable->first->item_list.first == NULL) {
         fprintf(stderr, "%s: Couldn't find @global symbol table on stack, maybe unitialized stack?\n", __func__);
         exit(IFJ_INTERNAL_ERR);
     }
 
-    stable->stack->items[0] = bst_insert_node(stable->stack->items[0], key, data);
+    stable->first->item_list.first->node = bst_insert_node(stable->first->item_list.first->node, key, data);
 }
 
 bool stable_insert_func_param(stable_data_t *data, stable_data_type_t dtype, char *id)
@@ -131,15 +209,28 @@ void stable_clean_data_struct(stable_data_t *data, bool params)
     data->type = STABLE_UNDEFINED;
 }
 
+// TODO: DEBUG
+void dbg_syntax_print_tree(bst_node_t *node)
+{
+    if(node == NULL)
+        return;
+
+    dbg_syntax_print_tree(node->left);
+    printf("%s\n", node->key);
+    dbg_syntax_print_tree(node->right);
+}
 bool stable_search_scope(stable_t *stable, char *key, stable_data_t **result)
 {
-    if(stable == NULL || key == NULL)
+    if(stable == NULL || stable->active == NULL || key == NULL)
         return false;
 
-    bst_node_t *node = stack_get_top_node(stable->stack);
-    node = bst_lookup_node(node, key);
+    stable_symbol_list_item_t *it = stable->active->active_scope;
+    if(it == NULL)
+        return false;
 
-    // Skip first stack item, which is global symbol table
+    dbg_syntax_print_tree(it->node);
+    bst_node_t *node = bst_lookup_node(it->node, key);
+
     if(node != NULL) {
         if(result != NULL)
              *result = &(node->data);
@@ -149,16 +240,19 @@ bool stable_search_scope(stable_t *stable, char *key, stable_data_t **result)
 
     return false;
 }
+
 bool stable_search_scopes(stable_t *stable, char *key, stable_data_t **result)
 {
-    if(stable == NULL || key == NULL)
+    if(stable == NULL || stable->active == NULL || key == NULL)
         return false;
 
     bst_node_t *node = NULL;
 
-    // Skip first stack item, which is global symbol table
-    for(int i = stable->stack->free_idx - 1; i > 0; i--) {
-        node = bst_lookup_node(stable->stack->items[i], key);
+    printf("Num of scopes: %d\n", stable->active->scopes->free_idx);
+    for(int i = stable->active->scopes->free_idx - 1; i >= 0; i--) {
+        printf("Tree %d: \n", i);
+        node = bst_lookup_node(stable->active->scopes->items[i]->node, key);
+        dbg_syntax_print_tree(stable->active->scopes->items[i]->node);
         if(node != NULL) {
             if(result != NULL)
                 *result = &(node->data);
@@ -167,7 +261,7 @@ bool stable_search_scopes(stable_t *stable, char *key, stable_data_t **result)
         }
     }
 
-    return false;
+    return stable_search_scope(stable, key, result);
 }
 
 bool stable_search_global(stable_t *stable, char *key, stable_data_t **result)
@@ -175,14 +269,14 @@ bool stable_search_global(stable_t *stable, char *key, stable_data_t **result)
     if(stable == NULL || key == NULL)
         return false;
 
-    if(stable->stack->size == 0 || stable->stack->items[0] == NULL || 
-       strcmp(stable->stack->items[0]->key, "@global") != 0) {
-        fprintf(stderr, "%s: Couldn't find @global symbol table on stack, maybe unitialized stack?\n", __func__);
+    if(stable == NULL || stable->first == NULL || stable->first->type != STABLE_TYPE_GLOBAL ||
+       stable->first->item_list.first == NULL) {
+        fprintf(stderr, "%s: Couldn't find global symbol table on stack, maybe unitialized stack?\n", __func__);
         exit(IFJ_INTERNAL_ERR);
     }
 
     bool rc = false;
-    bst_node_t *node = stable->stack->items[0];
+    bst_node_t *node = stable->first->item_list.first->node;
     node = bst_lookup_node(node, key);
 
     if(node != NULL) {
@@ -199,16 +293,14 @@ bool stable_search_all(stable_t *stable, char *key, stable_data_t **result)
     return (stable_search_global(stable, key, result) || stable_search_scopes(stable, key, result));
 }
 
-void stable_destroy_scope(stable_t *stable)
+void stable_pop_scope(stable_t *stable)
 {
     if(stable == NULL)
         return;
 
-    bst_node_t *node = stack_pop_node(stable->stack);
-
-    if(node != NULL) {
-        bst_destroy(node);
-    }
+    stable->active->active_scope = stack_pop_node(stable->active->scopes);
+    if(stable->active->active_scope != NULL)
+        stable->active->item_list.active = stable->active->active_scope;
 }
 
 void stable_destroy(stable_t *stable)
@@ -216,14 +308,29 @@ void stable_destroy(stable_t *stable)
     if(stable == NULL)
         return;
 
-    bst_node_t *node = stack_pop_node(stable->stack);
+    stable_item_t *it = stable->first;
+    stable_item_t *it_tmp = NULL;
+    stable_symbol_list_item_t *sit = NULL;
+    stable_symbol_list_item_t *sit_tmp = NULL;
 
-    while(node != NULL) {
-        bst_destroy(node);
-        node = stack_pop_node(stable->stack);
+    while(it != NULL) {
+        sit = it->item_list.first;
+        while(sit != NULL) {
+            bst_destroy(sit->node);
+            sit_tmp = sit;
+            sit = sit->next;
+            free(sit_tmp);
+            sit_tmp = NULL;
+        }
+
+        stack_destroy(it->scopes);
+        it_tmp = it;
+        it = it->next;
+        free(it_tmp);
+        it_tmp = NULL;
     }
 
-    stack_destroy(stable->stack);
+    stable->first = stable->last = stable->active = NULL;
 }
 
 void stable_destroy_data(stable_data_t *data)
