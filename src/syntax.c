@@ -386,8 +386,6 @@ void syntax_compound_statement(bool del_scope)
     if(!syntax_match(LEX_LBRACE))
         syntax_error("{ expected");
 
-    // TODO
-    //syntax_var_declr_list();
     syntax_stmt_list();
 
     if(!syntax_match(LEX_RBRACE))
@@ -397,18 +395,6 @@ void syntax_compound_statement(bool del_scope)
         stable_pop_scope(&t_stable);
     else
         syntax_data.new_scope = false;
-}
-
-void syntax_var_declr_list()
-{
-    if(syntax_var_declr(false)) {
-        if(!syntax_match(LEX_SEMICOLON))
-            syntax_error("; expected");
-
-        syntax_var_declr_list();
-    }
-
-    stable_clean_data(&symbol_data);
 }
 
 bool syntax_var_declr(bool mandatory_init)
