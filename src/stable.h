@@ -6,10 +6,57 @@
 /* Forward declarations to remove circular dependencies */
 typedef struct stack stack_t;
 typedef struct bst_node bst_node_t;
+typedef struct syntax_data syntax_data_t;
 
-typedef struct {
-    stack_t *stack;
+/**
+  * @brief Linked list for symbol table scopes
+  * @detail Each item represents one function block (scope)
+  *         in source code
+*/
+typedef struct stable_symbol_list {
+    struct stable_symbol_list_item *first;
+    struct stable_symbol_list_item *last;
+    struct stable_symbol_list_item *active;
+} stable_symbol_list_t;
+
+/**
+  * @brief Symbol list item
+*/
+typedef struct stable_symbol_list_item {
+    struct stable_symbol_list_item *next;   /**< Pointer to next list item */
+    bst_node_t *node;                       /**< Pointer to data (BST node) */
+} stable_symbol_list_item_t;
+
+/**
+  * @brief Linked list for symbol table base
+  * @detail Each item represents one function defined
+  *         in source code
+*/
+typedef struct stable {
+    struct stable_item *first;      /**< First item of the symbol table */
+    struct stable_item *last;       /**< Last item of the symbol table */
+    struct stable_item *active;     /**< Currently active item */
 } stable_t;
+
+/**
+  * @brief Types of symbol table items
+*/
+typedef enum {
+    STABLE_TYPE_GLOBAL = 0,     /**< Item is a global symbol table */
+    STABLE_TYPE_FUNC,           /**< Item is a symbol table of a function */
+    STABLE_TYPE_BLOCK           // TODO
+} stable_item_type_t;
+
+/**
+  * @brief Symbol table item
+*/
+typedef struct stable_item {
+    struct stable_item *next;                   /**< Pointer to next list item */
+    stable_item_type_t type;                    /**< Item type */
+    stable_symbol_list_t item_list;             /**< Scope list */
+    stack_t *scopes;                            /**< Stack for currently processed scopes */
+    stable_symbol_list_item_t *active_scope;    /**< Active scope */
+} stable_item_t;
 
 /**
   * @brief Type of symbol table item
@@ -83,18 +130,9 @@ typedef struct stable_data {
 void stable_init(stable_t *stable);
 
 /**
-  * @brief Initializes new scope on top of symbol table
-  *        with first item @scope
-  *
-  * @param stable Pointer to symbol table
-*/
-void stable_new_scope(stable_t *stable);
-
-/**
   * @brief Returns pointer to global symbol table BST
-  * @details Symbol table must have @global BST as the first item
-  *          otherwise function throws internal error
-  * @see stable_init()
+  * @details Global symbol table is initialized as
+  *          a first symbol table item
   *
   * @param stable Valid pointer to symbol table
   * @return Pointer to global symbol table BST
@@ -107,17 +145,15 @@ bst_node_t *stable_get_global(stable_t *stable);
   * @param stable Valid pointer to symbol table
   * @param key Data node key
   * @param data Valid pointer to data node
-  * @param new_scope When true, data node will be inserted in a new scope.
-                     If the symbol table is empty, new_scope is true by default.
+  * @param syntax_data Pointer to syntax_data_t structure
 */
-void stable_insert(stable_t *stable, char *key, stable_data_t *data, bool new_scope);
+void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data_t *syntax_data);
 
 /**
   * @brief Inserts given data node into global symbol table
-  * @details Stack in symbol table has to have @global symbol table already created.
-  *          This can be achieved by calling stable_init or creating @global symbol table
-  *          manually.
-  *
+  * @details Global symbol table is initialized as
+  *          a first symbol table item
+ *
   * @param stable Pointer to symbol table
   * @param key Data node key
   * @param data Pointer to data node
@@ -197,11 +233,11 @@ bool stable_search_global(stable_t *stable, char *key, stable_data_t **result);
 bool stable_search_all(stable_t *stable, char *key, stable_data_t **result);
 
 /**
-  * @brief Destroys the most recent scope (on top of a symbol table)
+  * @brief Pops the most recent scope from symbol table scope stack
   *
   * @param Pointer to symbol table
 */
-void stable_destroy_scope(stable_t *stable);
+void stable_pop_scope(stable_t *stable);
 
 /**
   * @brief Destroys symbol table
