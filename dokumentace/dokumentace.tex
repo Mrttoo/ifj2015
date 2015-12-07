@@ -1,4 +1,4 @@
-% Projekt: IFJ15 (Interpret jazyka) 
+% Projekt: IFJ15 (Interpret jazyka) - dokumentace
 % Autor: Patrik Jurnečka
 % Login: xjurne03
 % Email: xjurne03@stud.fit.vutbr.cz
@@ -58,17 +58,20 @@ Cílem projektu bylo vytvořit program, který interpretuje jazyk IFJ15, což je
 Překladač je rozdělen do tří hlavních celků. Pomocí \textbf{lexikálního analyzátoru} načítá zdrojový kód. \textbf{Syntaktický analyzátor} zažádá lexikální o token a ověří syntaxi a sémantiku. Po bezchybné kontrole se spustí \textbf{interpret}.  
 
 \section{Lexikální analizátor (scanner)}
-Lexikální analyzátor načítá zdrojový kód po znacích a převádí jej na tokeny (funkce \textit{lex\_get\_token}), přičemž veškeré komentáře ignoruje. Implementováno pomocí konečného automatu (Obrázek~\ref{picture_1:konecny_automat}). Funkce je volána vždy, když syntaktický analizátor zažádá o~token. 
+Analyzátor je implementován v souborech \textit{lex.c} a \textit{lex.h}. Lexikální analyzátor načítá zdrojový kód po znacích a převádí jej na tokeny. Veškerá komunikace s dalšími knihovnami probíhá pomocí funkce \textit{lex\_get\_token}. Analyzátor je Implementován pomocí konečného automatu (Obrázek~\ref{picture_1:konecny_automat}), přičemž veškeré komentáře ignoruje. Funkce je volána vždy, když syntaktický analyzátor zažádá o~token. 
+
+Token definuje jednotlivé prvky kódu a určuje jak se k němu má při překladu přistupovat. Analyzátor prochází tabulku klíčových slov (\textit{lex\_kw\_t keywords[]}), zda-li nejde o rezervované klíčové slovo pro speciální funkci.
 
 \subsection{Konečný automat}
 
 \begin{figure}[h]
 	\centering
-	\scalebox{0.2}{\includegraphics{konecny_automat.png}}
+	\scalebox{0.15}{\includegraphics{konecny_automat.png}}
 	\caption{Konečný automat}
 	\label{picture_1:konecny_automat}
 \end{figure}
 
+\newpage
 \section{Syntaktická analizátor (parser)}
 Syntaktický analyzátor postupně volá tokeny z lexikálního analyzátoru. Tokeny jsou zpracovávaný dvěma způsoby. Pomocí LL gramatiky (Tabulka \ref{table_1:LL_gramatic}) a precedenční syntaktické analýzy (Tabulka \ref{table_2:PA}). Při úspěšném dokončení syntaktické analýzy se generuje instrukční páska pro interpret.
 
@@ -97,6 +100,8 @@ LL gramatika postupně ověřuje příchozí tokeny.
 \end{table}
 
 \subsection{Precedenční syntaktická analýza}
+Syntaktická analýza zdola nahoru. Dle Zadání jsem analýzu implementovali za pomocí precedenční tabulky, která nám pomáhá ošetřit vstupní výrazy.
+
 \begin{table}[h]
 	\begin{center}
 	\begin{tabular}{l | c c c c c c c c c c c c c c}
@@ -121,36 +126,83 @@ LL gramatika postupně ověřuje příchozí tokeny.
 	\end{center}
 \end{table}
 
+\newpage
+
 \section{Sémantický analizátor}
 
 \section{Interpret}
+Poslední částí Interpretu je vlastní překlad, který nastane pouze pokud zdrojový kód úspěšně projde syntaktickou a sémantickou analýzou. Interpretační část ma za úkol zpracovat instrukční sadu založenou na 3AC (tří adresné instrukce).
+
+\section{Chybové stavy}
+Pro chybové stavy jsme implementovali vlastní funkci, která je vždy volána při nalezení chyby v kód, jak syntaktické, sémantické nebo při interpretaci. Návratové chybové kódy byly definovány v zadání projektu. 
 
 \newpage
 
 \section{Algoritmy z předmětu IAL}
 
 \subsection{Heapsort}
+Heapsort neboli \uv{řazení hromadou} je řadící metoda s lineární složitostí. Algoritmus patří mezi nestabilní algoritmy, protože přesouvá prvky s příliš velkými skoky a také se nechová přirozeně.  
+
 \subsection{Boyer-Mooreův algoritmus}
+Dle zadání jsem měli vestavěnou funkci \textbf{find}, která by používala pro vyhledání Boyer-Mooreův algoritmus.
+Boyer-Mooreův algoritmus je jedním velmi efektivním algoritmem pro vyhledávání podřetězců v řetězcích. Algoritmus prochází textem a porovnává vzorek zprava doleva a pro posuv bere ten z výsledků dvou heuristik,
+který je výhodnější. Jeho efektivita spočívá v časové složitosti. Čím delší je vyhledávaný podřetězec, tím je kratší doba. Funkce je implementována podle skript z předmětu IAL.
+
+\begin{itemize}
+	\item ComputerJumps()
+	\subitem Stanovení hodnot pole \textit{CharJump}, které určují posuv vzorku. Použití pole CharJump pro postup vzorku činí tento algoritmus mnohem rychlejší než algoritmus Knuth-Morris-Prattův. 
+	
+	\subitem Jednotlivé symboly řetězce mají uloženou svojí ASCII hodnotu. 
+	
+	\item ComputerMatchJumps()
+	\subitem Funkce pro samotný výpočet pole \textit{MatchJump}.
+	
+	\item Boyer\_Moor\_Alg()
+	\subitem Stanovení indexu polohy vzorku nalezeného v textu.
+	
+\end{itemize}
+
 \subsection{Binární vyhledávací strom (BVS)}
+Nejpoužívanější implementace pro dynamické vyhledávací tabulky. Algoritmus je implementován rekurzivně, dle opory k předmětu IAL (algoritmy). Vyhledávání v BVS je velmi podobné binárnímu vyhledávání v seřazeném poli.  
+
+Vytvořili jsme vlastní knihovnu funkcí. Implementace knihovny je v souborech \textit{bst.c} a \textit{bst.h}. 
+
+Rozhraní bst poskytuje funkčnost specifickou pro tabulku symbolů, která je implementována v souborech \textit{stable.c} a \textit{stable.h}.
 
 \newpage
 
 \section{Práce v týmu}
+Komunikace v týmu probíhala za pomocí IRC Freenode. Pravidelná osobní setkání se uskutečňovalo jednou za čtrnáct dní nebo po domluvě v CVT. Na osobním setkání bylo objasněno, co vše je zapotřebí udělat a také provedeno rovnoměrné rozdělení práce.
+
+Ke sdílení zdrojových kódů jsme využili GitHub s vlastním soukromým kanálem. 
+
 \subsection{Rozdělení práce}
 
 \begin{itemize}
-	\item\textbf{Martin Honza:}
-	\item\textbf{Patrik Jurnečka:} Syntaktický analyzátor, dokumentace
+	\item\textbf{Martin Honza:} Precedenční analýza výrazu
+	\item\textbf{Patrik Jurnečka:} Dokumentace, prezentace
 	\item\textbf{Hana Slámová:} Vestavěné funkce
 	\item\textbf{Frantisek Šumšal:} Lexikální analýzátor, syntaktický analyzátor
-	\item\textbf{Adam Švidroň:} Heap sort
+	\item\textbf{Adam Švidroň:} Heap sort, interpret
 \end{itemize}  
 
 \section{Závěr}
+Na projektu se pracovalo téměř dva měsíce, i když jsme začali včas, dokončit projekt jsme nestíhali do pokusného odevzdání. V posledním týdnu před odevzdáním jsme dodělávali interpret a snažili se vše zkompletovat, aby fungoval projekt dle zadání. Dokumentace se tvořila průběžně při dokončení některého logického celku. 
+
+Projekt byl velmi náročný, nejen ze strany programové, ale také hlavní roli hrála domluva týmu. Nakonec se to zvládlo dokončit. Z projektu jsme si odnesli velké zkušenosti, jak efektivně organizovat a pracovat v týmu.
+
+Navržená implementace byla nakonec otestována v prostředí operačních systémů Linux a MS Windows 10.
+
+Dokumentace i prezentace jsme psali v jazyce \LaTeX. 
+
 \subsection{Metriky kódu}
+\begin{itemize}
+	\item Počet souborů: ...
+	\item Počet řádků zdrojového kódu: ...
+	\item Velikost spustitelného souboru: ... (OS Linux 32 bitová architektůra)
+\end{itemize}  
 
-\section{Literatura}
-
+\nocite{Ahoc2007}
 \bibliography{literatura}
 
 \end{document} %konec textove casti
