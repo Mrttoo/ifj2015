@@ -242,7 +242,7 @@ void syntax_func_declr()
         stable_clean_data(&symbol_data);
 
         // Check following compound statement
-        syntax_compound_statement(true);
+        syntax_compound_statement();
 
         // Restore global variable and set definition flag to true
         symbol_data = local_data;
@@ -345,13 +345,11 @@ bool syntax_param_item()
 bool syntax_statement()
 {
     bool rc = true;
-    // TODO: Add var declaration
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     // compoundStmt
     if(current_token.type == LEX_LBRACE) {
         syntax_data.new_scope = true;
-        syntax_compound_statement(true);
-    // ifStmt
+        syntax_compound_statement();
     } else if(syntax_var_declr(false)) {
         if(!syntax_match(LEX_SEMICOLON))
             syntax_error("; expected");
@@ -380,7 +378,7 @@ bool syntax_statement()
     return rc;
 }
 
-void syntax_compound_statement(bool del_scope)
+void syntax_compound_statement()
 {
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     if(!syntax_match(LEX_LBRACE))
@@ -477,13 +475,13 @@ void syntax_if_statement()
         syntax_error(") expected");
 
     syntax_data.new_scope = true;
-    syntax_compound_statement(false);
+    syntax_compound_statement();
 
     if(!syntax_match(LEX_KW_ELSE))
         syntax_error("'else' expected");
 
     syntax_data.new_scope = true;
-    syntax_compound_statement(true);
+    syntax_compound_statement();
 }
 
 void syntax_for_statement()
@@ -506,7 +504,7 @@ void syntax_for_statement()
     if(!syntax_match(LEX_RPAREN))
         syntax_error(") expected");
 
-    syntax_compound_statement(true);
+    syntax_compound_statement();
 }
 
 void syntax_assign_statement()
