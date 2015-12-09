@@ -8,6 +8,7 @@
 #include "error.h"
 #include "util.h"
 #include "bst.h"
+#include "expr.h"
 
 #define ENUM_TO_STR(x) lex_token_strings[x - 256]
 #define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, &lex_data, __VA_ARGS__);
@@ -19,7 +20,7 @@
 lex_data_t lex_data;        /* Data for lexical analyser */
 lex_token_t current_token;  /* Currently processed token */
 syntax_data_t syntax_data;  /* Data for syntax analyser */
-stable_t t_stable;          /* Temporary symbol table for syntax analysis */
+stable_t symbol_table;      /* Symbol table for syntax analysis */
 stable_data_t symbol_data;  /* Currently processed symbol table item */
 stable_data_t *ptr_data;    /* Pointer for updating/accessing data in symbol table */
 
@@ -107,7 +108,7 @@ void syntax_insert_builtins()
             }
         }
 
-        stable_insert_global(&t_stable, func[i].id, &func[i]);
+        stable_insert_global(&symbol_table, func[i].id, &func[i]);
         free(func[i].func.params);
         func[i].func.params = NULL;
     }
@@ -148,7 +149,7 @@ void syntax_program()
     // Check for mandatory program components
     // 1. Every program has to have main function with prototype
     // int main()
-    if(stable_search_global(&t_stable, "main", &ptr_data)) {
+    if(stable_search_global(&symbol_table, "main", &ptr_data)) {
         if(ptr_data->type != STABLE_FUNCTION)
             syntax_error_ec(IFJ_DEF_ERR, "Symbol 'main' is not a function");
 
@@ -165,7 +166,7 @@ void syntax_program()
     }
 
     // 2. Every function declaration must have appropriate definition
-    bst_node_t *st_global = stable_get_global(&t_stable);
+    bst_node_t *st_global = stable_get_global(&symbol_table);
     bst_foreach_func(st_global, syntax_check_func_def);
 
     free(syntax_data.id);
@@ -215,8 +216,8 @@ void syntax_func_declr()
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
 
     // Insert function declaration into global symbol table
-    if(!stable_search_global(&t_stable, symbol_data.id, &ptr_data)) {
-        stable_insert_global(&t_stable, symbol_data.id, &symbol_data);
+    if(!stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
+        stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
         clean_params = false;
     }
 
@@ -231,7 +232,7 @@ void syntax_func_declr()
             func_param.id = symbol_data.func.params[i].id;
             func_param.var.dtype = symbol_data.func.params[i].dtype;
 
-            stable_insert(&t_stable, func_param.id, &func_param, &syntax_data);
+            stable_insert(&symbol_table, func_param.id, &func_param, &syntax_data);
         }
 
         // Save current function data
@@ -252,7 +253,7 @@ void syntax_func_declr()
     }
 
     // Check for redefinitions or add a missing definition
-    if(stable_search_global(&t_stable, symbol_data.id, &ptr_data)) {
+    if(stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
         // We already have a function with current name, but this one is not a function - throw an error
         if(ptr_data->type != STABLE_FUNCTION) {
             syntax_error("Redefined identifier '%s'", symbol_data.id);
@@ -390,7 +391,7 @@ void syntax_compound_statement()
         syntax_error("} expected");
 
     if(!syntax_data.new_scope)
-        stable_pop_scope(&t_stable);
+        stable_pop_scope(&symbol_table);
     else
         syntax_data.new_scope = false;
 }
@@ -422,8 +423,8 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
 
     symbol_data.id = ifj_strdup(syntax_data.id);
 
-    if(stable_search_scope(&t_stable, symbol_data.id, &ptr_data) ||
-       stable_search_global(&t_stable, symbol_data.id, &ptr_data)) {
+    if(stable_search_scope(&symbol_table, symbol_data.id, &ptr_data) ||
+       stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
         if(ptr_data->type == STABLE_FUNCTION) {
             syntax_error("'%s' is a function", ptr_data->id);
         } else if(!syntax_data.new_scope){
@@ -445,7 +446,7 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
         }
     }
 
-    stable_insert(&t_stable, symbol_data.id, &symbol_data, &syntax_data);
+    stable_insert(&symbol_table, symbol_data.id, &symbol_data, &syntax_data);
 }
 
 void syntax_stmt_list()
@@ -461,6 +462,8 @@ void syntax_expression()
     syntax_match(LEX_IDENTIFIER);
     if(syntax_match(LEX_LPAREN)) {
         syntax_call_statement();
+    } else {
+        //syntax_precedence(&current_token, &lex_data, &symbol_table, &symbol_data, ptr_data, &syntax_data);
     }
 }
 
@@ -512,7 +515,7 @@ void syntax_assign_statement()
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("identifier expected");
 
-    if(!stable_search_all(&t_stable, syntax_data.id, &ptr_data)) {
+    if(!stable_search_all(&symbol_table, syntax_data.id, &ptr_data)) {
         syntax_error("undeclared variable '%s'", syntax_data.id);
     } else if(ptr_data->type != STABLE_VARIABLE) {
         syntax_error("'%s' is not a variable", syntax_data.id);
@@ -581,7 +584,7 @@ void syntax_cin_statement()
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("identifier expected");
 
-    if(!stable_search_scopes(&t_stable, syntax_data.id, &ptr_data)) {
+    if(!stable_search_scopes(&symbol_table, syntax_data.id, &ptr_data)) {
         syntax_error("undefined variable '%s'", syntax_data.id);
     } else if(ptr_data->type != STABLE_VARIABLE) {
         syntax_error("symbol '%s' is not a variable", syntax_data.id);
@@ -600,7 +603,7 @@ void syntax_cin_args()
         if(!syntax_match(LEX_IDENTIFIER))
             syntax_error("identifier expected");
 
-        if(!stable_search_scopes(&t_stable, syntax_data.id, &ptr_data)) {
+        if(!stable_search_scopes(&symbol_table, syntax_data.id, &ptr_data)) {
             syntax_error("undefined variable '%s'", syntax_data.id);
         } else if(ptr_data->type != STABLE_VARIABLE) {
             syntax_error("symbol '%s' is not a variable", syntax_data.id);
@@ -647,7 +650,7 @@ void dbg_syntax_print_bst(bst_node_t *node)
     printf("%s\n", node->key);
     dbg_syntax_print_bst(node->right);
 }
-void dbg_syntax_print_stable(stable_t *t)
+void dbg_syntax_prinsymbol_table(stable_t *t)
 {
     if(t == NULL || t->first == NULL)
         return;
@@ -677,16 +680,16 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    stable_init(&t_stable);
+    stable_init(&symbol_table);
     lex_initialize(&lex_data, argv[1]);
 
     lex_get_token(&lex_data, &current_token);
     syntax_program();
 
     puts("SYMBOL TABLE DUMP");
-    dbg_syntax_print_stable(&t_stable);
+    dbg_syntax_prinsymbol_table(&symbol_table);
     lex_destroy(&lex_data);
-    stable_destroy(&t_stable);
+    stable_destroy(&symbol_table);
 
     return 0;
 }

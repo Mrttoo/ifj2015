@@ -6,7 +6,7 @@
 /**
   * @brief Interprets call of 'cin' function
   * @details Reads one integer/double/word from
-  *          standard inpu and saves it into passed
+  *          standard input and saves it into
   *          passed variable structure.
   *
   * @param var Pointer to variable structure
