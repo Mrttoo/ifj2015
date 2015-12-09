@@ -51,5 +51,8 @@ syntax: syntax.c syntax.h error.h lex.o stable.o stack.o bst.o util.o
 intfuncs: interpret_funcs.c interpret_funcs.h syntax.h error.h
 	${CC} ${CFLAGS} -DIFJ_INTERPRET_FUNCS_DEBUG $^ -o $@
 
+interpret: interpret.c interpret.h interpret_gen.c interpret_gen.h interpret_funcs.c interpret_funcs.h error.h syntax.h
+	${CC} ${CFLAGS} -DIFJ_INTERPRET_DEBUG $^ -o $@
+	
 clean:
 	${RM} ${EXEC} *.o
