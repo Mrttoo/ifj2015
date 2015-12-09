@@ -1,7 +1,7 @@
 #ifndef __INTERPRET_GEN_H_INCLUDED
 #define __INTERPRET_GEN_H_INCLUDED
 
-enum {
+typedef enum {
     INTSR_HALT = 0, /**< Stop interpret */
     INSTR_LENGTH,   /**< Built-in function: length */
     INSTR_SUBSTR,   /**< Built-in function: substr */
@@ -18,24 +18,32 @@ enum {
     INSTR_JMP,      /**< Unconditional jump */
     INSTR_JMPC,     /**< Conditional jump */
     INSTR_LAB       /**< Label */
-} interpret_instr_type_t;
+} instr_type_t;
 
 typedef struct {
-    inteprret_instr_type_t type;
+    instr_type_t type;
     void *addr1;
     void *addr2;
     void *addr3;
-} interpret_instr_t;
+} instr_t;
 
-typedef struct interpret_instr_list {
-    struct interpret_instr_list *first;
-    struct interpret_instr_list *last;
-    struct interpret_instr_list *active;
-} interpret_instr_list_t;
+typedef struct instr_list {
+    struct instr_list_item *first;
+    struct instr_list_item *last;
+    struct instr_list_item *active;
+} instr_list_t;
 
-typedef struct interpret_instr_list_item {
-    struct interpret_instr_list_item *next;
-    interpret_instr_t data;
-} interpret_instr_list_item_t;
+typedef struct instr_list_item {
+    struct instr_list_item *next;
+    instr_t data;
+} instr_list_item_t;
+
+
+void instr_list_init(instr_list_t *list);
+void instr_insert_last(instr_list_t *list, instr_t *instr);
+void instr_insert_instr(instr_list_t *list, instr_type_t type, void *addr1, void *addr2, void *addr3);
+void instr_jump_to(instr_list_t *list, instr_list_item_t *instr);
+void instr_jump_next(instr_list_t *list);
+instr_t *instr_active_get_data(instr_list_t *list);
 
 #endif
