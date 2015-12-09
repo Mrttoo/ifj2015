@@ -2,7 +2,7 @@
 #define __INTERPRET_GEN_H_INCLUDED
 
 typedef enum {
-    INTSR_HALT = 0, /**< Stop interpret */
+    INSTR_HALT = 0, /**< Stop interpret */
     INSTR_LENGTH,   /**< Built-in function: length */
     INSTR_SUBSTR,   /**< Built-in function: substr */
     INSTR_CONCAT,   /**< Built-in function: concat */
