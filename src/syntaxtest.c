@@ -1,42 +1,39 @@
-int main();
+int length(string s);
+string substr(string s, int i, int n);
+string concat(string s1, string s2);
+int find(string s, string search);
+string sort(string s);
+
+int main() {}
 
 string test(int p)
 {
-    int test;
+    int var1;
     string sdfasd223_234222;
     double _num;
-    auto testiceq = test;
+    auto testiceq = var1;
 
-    test = _num;
+    var1 = _num;
 
-    if(test) {
+    if(var1) {
+         int onlyinif;
         _num = test;
     } else {
+         int onlyinelse;
         _num = testiceq;
     }
 
-    test = some_function();
-    test = some_function2(test);
-    test = some_function3(test, test, test);
-    test = some_function4("test", 2.01, 23, _num);
-
-    cin >> test;
-    cin >> test >>_num >> testiceq;
-
-    cout << test;
-    cout << test << test << test;
-    cout << 1 << 1.2 << "test" << _num;
-
     for(int i = _num; _num; i = _num) {
         if(_num) {
-            _num = test;
-            return;
+            int intforif;
+            _num = intforif;
+            return _num;
         } else {
-            testiceq = test;
+            testiceq = i;
         }
     }
 
-    return test;
+    return var1;
 }
 
 double test2(int a, int b, string c)
