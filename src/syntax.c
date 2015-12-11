@@ -647,10 +647,10 @@ void dbg_syntax_print_bst(bst_node_t *node)
         return;
 
     dbg_syntax_print_bst(node->left);
-    printf("%s\n", node->key);
+    printf("%s | %d\n", node->key, (node->data.type == STABLE_VARIABLE) ? node->data.var.offset : -1);
     dbg_syntax_print_bst(node->right);
 }
-void dbg_syntax_prinsymbol_table(stable_t *t)
+void dbg_syntax_print_symbol_table(stable_t *t)
 {
     if(t == NULL || t->first == NULL)
         return;
@@ -687,7 +687,7 @@ int main(int argc, char *argv[])
     syntax_program();
 
     puts("SYMBOL TABLE DUMP");
-    dbg_syntax_prinsymbol_table(&symbol_table);
+    dbg_syntax_print_symbol_table(&symbol_table);
     lex_destroy(&lex_data);
     stable_destroy(&symbol_table);
 

@@ -48,10 +48,20 @@ typedef enum {
 } stable_item_type_t;
 
 /**
+  * @brief Symbol table variable & return type
+*/
+typedef enum {
+    STABLE_INT = 0,         /**< int */
+    STABLE_DOUBLE,          /**< double */
+    STABLE_STRING           /**< string */
+} stable_data_type_t;
+
+/**
   * @brief Symbol table item
 */
 typedef struct stable_item {
     struct stable_item *next;                   /**< Pointer to next list item */
+    unsigned int stack_idx;                     /**< Stack idx for generating relative addresses for interpreter */
     stable_item_type_t type;                    /**< Item type */
     stable_symbol_list_t item_list;             /**< Scope list */
     stack_t *scopes;                            /**< Stack for currently processed scopes */
@@ -68,18 +78,10 @@ typedef enum {
 } stable_type_t;
 
 /**
-  * @brief Symbol table variable & return type
-*/
-typedef enum {
-    STABLE_INT = 0,         /**< int */
-    STABLE_DOUBLE,          /**< double */
-    STABLE_STRING           /**< string */
-} stable_data_type_t;
-
-/**
   * @brief Symbol table data structure for variable
 */
 typedef struct stable_variable {
+    int offset;                     /**< Offset for interpreter stack */
     bool initialized;               /**< Is variable initialized? */
     stable_data_type_t dtype;       /**< Data type */
     union {
