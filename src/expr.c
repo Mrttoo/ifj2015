@@ -7,9 +7,14 @@
 #include "expr.h"
 #include "Estack.h"
 #include "util.h"
-#include "three_adress_code.h"
+//#include "interpret_gen.h"
 
 #define ENUM_TO_STR(x) lex_token_strings[x - 256]
+
+#define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, &lex_data, __VA_ARGS__);
+#define syntax_error_ec(ec, ...) throw_syntax_error(ec, &lex_data, __VA_ARGS__);
+
+stable_variable_t *constant_table;
 
 /*
    case precedence_table[stack_top][t->type]
@@ -21,6 +26,7 @@
    until b=$ & top=$;
    */
 #define t_size 14
+
 int precedence_table[t_size][t_size]=
 {
 //	   +	 -	   *	 /	   <	 >    <=	>=	  ==    !=	   (	 ) 	  id	 $
@@ -96,17 +102,24 @@ sign_value get_sign(lex_token_t *t)
 	
 	case LEX_EOF:
 		return symbol_eof;
+
 	default:
 		return symbol_error;
 	}
 }
 
+/*Function should secure that types of variables are correct after binary operations
+  Number of non terminals on stack should match number of types on stack_types.
+  
+ */
 
-int type(Stack *stack, Stack *stack_type, int Rule)
+void type(Stack *stack, Stack *stack_types, int Rule)
 {
-	int second_op = stack_top(&(*stack_type)) ; 
-	int first_op = stack_top(&(*stack_type));
-	int result;
+	int second_op = stack_top(&(*stack_types));
+	stack_pop(&(*stack_types));
+	int first_op = stack_top(&(*stack_types));
+	stack_pop(&(*stack_types));
+
 
 	stack_pop(&(*stack));
 	stack_pop(&(*stack));
@@ -121,53 +134,106 @@ int type(Stack *stack, Stack *stack_type, int Rule)
 		case E_minus_E:
 		case E_mul_E:
 		case E_div_E:
-			if(first_op != second_op)
-				//TAC(Rule, 
-				return result = LEX_DOUBLE;
-			else
-				//TAC(Rule,
-				return result = LEX_INTEGER;
+			if((first_op == LEX_INTEGER) && (second_op == LEX_INTEGER))
+			{
+				//instr_insert_instr()
+				stack_push(&(*stack_types), LEX_INTEGER);
 				break;
+			}
+				
+			else
+			{
+				//instr_insert_instr()
+				stack_push(&(*stack_types), LEX_DOUBLE);
+				break;
+			}
 		case E_less_E:
 		case E_greater_E:
 		case E_lessequal_E:
 		case E_greaterequal_E:
 		case E_equal_E:
 		case E_notequal_E:
-				if(first_op ==  second_op) 
-					//TAC(Rule,
-					return result = LEX_INTEGER;
+				if((first_op == LEX_INTEGER) && (second_op == LEX_INTEGER)) 
+				{
+					//instr_insert_instr()
+					stack_push(&(*stack_types), LEX_INTEGER);
+					break;
+				}
 				else
-					//TAC(Rule,
-					return result = LEX_DOUBLE;
-				break;
+				{
+					//instr_insert_instr()
+					stack_push(&(*stack_types), LEX_DOUBLE);
+					break;
+				}
 		default:
-				return result = 0;
 				break;
 	}
 }
 
 
 
+void constant_check(lex_token_t *token)
+{
+	static int i = 0;
+	if(i < 1)
+		constant_table = malloc(sizeof(stable_variable_t));
+	 if(constant_table == NULL)
+	 {
+		 fprintf(stderr,"Error while allocating in constant check");
+	 }
+	
 
-lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_t *symbol_table, stable_data_t *symbol_data, stable_data_t
+	switch(token->type)
+	{
+		case LEX_INTEGER:
+		 	constant_table[i].val.i = atoi(token->val);
+			constant_table[i].dtype = 0;
+			i++;
+			//instr_insert_instr(, INST_ASSIGN, , ,i)
+			break;
+
+		case LEX_DOUBLE:
+			constant_table[i].val.d  = atof(token->val);
+			i++;
+			constant_table[i].dtype = 1;
+			//inst_insert_instr(, INST_ASSIGN, , ,i )
+			break;
+
+		default:
+			break;
+
+	}
+}
+
+
+
+
+
+/*
+   Function should get token, with the help of function get_sing() it should transform that token to value that will match precedence table, after
+   that it continues according to precedence rules (=, <, >).
+ */
+
+lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data_t *symbol_data, stable_data_t
 		*ptr_data, syntax_data_t *syntax_data)
 {
 	int i=1;
+
 	Stack stack;
 	Stack stack_types;
+
 	Stack_Init(&stack);
 	Stack_Init(&stack_types);
+
 	stack_push(&stack, symbol_dollar);
 	stack_push(&stack_types, symbol_dollar);
-
 
 
 	do
 	{
 
-		if(!stable_search_scopes(symbol_table, syntax_data->id, &ptr_data))
-			fprintf(stderr,"Undefined variabile");
+		//if(!stable_search_scopes(symbol_table, syntax_data->id, &ptr_data))
+		//	fprintf(stderr,"Undefined variabile");
 
 		printf("[%s] Current token: (%d) %s\n", __func__, token->type, ENUM_TO_STR(token->type));
 		if(stack_top(&stack) == 'E')
@@ -194,7 +260,13 @@ lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_t *s
 					stack_push(&stack, '<');
 					stack_push(&stack, 'E');
 					if((token->type == LEX_INTEGER) || (token->type == LEX_DOUBLE))
-					   stack_push(&stack_types, token->type);	
+					{
+					   stack_push(&stack_types, token->type);
+					   constant_check(token);
+					   //instr_insert_instr(,INST_ASSIGN, , , )
+					}
+					else if(token->type == LEX_IDENTIFIER)
+						//instr_insert_instr(,INST_ASSIGN, , , )
 					stack_push(&stack, get_sign(token));
 
 				}
@@ -202,7 +274,12 @@ lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_t *s
 				{
 					stack_push(&stack,'<');
 					if((token->type == LEX_INTEGER) || (token->type == LEX_DOUBLE))
+					{
 						stack_push(&stack_types, token->type);
+						constant_check(token);
+					}
+					else if(token->type == LEX_IDENTIFIER)
+						//instr_insert_instr(, INST_ASSIGN, , , )
 					stack_push(&stack, get_sign(token));
 				}
 
@@ -218,8 +295,8 @@ lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_t *s
 				//E->i
 				if(stack_top(&stack) == symbol_id)
 				{
-					stack_push(&stack_types, token->type);
 					stack_pop(&stack);
+					
 					if(stack_top(&stack) == '<')
 					{
 						stack_pop(&stack);
@@ -241,7 +318,7 @@ lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_t *s
 						{
 							stack_pop(&stack);
 							stack_push(&stack, 'E');
-							//TAC()
+							//TAC(
 							printf("Reduction rule E->(E) used\n");
 						}
 					}
@@ -299,6 +376,9 @@ lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_t *s
 					}
 				}
 			case '#':
+
+				/* Check for function call, if ID( then we will expect it to be function and return token to syntax. analyator
+				   */
 				if(stack_top(&stack) == symbol_id)
 				{
 					if(get_sign(token) == sign_lparen)
@@ -316,7 +396,8 @@ lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_t *s
 			}
 			syntax_data->id = ifj_strdup(token->val);
 		}
-	}while(!((stack_top(&stack) == 'E') && ((get_sign(token) == sign_rparen) || token->type == LEX_SEMICOLON)) );
+	}while(!(((stack_top(&stack) == 'E') && (stack_offset(&stack, 2) == symbol_dollar)) && ((get_sign(token) == sign_rparen) || (token->type ==
+						LEX_SEMICOLON))));
 
 return token;	
 }
