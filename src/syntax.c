@@ -9,6 +9,7 @@
 #include "util.h"
 #include "bst.h"
 #include "expr.h"
+#include "interpret_gen.h"
 
 #define ENUM_TO_STR(x) lex_token_strings[x - 256]
 #define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, &lex_data, __VA_ARGS__);
@@ -23,6 +24,7 @@ syntax_data_t syntax_data;  /* Data for syntax analyser */
 stable_t symbol_table;      /* Symbol table for syntax analysis */
 stable_data_t symbol_data;  /* Currently processed symbol table item */
 stable_data_t *ptr_data;    /* Pointer for updating/accessing data in symbol table */
+instr_list_t instr_list;    /* Instruction list */
 
 /* Token array for debugging */
 char *lex_token_strings[] = {
@@ -682,10 +684,12 @@ int main(int argc, char *argv[])
 
     stable_init(&symbol_table);
     lex_initialize(&lex_data, argv[1]);
+    instr_list_init(&instr_list);
 
     lex_get_token(&lex_data, &current_token);
     syntax_program();
 
+    instr_list_destroy(&instr_list);
     puts("SYMBOL TABLE DUMP");
     dbg_syntax_print_symbol_table(&symbol_table);
     lex_destroy(&lex_data);

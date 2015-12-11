@@ -7,11 +7,12 @@
 #include "interpret.h"
 #include "stable.h"
 #include "ef.h"
+#include "util.h"
 
-int interpret_process(instr_list_t *instr_list)
+int interpret_process(instr_list_t *instr_list, char *testconstarray[])
 {
+    stable_variable_t *var = NULL;
     instr_t *instr = NULL;
-    instr_stack_t *s = NULL;
     frame_t *curr_frame = NULL;
     frame_t *tmp_frame = NULL;
     frame_stack_t fstack;
@@ -34,33 +35,45 @@ int interpret_process(instr_list_t *instr_list)
 
             return 0;
         break;
-        case INSTR_LENGTH:
-            //s = (instr_stack_t*)instr->addr3;
-            //((stable_variable_t*)instr->addr1)->val.i = strlen(instr_stack_pop_first(s)->val.s);
+        case INSTR_CALL_LENGTH:
+            // Simulate INSTR_CALL
+            tmp_frame->ret_val = &(curr_frame->vars.items[instr->addr2]);
+            curr_frame = tmp_frame;
+            curr_frame->ret_val->val.i = strlen(curr_frame->vars.items[0].val.s);
+            curr_frame->ret_val->initialized = true;
+            printf("STRLEN RES: %d\n", curr_frame->ret_val->val.i);
+            printf("OK SO FAR\n");
+            // Simulate INSTR_RET
+            frame_stack_pop(&fstack);
+            tmp_frame = frame_stack_get_top(&fstack);
+            frame_destroy(curr_frame);
+            curr_frame = tmp_frame;
         break;
-        case INSTR_SUBSTR:
+        case INSTR_CALL_SUBSTR:
 
         break;
-        case INSTR_CONCAT:
+        case INSTR_CALL_CONCAT:
 
         break;
-        case INSTR_FIND:
+        case INSTR_CALL_FIND:
 
         break;
-        case INSTR_SORT:
+        case INSTR_CALL_SORT:
 
         break;
         case INSTR_CIN:
             curr_frame->vars.items[instr->addr1].dtype = instr->addr2;
             interpret_cin(&(curr_frame->vars.items[instr->addr1]));
+            curr_frame->vars.items[instr->addr1].initialized = true;
         break;
         case INSTR_COUT:
             interpret_cout(&(curr_frame->vars.items[instr->addr1]));
         break;
         case INSTR_CALL:
-            puts("CREATING NEW STACK FRAME");
-            tmp_frame = frame_stack_new(&fstack, instr->addr3);
+            // Set new frame (created by INSTR_PUSHF) as active
+            // and proceed to called function
             if(curr_frame != NULL) {
+                tmp_frame->ret_val = &(curr_frame->vars.items[instr->addr2]);
                 tmp_frame->ret_addr = (void*)instr_list->active;
             }
 
@@ -68,25 +81,59 @@ int interpret_process(instr_list_t *instr_list)
             instr_list->active = (instr_list_item_t*)&(instr->addr1);
         break;
         case INSTR_RET:
+            puts("DESTROYING STACK FRAME");
             frame_stack_pop(&fstack);
             tmp_frame = frame_stack_get_top(&fstack);
-            // TODO: Assign return value, delete pop'd frame
+            // TODO: Assign return value
+            printf("Returning to instruction %d\n", ((instr_list_item_t*)curr_frame->ret_addr)->data.type);
             instr_list->active = (instr_list_item_t*)curr_frame->ret_addr;
             frame_destroy(curr_frame);
             curr_frame = tmp_frame;
         break;
         case INSTR_PUSHF:
+            // Prepare new frame into temporary variable
+            // INSTR_CALL or INSTR_PUSHP instruction MUST follow
+            printf("CREATING NEW STACK FRAME FOR %d VARS\n", instr->addr1);
+            tmp_frame = frame_stack_new(&fstack, instr->addr1);
+        break;
+        case INSTR_PUSHP:
+            // addr1 - index to old frame (or constant table)
+            // addr2 - index to new frame
+            // INSTR_PUSHF should be called before
+            //if(instr->addr1 < 0)
+            //    var = testconstarray[instr->addr1 * -1];
+            //else
+                var = &(curr_frame->vars.items[instr->addr1]);
 
+            switch(curr_frame->vars.items[instr->addr2].dtype) {
+            case STABLE_INT:
+                tmp_frame->vars.items[instr->addr2].val.i = var->val.i;
+            break;
+            case STABLE_DOUBLE:
+                tmp_frame->vars.items[instr->addr2].val.d = var->val.d;
+            break;
+            case STABLE_STRING:
+                tmp_frame->vars.items[instr->addr2].val.s = ifj_strdup(var->val.s);
+            break;
+            }
+
+            tmp_frame->vars.items[instr->addr2].initialized = true;
+            tmp_frame->vars.items[instr->addr2].dtype = var->dtype;
         break;
         case INSTR_MOVI:
-            curr_frame->vars.items[instr->addr1].val.i = instr->addr2;//curr_frame->vars.items[instr->addr2].val.i;
+            //curr_frame->vars.items[instr->addr1].val.i = testconstarray[instr->addr2 * -1];
             curr_frame->vars.items[instr->addr1].dtype = STABLE_INT;
+            curr_frame->vars.items[instr->addr1].initialized = true;
         break;
         case INSTR_MOVD:
-
+            curr_frame->vars.items[instr->addr1].val.d = curr_frame->vars.items[instr->addr2].val.d;
+            curr_frame->vars.items[instr->addr1].dtype = STABLE_DOUBLE;
+            curr_frame->vars.items[instr->addr1].initialized = true;
         break;
         case INSTR_MOVS:
-
+            curr_frame->vars.items[instr->addr1].val.s = ifj_strdup(testconstarray[instr->addr2 * -1]);//curr_frame->vars.items[instr->addr2].val.s;
+            curr_frame->vars.items[instr->addr1].dtype = STABLE_STRING;
+            curr_frame->vars.items[instr->addr1].initialized = true;
         break;
         case INSTR_ADD:
 
@@ -106,7 +153,7 @@ int interpret_process(instr_list_t *instr_list)
             instr_list->active = (instr_list_item_t*)&(instr->addr1);
         break;
         case INSTR_JMPC:
-            //If addr1 value is true, jump to label
+            // If addr1 value is true, jump to label
             if(curr_frame->vars.items[instr->addr1].val.i)
                 instr_list->active = (instr_list_item_t*)instr->addr2;
         break;
@@ -119,26 +166,41 @@ int interpret_process(instr_list_t *instr_list)
     }
 }
 
+#ifdef IFJ_INTERPRET_DEBUG
 int main(int argc, char *argv[])
 {
+    char *testconstarray[] = { "", "Test", "Test2" };
     instr_list_t list;
     instr_list_init(&list);
     instr_list_item_t *ptr = NULL, *ptr2 = NULL, *ptr3 = NULL, *entry = NULL;
 
+    /* Equivalent in C:
+     * char *a = "Test";
+     * int b = strlen(a);
+     * printf("%s", a);
+     * printf("%d", b);
+     * return
+    */
     ptr = instr_insert_instr(&list, INSTR_LAB, 0, 0, 0);
-    instr_insert_instr(&list, INSTR_MOVI, 0, 99, 0);
+    instr_insert_instr(&list, INSTR_MOVS, 0, -1, 0);
+    instr_insert_instr(&list, INSTR_PUSHF, 1, 0, 0);
+    instr_insert_instr(&list, INSTR_PUSHP, 0, 0, 0); 
+    instr_insert_instr(&list, INSTR_CALL_LENGTH, 0, 1, 0);
     instr_insert_instr(&list, INSTR_COUT, 0, 0, 0);
+    instr_insert_instr(&list, INSTR_COUT, 1, 0, 0);
     instr_insert_instr(&list, INSTR_RET, 0, 0, 0);
 
     ptr2 = instr_insert_instr(&list, INSTR_LAB, 0, 0, 0);
 
-    entry = instr_insert_before_instr(&list, ptr2, INSTR_CALL, (intptr_t)ptr2, 0, 2);
+    entry = instr_insert_before_instr(&list, ptr2, INSTR_CALL, (intptr_t)ptr2, 0, 0);
+    entry = instr_insert_before_instr(&list, entry, INSTR_PUSHF, 3, 0, 0);
     //instr_insert_instr(&list, INSTR_CIN, 1, STABLE_STRING, 0);
     //instr_insert_instr(&list, INSTR_COUT, 1, 0, 0);
     ptr3 = instr_insert_after_instr(&list, ptr2, INSTR_CIN, 0, STABLE_INT, 0);
     ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_COUT, 0, 0, 0);
     ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_JMPC, 0, (intptr_t)ptr2, 0);
-    ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_CALL, (intptr_t)ptr, 0, 1);
+    ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_PUSHF, 2, 0, 0);
+    ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_CALL, (intptr_t)ptr, 2, 0);
     instr_insert_instr(&list, INSTR_HALT, 0, 0, 0);
 
     instr_list_item_t *lptr = list.first;
@@ -149,13 +211,13 @@ int main(int argc, char *argv[])
 
     list.active = entry;
 
-    int rc = interpret_process(&list);
+    int rc = interpret_process(&list, testconstarray);
 
     instr_list_destroy(&list);
 
     return rc;
 }
-
+#endif
 void instr_stack_init(instr_stack_t *stack, unsigned int size)
 {
     stack->items = malloc(sizeof *(stack->items) * size);
@@ -167,6 +229,10 @@ void instr_stack_init(instr_stack_t *stack, unsigned int size)
     stack->size = size;
     stack->first_idx = 0;
     stack->free_idx = 0;
+
+    stable_variable_t t = { .initialized = false };
+    for(unsigned int i = 0; i < size; i++)
+        stack->items[i] = t;
 }
 
 void instr_stack_push(instr_stack_t *stack, stable_variable_t *var)
@@ -289,6 +355,12 @@ void frame_destroy(frame_t *frame)
 {
     if(frame == NULL)
         return;
+
+    for(int i = 0; i < frame->vars.size; i++) {
+        if(frame->vars.items[i].initialized && frame->vars.items[i].dtype == STABLE_STRING) {
+            free(frame->vars.items[i].val.s);
+        }
+    }
 
     free(frame->vars.items);
     frame->vars.items = NULL;

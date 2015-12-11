@@ -18,8 +18,7 @@ stable_variable_t *instr_stack_pop(instr_stack_t *stack);
 
 typedef struct {
     void *ret_addr;
-    int ret_ip;
-    stable_variable_t ret_val;
+    stable_variable_t *ret_val;
     instr_stack_t vars;
 } frame_t;
 
