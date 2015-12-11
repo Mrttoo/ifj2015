@@ -6,27 +6,28 @@
 #define INTERPRET_STACK_CHUNK 5
 
 typedef enum {
-    INSTR_HALT = 0, /**< Stop interpreter */
-    INSTR_LENGTH,   /**< Built-in function: length */
-    INSTR_SUBSTR,   /**< Built-in function: substr */
-    INSTR_CONCAT,   /**< Built-in function: concat */
-    INSTR_FIND,     /**< Built-in function: find */
-    INSTR_SORT,     /**< Built-in function: sort */
-    INSTR_CIN,      /**< Built-in function: cin */
-    INSTR_COUT,     /**< Built-in function: cout */
-    INSTR_CALL,     /**< Function call */
-    INSTR_RET,      /**< Return from function */
-    INSTR_PUSHF,    /**< Push a new frame */
-    INSTR_MOVI,     /**< Assignment (integer) */
-    INSTR_MOVD,     /**< Assignment (double) */
-    INSTR_MOVS,     /**< Assignment (string) */
-    INSTR_ADD,      /**< Expression: addition */
-    INSTR_SUB,      /**< Expression: subtraction */
-    INSTR_MUL,      /**< Expression: multiplication */
-    INSTR_DIV,      /**< Expression: division */
-    INSTR_JMP,      /**< Unconditional jump */
-    INSTR_JMPC,     /**< Conditional jump */
-    INSTR_LAB       /**< Label */
+    INSTR_HALT = 0,     /**< Stop interpreter */
+    INSTR_CALL_LENGTH,  /**< Built-in function: length */
+    INSTR_CALL_SUBSTR,  /**< Built-in function: substr */
+    INSTR_CALL_CONCAT,  /**< Built-in function: concat */
+    INSTR_CALL_FIND,    /**< Built-in function: find */
+    INSTR_CALL_SORT,    /**< Built-in function: sort */
+    INSTR_CIN,          /**< Built-in function: cin */
+    INSTR_COUT,         /**< Built-in function: cout */
+    INSTR_CALL,         /**< Function call */
+    INSTR_RET,          /**< Return from a function */
+    INSTR_PUSHF,        /**< Push a new frame */
+    INSTR_PUSHP,        /**< Push a function parameter value into frame created by PUSHF */
+    INSTR_MOVI,         /**< Assignment (integer) */
+    INSTR_MOVD,         /**< Assignment (double) */
+    INSTR_MOVS,         /**< Assignment (string) */
+    INSTR_ADD,          /**< Expression: addition */
+    INSTR_SUB,          /**< Expression: subtraction */
+    INSTR_MUL,          /**< Expression: multiplication */
+    INSTR_DIV,          /**< Expression: division */
+    INSTR_JMP,          /**< Unconditional jump */
+    INSTR_JMPC,         /**< Conditional jump */
+    INSTR_LAB           /**< Label */
 } instr_type_t;
 
 typedef struct {

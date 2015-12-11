@@ -22,6 +22,12 @@ stack.o: stack.c stack.h stable.h bst.c bst.h util.c util.h
 stable.o: stable.c stable.h stack.h stack.h bst.c bst.h
 	${CC} ${CFLAGS} -c $^
 
+interpret_funcs.o: interpret_funcs.c interpret_funcs.h
+	${CC} ${CFLAGS} -c $^
+
+interpret.o: interpret_gen.c interpret_gen.h interpret.c interpret.h
+	${CC} ${CFLAGS} -c $^
+
 # Create binary for lex testing/debugging
 lex: lex.c lex.h
 	${CC} ${CFLAGS} $^ -DIFJ_LEX_DEBUG -o $@
@@ -45,14 +51,14 @@ stack: stack.c stack.h bst.o util.o
 stable: stable.c stable.h stack.o bst.o util.o
 	${CC} ${CFLAGS} $^ -DIFJ_STABLE_DEBUG -o $@
 
-syntax: syntax.c syntax.h error.h lex.o stable.o stack.o bst.o util.o
+syntax: syntax.c syntax.h error.h interpret_gen.c lex.o stable.o stack.o bst.o util.o interpret.o interpret_funcs.o
 	${CC} ${CFLAGS} -DIFJ_SYNTAX_DEBUG $^ -o $@
 
 intfuncs: interpret_funcs.c interpret_funcs.h syntax.h error.h
 	${CC} ${CFLAGS} -DIFJ_INTERPRET_FUNCS_DEBUG $^ -o $@
 
 interpret: interpret.c interpret.h interpret_gen.c interpret_gen.h interpret_funcs.c interpret_funcs.h error.h syntax.h \
-		   ef.c ef.h string.c string.h ial.c ial.h
+		   ef.c ef.h string.c string.h ial.c ial.h util.o
 	${CC} ${CFLAGS} -DIFJ_INTERPRET_DEBUG $^ -o $@
 	
 clean:
