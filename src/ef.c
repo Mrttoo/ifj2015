@@ -3,6 +3,8 @@ Project: IFJ15
 */
 #include "string.h"
 #include "ef.h"
+#include "ial.h"
+
 /*
 int main() {
 	

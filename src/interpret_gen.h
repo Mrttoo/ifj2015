@@ -1,8 +1,11 @@
 #ifndef __INTERPRET_GEN_H_INCLUDED
 #define __INTERPRET_GEN_H_INCLUDED
 
+#include "stable.h"
+#define INTERPRET_STACK_CHUNK 5
+
 typedef enum {
-    INSTR_HALT = 0, /**< Stop interpret */
+    INSTR_HALT = 0, /**< Stop interpreter */
     INSTR_LENGTH,   /**< Built-in function: length */
     INSTR_SUBSTR,   /**< Built-in function: substr */
     INSTR_CONCAT,   /**< Built-in function: concat */
@@ -11,6 +14,7 @@ typedef enum {
     INSTR_CIN,      /**< Built-in function: cin */
     INSTR_COUT,     /**< Built-in function: cout */
     INSTR_CALL,     /**< Function call */
+    INSTR_ASSIGN    /**< Assignment */
     INSTR_ADD,      /**< Expression: addition */
     INSTR_SUB,      /**< Expression: subtraction */
     INSTR_MUL,      /**< Expression: multiplication */
@@ -40,10 +44,22 @@ typedef struct instr_list_item {
 
 
 void instr_list_init(instr_list_t *list);
+void instr_list_destroy(instr_list_t *list);
 void instr_insert_last(instr_list_t *list, instr_t *instr);
-void instr_insert_instr(instr_list_t *list, instr_type_t type, void *addr1, void *addr2, void *addr3);
+instr_list_item_t *instr_insert_instr(instr_list_t *list, instr_type_t type, void *addr1, void *addr2, void *addr3);
 void instr_jump_to(instr_list_t *list, instr_list_item_t *instr);
 void instr_jump_next(instr_list_t *list);
 instr_t *instr_active_get_data(instr_list_t *list);
+
+typedef struct instr_stack {
+    int size;
+    int first_idx;
+    int free_idx;
+    stable_variable_t **items;
+} instr_stack_t;
+
+void instr_stack_init(instr_stack_t *stack);
+void instr_stack_push(instr_stack_t *stack, stable_variable_t *instr);
+stable_variable_t *instr_stack_pop_first(instr_stack_t *stack);
 
 #endif
