@@ -74,6 +74,7 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
                 exit(IFJ_INTERNAL_ERR);
             }
 
+            it->stack_idx = 0;
             // It's a function item
             it->type = STABLE_TYPE_FUNC;
             // Add it to the end of our symbol table list
@@ -92,6 +93,9 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
             // ...and current scope to NULL
             it->active_scope = NULL;
         }
+
+        if(data->type == STABLE_VARIABLE)
+            data->var.offset = stable->active->stack_idx++;
 
         // Create new scope
         n = bst_new_node(key, data);
@@ -139,6 +143,9 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
         } else {
             // Or just insert symbol into active scope symbol table
             printf("INSERTING NODE %s INTO EXISTING TREE\n", key);
+            if(data->type == STABLE_VARIABLE)
+                data->var.offset = stable->active->stack_idx++;
+
             stable->active->item_list.active->node = bst_insert_node(stable->active->item_list.active->node, key, data);
             stable->active->active_scope = stable->active->item_list.active;
         }
