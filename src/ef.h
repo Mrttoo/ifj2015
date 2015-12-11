@@ -5,7 +5,7 @@
 #include "error.h"
 #include <string.h>
 #include <stdlib.h>
-
+#include "string.h"
 
 typedef enum{
 DT_INT,

@@ -4,6 +4,7 @@
 #include "string.h"
 #include <string.h>
 #include <stdlib.h>
+#include "error.h"
 /*
 int main(){
 	char * pattern = "";

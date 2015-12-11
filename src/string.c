@@ -85,7 +85,7 @@ void deleteString(String *string)
  {	
  	string -> data = realloc(string -> data, size);
 
- 	if(string -> data == NULL)}	//Cchyba
+ 	if(string -> data == NULL) {	//Cchyba
  		fprintf(stderr, "%s: Malloc error. \n",__func__);
  		exit(IFJ_INTERNAL_ERR);
  	}
