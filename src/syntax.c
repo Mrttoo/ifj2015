@@ -11,10 +11,11 @@
 #include "expr.h"
 #include "stack.h"
 #include "interpret_gen.h"
+#include "interpret.h"
 
 #define ENUM_TO_STR(x) lex_token_strings[x - 256]
-#define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, &lex_data, __VA_ARGS__);
-#define syntax_error_ec(ec, ...) throw_syntax_error(ec, &lex_data, __VA_ARGS__);
+#define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, lex_data.line + 1, __VA_ARGS__);
+#define syntax_error_ec(ec, ...) throw_syntax_error(ec, lex_data.line + 1, __VA_ARGS__);
 #define stable_clean_data(x) stable_clean_data_struct(x, false);
 #define stable_clean_data_all(x) stable_clean_data_struct(x, true);
 
@@ -149,6 +150,8 @@ void syntax_program()
     if(!syntax_match(LEX_EOF))
         syntax_error("expected end of file");
 
+    instr_insert_instr(&instr_list, INSTR_HALT, 0, 0, 0);
+
     // Check for mandatory program components
     // 1. Every program has to have main function with prototype
     // int main()
@@ -249,6 +252,7 @@ void syntax_func_declr()
         // Check following compound statement
         syntax_compound_statement();
 
+        // Check if function has a valid return statement
         if(!syntax_data.valid_return)
             syntax_error("missing return statement");
 
@@ -582,10 +586,8 @@ void syntax_return_statement()
     if(!syntax_match(LEX_SEMICOLON))
         syntax_error("; expected");
 
-    if(symbol_table.active->active_scope->base_scope) {
-        puts("YES");
+    if(symbol_table.active->active_scope->base_scope)
         syntax_data.valid_return = true;
-    }
 }
 
 void syntax_cin_statement()
@@ -692,6 +694,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    int rc = 0;
     stable_init(&symbol_table);
     lex_initialize(&lex_data, argv[1]);
     instr_list_init(&instr_list);
@@ -699,13 +702,17 @@ int main(int argc, char *argv[])
     lex_get_token(&lex_data, &current_token);
     syntax_program();
 
-    instr_list_destroy(&instr_list);
     puts("SYMBOL TABLE DUMP");
     dbg_syntax_print_symbol_table(&symbol_table);
+    printf("***** INTERPRETER OUTPUT *****\n");
+    instr_list.active = instr_list.first;
+    rc = interpret_process(&instr_list, NULL);
+
+    instr_list_destroy(&instr_list);
     lex_destroy(&lex_data);
     stable_destroy(&symbol_table);
 
-    return 0;
+    return rc;
 }
 
 #endif
