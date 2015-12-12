@@ -19,6 +19,7 @@ void stable_init(stable_t *stable)
 
     if(it == NULL) {
         fprintf(stderr, "%s: Couldn't allocate memory for symbol table\n", __func__);
+<<<<<<< HEAD
         exit(IFJ_INTERNAL_ERR);
     }
 
@@ -32,6 +33,21 @@ void stable_init(stable_t *stable)
         exit(IFJ_INTERNAL_ERR);
     }
 
+=======
+        exit(IFJ_INTERNAL_ERR);
+    }
+
+    it->type = STABLE_TYPE_GLOBAL;
+    it->next = NULL;
+    it->scopes = NULL;
+
+    stable_symbol_list_item_t *s_it = malloc(sizeof *s_it);
+    if(s_it == NULL) {
+        fprintf(stderr, "%s: Couldn't allocate memory for global symbol table\n", __func__);
+        exit(IFJ_INTERNAL_ERR);
+    }
+
+>>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
     s_it->node = NULL;
     s_it->next = NULL;
     it->item_list.first = s_it;
@@ -406,6 +422,101 @@ bool stable_compare_param_arrays(stable_data_t *a1, stable_data_t *a2)
     return true;
 }
 
+void stable_const_init(stable_const_t *table)
+{
+    if(table == NULL)
+        return;
+
+    table->items = malloc(sizeof *(table->items) * 20);
+    if(table->items == NULL) {
+        fprintf(stderr, "%s: Unable to allocate memory for constant array\n", __func__);
+        exit(IFJ_INTERNAL_ERR);
+    }
+
+    table->max_size = 20;
+    table->free_idx = 0;
+}
+
+void stable_const_insert(stable_const_t *table, stable_variable_t *var)
+{
+    if(table == NULL || var == NULL)
+        return;
+
+    if((table->free_idx + 1) == table->max_size) {
+        stable_variable_t *n = realloc(table->items, sizeof *n * (table->max_size + 20));
+        if(n == NULL) {
+            fprintf(stderr, "%s: Unable to expand constant array\n", __func__);
+            exit(IFJ_INTERNAL_ERR);
+        }
+
+        table->items = n;
+        table->max_size += 20;
+    }
+
+    table->items[table->free_idx++] = *var;
+}
+
+int stable_const_insert_int(stable_const_t *table, int val)
+{
+    stable_variable_t var;
+
+    var.dtype = STABLE_INT;
+    var.val.i = val;
+    var.initialized = true;
+
+    stable_const_insert(table, &var);
+    return (table->free_idx * -1);
+}
+
+int stable_const_insert_double(stable_const_t *table, double val)
+{
+    stable_variable_t var;
+
+    var.dtype = STABLE_DOUBLE;
+    var.val.d = val;
+    var.initialized = true;
+
+    stable_const_insert(table, &var);
+    return (table->free_idx * -1);
+}
+
+int stable_const_insert_string(stable_const_t *table, char *val)
+{
+    stable_variable_t var;
+
+    var.dtype = STABLE_STRING;
+    var.val.s = ifj_strdup(val);
+    var.initialized = true;
+
+    stable_const_insert(table, &var);
+    return (table->free_idx * -1);
+}
+
+void stable_const_destroy(stable_const_t *table)
+{
+    if(table == NULL)
+        return;
+
+    for(unsigned int i = 0; i < table->free_idx; i++) {
+        if(table->items[i].dtype == STABLE_STRING) {
+            free(table->items[i].val.s);
+            table->items[i].val.s = NULL;
+        }
+    }
+
+    free(table->items);
+    table->items = NULL;
+}
+
+stable_variable_t *stable_const_get(stable_const_t *table, int idx)
+{
+    idx = (idx * -1) - 1;
+
+    if(idx > 0 && (unsigned int)idx >= table->free_idx)
+        return NULL;
+
+    return &(table->items[idx]);
+}
 #ifdef IFJ_STABLE_DEBUG
 
 void dbg_bst_print(bst_node_t *node)

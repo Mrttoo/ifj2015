@@ -23,7 +23,12 @@
 lex_data_t lex_data;        /* Data for lexical analyser */
 lex_token_t current_token;  /* Currently processed token */
 syntax_data_t syntax_data;  /* Data for syntax analyser */
+<<<<<<< HEAD
 stable_t symbol_table;      /* Symbol table for syntax analysis */
+=======
+stable_t symbol_table;      /* Symbol table */
+stable_const_t const_table; /* Symbol table for constants */
+>>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
 stable_data_t symbol_data;  /* Currently processed symbol table item */
 stable_data_t *ptr_data;    /* Pointer for updating/accessing data in symbol table */
 instr_list_t instr_list;    /* Instruction list */
@@ -696,20 +701,50 @@ int main(int argc, char *argv[])
 
     int rc = 0;
     stable_init(&symbol_table);
+    stable_const_init(&const_table);
     lex_initialize(&lex_data, argv[1]);
     instr_list_init(&instr_list);
 
     lex_get_token(&lex_data, &current_token);
     syntax_program();
 
+<<<<<<< HEAD
     puts("SYMBOL TABLE DUMP");
     dbg_syntax_print_symbol_table(&symbol_table);
+=======
+    int i_idx = stable_const_insert_int(&const_table, 50);
+    int d_idx = stable_const_insert_double(&const_table, 2.23);
+    int s_idx = stable_const_insert_string(&const_table, "Test");
+
+    puts("SYMBOL TABLE DUMP");
+    dbg_syntax_print_symbol_table(&symbol_table);
+    puts("CONST SYMBOL TABLE DUMP - IDX");
+    printf("INT: %d\n", stable_const_get(&const_table, i_idx)->val.i);
+    printf("DOUBLE: %lf\n", stable_const_get(&const_table, d_idx)->val.d);
+    printf("STRING: %s\n", stable_const_get(&const_table, s_idx)->val.s);
+
+    puts("CONST SYMBOL TABLE DUMP - LOOP");
+    for(unsigned int i = 0; i < const_table.free_idx; i++) {
+        switch(const_table.items[i].dtype) {
+        case STABLE_INT:
+            printf("INT: %d\n", const_table.items[i].val.i);
+        break;
+        case STABLE_DOUBLE:
+            printf("DOUBLE: %lf\n", const_table.items[i].val.d);
+        break;
+        case STABLE_STRING:
+            printf("STRING: %s\n", const_table.items[i].val.s);
+        break;
+        }
+    }
+>>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
     printf("***** INTERPRETER OUTPUT *****\n");
     instr_list.active = instr_list.first;
     rc = interpret_process(&instr_list, NULL);
 
     instr_list_destroy(&instr_list);
     lex_destroy(&lex_data);
+    stable_const_destroy(&const_table);
     stable_destroy(&symbol_table);
 
     return rc;

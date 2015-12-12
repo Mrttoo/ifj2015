@@ -32,6 +32,15 @@ typedef enum {
     INSTR_SUB,          /**< Expression: subtraction */
     INSTR_MUL,          /**< Expression: multiplication */
     INSTR_DIV,          /**< Expression: division */
+<<<<<<< HEAD
+=======
+    INSTR_LT,           /**< Expression: less than */
+    INSTR_GT,           /**< Expression: greather than */
+    INSTR_LTE,          /**< Expression: less than or equal */
+    INSTR_GTE,          /**< Expression: greater than or equal */
+    INSTR_EQ,           /**< Expression: equality */
+    INSTR_NEQ,          /**< Expression: inequality */
+>>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
     INSTR_JMP,          /**< Unconditional jump 
                           *  addr1: jump destination address, addr2 & addr3: n/a */
     INSTR_JMPC,         /**< Conditional jump - if variable at addr1 is true, jump to addr2

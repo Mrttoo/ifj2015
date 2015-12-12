@@ -151,6 +151,27 @@ int interpret_process(instr_list_t *instr_list, char *testconstarray[])
         case INSTR_DIV:
 
         break;
+<<<<<<< HEAD
+=======
+        case INSTR_LT:
+
+        break;
+        case INSTR_GT:
+
+        break;
+        case INSTR_LTE:
+
+        break;
+        case INSTR_GTE:
+
+        break;
+        case INSTR_EQ:
+
+        break;
+        case INSTR_NEQ:
+
+        break;
+>>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
         case INSTR_JMP:
             // Jump to label
             instr_list->active = (instr_list_item_t*)&(instr->addr1);
