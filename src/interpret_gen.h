@@ -19,7 +19,7 @@ typedef enum {
     INSTR_COUT,         /**< Built-in function: cout
                           *  addr1: index of source variable, addr2 & addr3: unimportant */
     INSTR_CALL,         /**< Function call
-                          *  addr1: address of return instruction, addr2: address of variable for return value, addr3: unimportant */
+                          *  addr1: address destination instruction, addr2: address of variable for return value, addr3: unimportant */
     INSTR_RET,          /**< Return from a function
                           *  addr1: index to value to return, add2: n/a, add3: if set to -1, INSTR_RET throws an error 8 when reached */
     INSTR_PUSHF,        /**< Push a new frame - MUST be called before any CALL* instruction
@@ -52,6 +52,13 @@ typedef enum {
                           *  addr1: variable index to check, addr2: jump address */
     INSTR_LAB           /**< Label */
 } instr_type_t;
+
+static const char *instr_string_array[] = {
+    "INSTR_HALT", "INSTR_CALL_LENGTH", "INSTR_CALL_SUBSTR", "INSTR_CALL_CONCAT", "INSTR_CALL_FIND",
+    "INSTR_CALL_SORT", "INSTR_CIN", "INSTR_COUT", "INSTR_CALL", "INSTR_RET", "INSTR_PUSHF", "INSTR_PUSHP",
+    "INSTR_MOVI", "INSTR_MOVD", "INSTR_MOVS", "INSTR_ADD", "INSTR_SUB", "INSTR_MUL", "INSTR_DIV", "INSTR_LT",
+    "INSTR_GT", "INSTR_LTE", "INSTR_GTE", "INSTR_EQ", "INSTR_NEQ", "INSTR_JMP", "INSTR_JMPC", "INSTR_LAB"
+};
 
 typedef struct {
     instr_type_t type;

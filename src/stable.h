@@ -105,6 +105,8 @@ typedef struct stable_function_param {
 */
 typedef struct stable_function {
     bool defined;                       /**< Is function defined? */
+    void *label;                        /**< Function instruction laber address */
+    stable_item_t *f_item;
     stable_data_type_t rtype;           /**< Return data type */
     unsigned int nparam;                /**< Number of parameters */
     unsigned int maxparam;              /**< Current max parameters which can be saved into params array */
