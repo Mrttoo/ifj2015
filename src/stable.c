@@ -6,7 +6,7 @@
 #include "syntax.h"
 #include "error.h"
 #include "stack.h"
-#include "bst.h"
+#include "ial.h"
 #include "util.h"
 
 void stable_init(stable_t *stable)

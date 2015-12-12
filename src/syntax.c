@@ -7,7 +7,7 @@
 #include "stable.h"
 #include "error.h"
 #include "util.h"
-#include "bst.h"
+#include "ial.h"
 #include "expr.h"
 #include "stack.h"
 #include "interpret_gen.h"
