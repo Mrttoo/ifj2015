@@ -222,7 +222,7 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
 
     for(;;) {
         instr = instr_active_get_data(instr_list);
-        printf("\nCurr instr: %d\n", instr->type);
+        printf("\nCurr instr: %s\n", instr_string_array[instr->type]);
 
         switch(instr->type) {
         case INSTR_HALT:

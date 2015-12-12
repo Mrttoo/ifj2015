@@ -38,6 +38,7 @@ bst
 stack
 stable
 syntax
+interpret
 
 # Vim swap file
 *.swp

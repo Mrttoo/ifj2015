@@ -487,10 +487,16 @@ void syntax_expression()
 
 void syntax_if_statement()
 {
+    instr_list_item_t *preif = NULL, *elsif = NULL, *postif = NULL, *tmp = NULL;
     if(!syntax_match(LEX_LPAREN))
         syntax_error("( expected");
 
     syntax_expression();
+
+    preif = instr_insert_after_instr(&instr_list, curr_instr, INSTR_LAB, 0, 0, 0);
+    elsif = instr_insert_after_instr(&instr_list, preif, INSTR_LAB, 0, 0, 0);
+    postif = instr_insert_after_instr(&instr_list, elsif, INSTR_LAB, 0, 0, 0);
+    curr_instr = preif;
 
     if(!syntax_match(LEX_RPAREN))
         syntax_error(") expected");
@@ -498,15 +504,25 @@ void syntax_if_statement()
     syntax_data.new_scope = true;
     syntax_compound_statement();
 
+    instr_insert_after_instr(&instr_list, curr_instr, INSTR_JMP, (intptr_t)postif, 0, 0);
+    curr_instr = elsif;
+
     if(!syntax_match(LEX_KW_ELSE))
         syntax_error("'else' expected");
 
     syntax_data.new_scope = true;
     syntax_compound_statement();
+
+    tmp = instr_insert_before_instr(&instr_list, preif, INSTR_JMP, (intptr_t)elsif, 0, 0);
+    // TODO - MUST HAVE VALID FIRST ADDRESS (FROM LR PARSER)
+    instr_insert_before_instr(&instr_list, tmp, INSTR_JMPC, 0, (intptr_t)preif, 0);
+
+    curr_instr = postif;
 }
 
 void syntax_for_statement()
 {
+    instr_list_item_t *forbeg = NULL, *forblock = NULL, *forexpr = NULL, *forend = NULL;
     if(!syntax_match(LEX_LPAREN))
         syntax_error("( expected");
 
@@ -515,17 +531,37 @@ void syntax_for_statement()
     if(!syntax_match(LEX_SEMICOLON))
         syntax_error("; expected");
 
+    // Insert necessary labels
+    forbeg = instr_insert_after_instr(&instr_list, curr_instr, INSTR_LAB, 0, 0, 0);
+    forblock = instr_insert_after_instr(&instr_list, forbeg, INSTR_LAB, 0, 0, 0);
+    forexpr = instr_insert_after_instr(&instr_list, forblock, INSTR_LAB, 0, 0, 0);
+    forend = instr_insert_after_instr(&instr_list, forexpr, INSTR_LAB, 0, 0, 0);
+
     syntax_expression();
+
+    // Insert conditional block
+    // TODO - FIX COND JUMP VARIABLE
+    curr_instr = instr_insert_after_instr(&instr_list, forbeg, INSTR_JMPC, 0, (intptr_t)forblock, 0);
+    instr_insert_after_instr(&instr_list, curr_instr, INSTR_JMP, (intptr_t)forend, 0, 0);
 
     if(!syntax_match(LEX_SEMICOLON))
         syntax_error("; expected");
 
+    // Set expresison block as the active one
+    curr_instr = forexpr;
     syntax_assign_statement();
+
+    // Insert jump to for begin
+    curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_JMP, (intptr_t)forbeg, 0, 0);
 
     if(!syntax_match(LEX_RPAREN))
         syntax_error(") expected");
 
+    // Set compound statement block as the active one a parse the cond. statement
+    curr_instr = forblock;
     syntax_compound_statement();
+
+    curr_instr = forend;
 }
 
 void syntax_assign_statement()
