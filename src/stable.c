@@ -406,6 +406,92 @@ bool stable_compare_param_arrays(stable_data_t *a1, stable_data_t *a2)
     return true;
 }
 
+void stable_const_init(stable_const_t *table)
+{
+    if(table == NULL)
+        return;
+
+    table->items = malloc(sizeof *(table->items) * 20);
+    if(table->items == NULL) {
+        fprintf(stderr, "%s: Unable to allocate memory for constant array\n", __func__);
+        exit(IFJ_INTERNAL_ERR);
+    }
+
+    table->max_size = 20;
+    table->free_idx = 0;
+}
+
+void stable_const_insert(stable_const_t *table, stable_variable_t *var)
+{
+    if(table == NULL || var == NULL)
+        return;
+
+    if((table->free_idx + 1) == table->max_size) {
+        stable_variable_t *n = realloc(table->items, sizeof *n * (table->max_size + 20));
+        if(n == NULL) {
+            fprintf(stderr, "%s: Unable to expand constant array\n", __func__);
+            exit(IFJ_INTERNAL_ERR);
+        }
+
+        table->items = n;
+        table->max_size += 20;
+    }
+
+    table->items[table->free_idx++] = *var;
+}
+
+int stable_const_insert_int(stable_const_t *table, int val)
+{
+    stable_variable_t var;
+
+    var.dtype = STABLE_INT;
+    var.val.i = val;
+    var.initialized = true;
+
+    stable_const_insert(table, &var);
+    return (table->free_idx - 1);
+}
+
+int stable_const_insert_double(stable_const_t *table, double val)
+{
+    stable_variable_t var;
+
+    var.dtype = STABLE_DOUBLE;
+    var.val.d = val;
+    var.initialized = true;
+
+    stable_const_insert(table, &var);
+    return (table->free_idx - 1);
+}
+
+int stable_const_insert_string(stable_const_t *table, char *val)
+{
+    stable_variable_t var;
+
+    var.dtype = STABLE_STRING;
+    var.val.s = ifj_strdup(val);
+    var.initialized = true;
+
+    stable_const_insert(table, &var);
+    return (table->free_idx - 1);
+}
+
+void stable_const_destroy(stable_const_t *table)
+{
+    if(table == NULL)
+        return;
+
+    for(unsigned int i = 0; i < table->free_idx; i++) {
+        if(table->items[i].dtype == STABLE_STRING) {
+            free(table->items[i].val.s);
+            table->items[i].val.s = NULL;
+        }
+    }
+
+    free(table->items);
+    table->items = NULL;
+}
+
 #ifdef IFJ_STABLE_DEBUG
 
 void dbg_bst_print(bst_node_t *node)

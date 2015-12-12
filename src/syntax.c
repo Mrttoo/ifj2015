@@ -23,7 +23,8 @@
 lex_data_t lex_data;        /* Data for lexical analyser */
 lex_token_t current_token;  /* Currently processed token */
 syntax_data_t syntax_data;  /* Data for syntax analyser */
-stable_t symbol_table;      /* Symbol table for syntax analysis */
+stable_t symbol_table;      /* Symbol table */
+stable_const_t const_table; /* Symbol table for constants */
 stable_data_t symbol_data;  /* Currently processed symbol table item */
 stable_data_t *ptr_data;    /* Pointer for updating/accessing data in symbol table */
 instr_list_t instr_list;    /* Instruction list */
@@ -696,20 +697,40 @@ int main(int argc, char *argv[])
 
     int rc = 0;
     stable_init(&symbol_table);
+    stable_const_init(&const_table);
     lex_initialize(&lex_data, argv[1]);
     instr_list_init(&instr_list);
 
     lex_get_token(&lex_data, &current_token);
     syntax_program();
 
+    stable_const_insert_int(&const_table, 50);
+    stable_const_insert_double(&const_table, 2.23);
+    stable_const_insert_string(&const_table, "Test");
+
     puts("SYMBOL TABLE DUMP");
     dbg_syntax_print_symbol_table(&symbol_table);
+    puts("CONST SYMBOL TABLE DUMP");
+    for(unsigned int i = 0; i < const_table.free_idx; i++) {
+        switch(const_table.items[i].dtype) {
+        case STABLE_INT:
+            printf("INT: %d\n", const_table.items[i].val.i);
+        break;
+        case STABLE_DOUBLE:
+            printf("DOUBLE: %lf\n", const_table.items[i].val.d);
+        break;
+        case STABLE_STRING:
+            printf("STRING: %s\n", const_table.items[i].val.s);
+        break;
+        }
+    }
     printf("***** INTERPRETER OUTPUT *****\n");
     instr_list.active = instr_list.first;
     rc = interpret_process(&instr_list, NULL);
 
     instr_list_destroy(&instr_list);
     lex_destroy(&lex_data);
+    stable_const_destroy(&const_table);
     stable_destroy(&symbol_table);
 
     return rc;

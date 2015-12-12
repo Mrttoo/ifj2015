@@ -269,4 +269,17 @@ void stable_destroy_data(stable_data_t *data);
 */
 bool stable_compare_param_arrays(stable_data_t *a1, stable_data_t *a2);
 
+typedef struct stable_const {
+    unsigned int max_size;
+    unsigned free_idx;
+    stable_variable_t *items;
+} stable_const_t;
+
+void stable_const_init(stable_const_t *table);
+void stable_const_insert(stable_const_t *table, stable_variable_t *var);
+int  stable_const_insert_int(stable_const_t *table, int val);
+int  stable_const_insert_double(stable_const_t *table, double val);
+int  stable_const_insert_string(stable_const_t *table, char *val);
+void stable_const_destroy(stable_const_t *table);
+
 #endif
