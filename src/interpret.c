@@ -104,6 +104,107 @@ void interpret_math_expr(char op, stable_variable_t *var1, stable_variable_t *va
     }
 }
 
+void interpret_logic_expr(int op, stable_variable_t *var1, stable_variable_t *var2, stable_variable_t *var3)
+{
+    int res = 0;
+
+    printf("var2: %d | var3: %d\n", var2->val.i, var3->val.i);
+    switch(op) {
+    case INSTR_LT:
+        if(var2->dtype == STABLE_INT && var3->dtype == STABLE_INT)
+            res = var2->val.i < var3->val.i;
+        else if(var2->dtype == STABLE_INT && var3->dtype == STABLE_DOUBLE)
+            res = (double)var2->val.i < var3->val.d;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_INT)
+            res = var2->val.d < (double)var3->val.i;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_DOUBLE)
+            res = var2->val.d < var3->val.d;
+        else
+            fprintf(stderr, "%s (%d): ERROR - Invalid variable type\n", __func__, __LINE__);
+    break;
+    case INSTR_GT:
+        if(var2->dtype == STABLE_INT && var3->dtype == STABLE_INT)
+            res = var2->val.i > var3->val.i;
+        else if(var2->dtype == STABLE_INT && var3->dtype == STABLE_DOUBLE)
+            res = (double)var2->val.i > var3->val.d;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_INT)
+            res = var2->val.d > (double)var3->val.i;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_DOUBLE)
+            res = var2->val.d > var3->val.d;
+        else
+            fprintf(stderr, "%s (%d): ERROR - Invalid variable type\n", __func__, __LINE__);
+    break;
+    case INSTR_LTE:
+        if(var2->dtype == STABLE_INT && var3->dtype == STABLE_INT)
+            res = var2->val.i <= var3->val.i;
+        else if(var2->dtype == STABLE_INT && var3->dtype == STABLE_DOUBLE)
+            res = (double)var2->val.i <= var3->val.d;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_INT)
+            res = var2->val.d <= (double)var3->val.i;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_DOUBLE)
+            res = var2->val.d <= var3->val.d;
+        else
+            fprintf(stderr, "%s (%d): ERROR - Invalid variable type\n", __func__, __LINE__);
+    break;
+    case INSTR_GTE:
+        if(var2->dtype == STABLE_INT && var3->dtype == STABLE_INT)
+            res = var2->val.i >= var3->val.i;
+        else if(var2->dtype == STABLE_INT && var3->dtype == STABLE_DOUBLE)
+            res = (double)var2->val.i >= var3->val.d;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_INT)
+            res = var2->val.d >= (double)var3->val.i;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_DOUBLE)
+            res = var2->val.d >= var3->val.d;
+        else
+            fprintf(stderr, "%s (%d): ERROR - Invalid variable type\n", __func__, __LINE__);
+    break;
+    case INSTR_EQ:
+        if(var2->dtype == STABLE_INT && var3->dtype == STABLE_INT)
+            res = var2->val.i == var3->val.i;
+        else if(var2->dtype == STABLE_INT && var3->dtype == STABLE_DOUBLE)
+            res = (double)var2->val.i == var3->val.d;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_INT)
+            res = var2->val.d == (double)var3->val.i;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_DOUBLE)
+            res = var2->val.d == var3->val.d;
+        else if(var2->dtype == STABLE_STRING && var3->dtype == STABLE_STRING)
+            res = strcmp(var2->val.s, var3->val.s) == 0;
+        else
+            fprintf(stderr, "%s (%d): ERROR - Invalid variable type\n", __func__, __LINE__);
+    break;
+    case INSTR_NEQ:
+        if(var2->dtype == STABLE_INT && var3->dtype == STABLE_INT)
+            res = var2->val.i != var3->val.i;
+        else if(var2->dtype == STABLE_INT && var3->dtype == STABLE_DOUBLE)
+            res = (double)var2->val.i != var3->val.d;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_INT)
+            res = var2->val.d != (double)var3->val.i;
+        else if(var2->dtype == STABLE_DOUBLE && var3->dtype == STABLE_DOUBLE)
+            res = var2->val.d != var3->val.d;
+        else if(var2->dtype == STABLE_STRING && var3->dtype == STABLE_STRING)
+            res = strcmp(var2->val.s, var3->val.s) != 0;
+        else
+            fprintf(stderr, "%s (%d): ERROR - Invalid variable type\n", __func__, __LINE__);
+    break;
+    }
+
+    switch(var1->dtype) {
+    case STABLE_INT:
+        var1->val.i = res;
+    break;
+    case STABLE_DOUBLE:
+        var1->val.d = (double)res;
+    break;
+    case STABLE_NONE:
+        var1->val.i = res;
+        var1->dtype = STABLE_INT;
+        var1->initialized = true;
+    break;
+    default:
+            fprintf(stderr, "%s (%d): ERROR - Invalid variable type\n", __func__, __LINE__);
+    }
+}
+
 int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
 {
     stable_variable_t *var1 = NULL, *var2 = NULL, *var3 = NULL;
@@ -303,22 +404,23 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
             }
         break;
         case INSTR_LT:
-
-        break;
         case INSTR_GT:
-
-        break;
         case INSTR_LTE:
-
-        break;
         case INSTR_GTE:
-
-        break;
         case INSTR_EQ:
-
-        break;
         case INSTR_NEQ:
+            var1 = &(curr_frame->vars.items[instr->addr1]);
+            if(instr->addr2 < 0)
+                var2 = stable_const_get(const_table, instr->addr2);
+            else
+                var2 = &(curr_frame->vars.items[instr->addr2]);
 
+            if(instr->addr3 < 0)
+                var3 = stable_const_get(const_table, instr->addr3);
+            else
+                var3 = &(curr_frame->vars.items[instr->addr3]);
+
+           interpret_logic_expr(instr->type, var1, var2, var3);
         break;
         case INSTR_JMP:
             // Jump to label
@@ -370,7 +472,7 @@ int main(int argc, char *argv[])
     ptr2 = instr_insert_instr(&list, INSTR_LAB, 0, 0, 0);
 
     entry = instr_insert_before_instr(&list, ptr2, INSTR_CALL, (intptr_t)ptr2, 0, 0);
-    entry = instr_insert_before_instr(&list, entry, INSTR_PUSHF, 3, 0, 0);
+    entry = instr_insert_before_instr(&list, entry, INSTR_PUSHF, 4, 0, 0);
     //instr_insert_instr(&list, INSTR_CIN, 1, STABLE_STRING, 0);
     //instr_insert_instr(&list, INSTR_COUT, 1, 0, 0);
     ptr3 = instr_insert_after_instr(&list, ptr2, INSTR_CIN, 0, STABLE_INT, 0);
@@ -388,8 +490,16 @@ int main(int argc, char *argv[])
     ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_SUB, 2, 2, idx);
     ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_COUT, 2, 0, 0);
     idx = stable_const_insert_int(&const_table, 2);
+    ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_LAB, 0, 0, 0);
+    ptr = ptr3;
     ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_DIV, 2, 2, idx);
     ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_COUT, 2, 0, 0);
+    idx = stable_const_insert_int(&const_table, 0);
+    ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_NEQ, 3, 2, idx);
+    idx= stable_const_insert_string(&const_table, "Compare result: ");
+    ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_COUT, idx, 0, 0);
+    ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_COUT, 3, 0, 0);
+    ptr3 = instr_insert_after_instr(&list, ptr3, INSTR_JMPC, 3, (intptr_t)ptr, 0);
     instr_insert_instr(&list, INSTR_HALT, 0, 0, 0);
 
     instr_list_item_t *lptr = list.first;
