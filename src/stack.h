@@ -74,4 +74,6 @@ stable_symbol_list_item_t *stack_pop_node(stack_t *stack);
 */
 stable_symbol_list_item_t *stack_get_top_node(stack_t *stack);
 
+int stack_size(stack_t *stack);
+
 #endif

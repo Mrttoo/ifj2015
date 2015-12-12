@@ -59,9 +59,10 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
         return;
 
     bst_node_t *n = NULL;
-
+    bool base_scope = false;
     // Oh my god, this is disgusting...
     if(syntax_data->new_scope) {
+        base_scope = syntax_data->function_scope;
         syntax_data->new_scope = false;
         printf("NEW SCOPE FOR KEY %s\n", key);
         if(syntax_data->function_scope) {
@@ -109,6 +110,7 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
 
         it->node = n;
         it->next = NULL;
+        it->base_scope = base_scope;
 
         // Insert it into the scope list and set it as an active scope
         if(stable->active->item_list.first == NULL) {

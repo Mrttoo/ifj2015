@@ -25,6 +25,7 @@ typedef struct stable_symbol_list {
 typedef struct stable_symbol_list_item {
     struct stable_symbol_list_item *next;   /**< Pointer to next list item */
     bst_node_t *node;                       /**< Pointer to data (BST node) */
+    bool base_scope;                        /**< Determines if current scope is a base one or we're in a block */
 } stable_symbol_list_item_t;
 
 /**
