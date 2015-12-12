@@ -84,6 +84,13 @@ stable_symbol_list_item_t *stack_get_top_node(stack_t *stack)
     return stack->items[stack->free_idx - 1];
 }
 
+int stack_size(stack_t *stack)
+{
+    if(stack == NULL)
+        return 0;
+
+    return stack->size;
+}
 // Tests
 #ifdef IFJ_STACK_DEBUG
 

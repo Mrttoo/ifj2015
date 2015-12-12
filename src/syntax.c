@@ -9,6 +9,7 @@
 #include "util.h"
 #include "bst.h"
 #include "expr.h"
+#include "stack.h"
 #include "interpret_gen.h"
 
 #define ENUM_TO_STR(x) lex_token_strings[x - 256]
@@ -195,6 +196,7 @@ void syntax_func_declr()
     symbol_data.type = STABLE_FUNCTION;
     syntax_data.new_scope = true;
     syntax_data.function_scope = true;
+    syntax_data.valid_return = false;
 
     if(!syntax_type_spec())
         syntax_error("type expected");
@@ -246,6 +248,9 @@ void syntax_func_declr()
 
         // Check following compound statement
         syntax_compound_statement();
+
+        if(!syntax_data.valid_return)
+            syntax_error("missing return statement");
 
         // Restore global variable and set definition flag to true
         symbol_data = local_data;
@@ -576,6 +581,11 @@ void syntax_return_statement()
 
     if(!syntax_match(LEX_SEMICOLON))
         syntax_error("; expected");
+
+    if(symbol_table.active->active_scope->base_scope) {
+        puts("YES");
+        syntax_data.valid_return = true;
+    }
 }
 
 void syntax_cin_statement()
