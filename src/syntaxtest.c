@@ -6,10 +6,11 @@ string sort(string s);
 
 int main() { 
     int x; 
-    int y;
+    string y;
 
     cin >> x >> y;
-    cout << "You entered: " << x << "END OF INPUT";
+    cout << "You entered: " << x << "AND" << y << "END OF INPUT";
+
     return x;
 }
 

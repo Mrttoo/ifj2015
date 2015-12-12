@@ -437,6 +437,7 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
     stable_clean_data(&symbol_data);
     symbol_data.type = STABLE_VARIABLE;
     symbol_data.var.initialized = false;
+    symbol_data.var.dtype = syntax_data.dtype;
 
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("identifier expected");
