@@ -95,6 +95,7 @@ sign_value get_sign(lex_token_t *t)
 	case LEX_IDENTIFIER:
 	case LEX_INTEGER:
 	case LEX_DOUBLE:
+	case LEX_STRING;
 		return symbol_id;
 	
 	case LEX_SEMICOLON:
@@ -174,8 +175,8 @@ void type(Stack *stack, Stack *stack_types, int Rule)
 
 void constant_check(lex_token_t *token)
 {
-	static int i = 0;
-	if(i < 1)
+	static int i = 1;
+	if(i < 2)
 		constant_table = malloc(sizeof(stable_variable_t));
 	 if(constant_table == NULL)
 	 {
@@ -189,15 +190,20 @@ void constant_check(lex_token_t *token)
 		 	constant_table[i].val.i = atoi(token->val);
 			constant_table[i].dtype = 0;
 			i++;
-			//instr_insert_instr(, INST_ASSIGN, , ,i)
+			//instr_insert_instr(&list, INST_MOVI,0 ,0 ,i);
 			break;
 
 		case LEX_DOUBLE:
 			constant_table[i].val.d  = atof(token->val);
 			i++;
 			constant_table[i].dtype = 1;
-			//inst_insert_instr(, INST_ASSIGN, , ,i )
+			//inst_insert_instr(&list, INST_MOVD,0 ,0 ,i )
 			break;
+		case LEX_STRING:
+			constant_table[i].val.s = token->val;
+			i++;
+			constant_table[i].dtype = 2;
+			//inst_insert_instr(&list, INST_MOVS,0, 0, i)
 
 		default:
 			break;
@@ -218,6 +224,7 @@ lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data
 		*ptr_data, syntax_data_t *syntax_data)
 {
 	int i=1;
+	int offset;
 
 	Stack stack;
 	Stack stack_types;
@@ -263,10 +270,15 @@ lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data
 					{
 					   stack_push(&stack_types, token->type);
 					   constant_check(token);
-					   //instr_insert_instr(,INST_ASSIGN, , , )
 					}
 					else if(token->type == LEX_IDENTIFIER)
-						//instr_insert_instr(,INST_ASSIGN, , , )
+					{
+						int *pom;
+						pom = &token->val;
+						stable.active.
+						offset = offset*(-1);
+						instr_insert_instr(&list,INST_, pom, 0, offset )
+					}
 					stack_push(&stack, get_sign(token));
 
 				}
@@ -278,7 +290,7 @@ lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data
 						stack_push(&stack_types, token->type);
 						constant_check(token);
 					}
-					else if(token->type == LEX_IDENTIFIER)
+					//else if(token->type == LEX_IDENTIFIER)
 						//instr_insert_instr(, INST_ASSIGN, , , )
 					stack_push(&stack, get_sign(token));
 				}

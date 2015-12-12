@@ -470,7 +470,7 @@ void syntax_stmt_list()
 // TODO: Waiting for LR parser
 void syntax_expression()
 {
-    syntax_match(LEX_IDENTIFIER);
+	syntax_precedence(&current_token, &lex_data, &symbol_data, ptr_data, &syntax_data);
     if(syntax_match(LEX_LPAREN)) {
         syntax_call_statement();
     } else {
@@ -503,7 +503,7 @@ void syntax_for_statement()
     if(!syntax_match(LEX_LPAREN))
         syntax_error("( expected");
 
-    syntax_var_declr(true);
+    syntax_var_declr(false);
 
     if(!syntax_match(LEX_SEMICOLON))
         syntax_error("; expected");

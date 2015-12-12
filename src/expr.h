@@ -10,6 +10,9 @@
 #include "error.h"
 #include "Estack.h"
 
+
+
+
 typedef enum 
 {
 	sign_plus,
@@ -29,6 +32,8 @@ typedef enum
 	symbol_semicolon,
 	symbol_eof
 }sign_value;
+
+
 typedef enum 
 {
 	E_plus_E, 			// E->E+E  0
@@ -50,9 +55,10 @@ enum symbols
 	nonterminal,
 	symbol_error
 };
-lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_t *symbol_table, stable_data_t *symbol_data, stable_data_t
+lex_token_t *syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data_t *symbol_data, stable_data_t
 		*ptr_data, syntax_data_t *syntax_data);
 sign_value get_sign(lex_token_t *t);
+
 
 
 #endif

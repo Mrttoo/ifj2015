@@ -10,6 +10,11 @@
 #include "lex.h"
 #include "stable.h"
 #include "error.h"
+#include "expr.h"
+
+extern char *lex_token_strings[];
+extern stable_t t_stable;
+
 
 typedef struct syntax_data {
     char *id;
