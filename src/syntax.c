@@ -23,15 +23,12 @@
 lex_data_t lex_data;        /* Data for lexical analyser */
 lex_token_t current_token;  /* Currently processed token */
 syntax_data_t syntax_data;  /* Data for syntax analyser */
-<<<<<<< HEAD
-stable_t symbol_table;      /* Symbol table for syntax analysis */
-=======
 stable_t symbol_table;      /* Symbol table */
 stable_const_t const_table; /* Symbol table for constants */
->>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
 stable_data_t symbol_data;  /* Currently processed symbol table item */
 stable_data_t *ptr_data;    /* Pointer for updating/accessing data in symbol table */
 instr_list_t instr_list;    /* Instruction list */
+instr_list_item_t *curr_instr;
 
 /* Token array for debugging */
 char *lex_token_strings[] = {
@@ -180,6 +177,12 @@ void syntax_program()
     bst_node_t *st_global = stable_get_global(&symbol_table);
     bst_foreach_func(st_global, syntax_check_func_def);
 
+    // 3. Prepare instruction list
+    // Insert necessary PUSHF and CALL instructions (and set main function as active one)
+    instr_list_item_t *instr = ptr_data->func.label;
+    instr_list.active = instr_insert_before_instr(&instr_list, instr, INSTR_CALL, (intptr_t)instr, 0, 0);
+    instr_list.active = instr_insert_before_instr(&instr_list, instr_list.active, INSTR_PUSHF, ptr_data->func.f_item->stack_idx, 0, 0);
+
     free(syntax_data.id);
     syntax_data.id = NULL;
 }
@@ -197,6 +200,7 @@ void declr_list()
 void syntax_func_declr()
 {
     bool clean_params = true;
+    instr_list_item_t *instr = NULL;
     // Clean symbol data variable and set things we know so far
     stable_data_t local_data;
     stable_clean_data(&symbol_data);
@@ -204,7 +208,6 @@ void syntax_func_declr()
     symbol_data.type = STABLE_FUNCTION;
     syntax_data.new_scope = true;
     syntax_data.function_scope = true;
-    syntax_data.valid_return = false;
 
     if(!syntax_type_spec())
         syntax_error("type expected");
@@ -247,6 +250,9 @@ void syntax_func_declr()
             stable_insert(&symbol_table, func_param.id, &func_param, &syntax_data);
         }
 
+        instr = instr_insert_instr(&instr_list, INSTR_LAB, 0, 0, 0);
+        curr_instr = instr;
+
         // Save current function data
         local_data = symbol_data;
         // Clean global variable
@@ -256,10 +262,6 @@ void syntax_func_declr()
 
         // Check following compound statement
         syntax_compound_statement();
-
-        // Check if function has a valid return statement
-        if(!syntax_data.valid_return)
-            syntax_error("missing return statement");
 
         // Restore global variable and set definition flag to true
         symbol_data = local_data;
@@ -274,6 +276,8 @@ void syntax_func_declr()
         if(ptr_data->type != STABLE_FUNCTION) {
             syntax_error("Redefined identifier '%s'", symbol_data.id);
         } else if(ptr_data->type == STABLE_FUNCTION) {
+            ptr_data->func.f_item = symbol_table.active;
+            ptr_data->func.label = instr;
             // Compare function parameters
             if(stable_compare_param_arrays(&symbol_data, ptr_data) &&
                symbol_data.func.rtype == ptr_data->func.rtype) {
@@ -433,6 +437,7 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
     stable_clean_data(&symbol_data);
     symbol_data.type = STABLE_VARIABLE;
     symbol_data.var.initialized = false;
+    symbol_data.var.dtype = syntax_data.dtype;
 
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("identifier expected");
@@ -475,7 +480,7 @@ void syntax_stmt_list()
 // TODO: Waiting for LR parser
 void syntax_expression()
 {
-	syntax_precedence(&current_token, &lex_data, &symbol_data, ptr_data, &syntax_data);
+    syntax_match(LEX_IDENTIFIER);
     if(syntax_match(LEX_LPAREN)) {
         syntax_call_statement();
     } else {
@@ -508,7 +513,7 @@ void syntax_for_statement()
     if(!syntax_match(LEX_LPAREN))
         syntax_error("( expected");
 
-    syntax_var_declr(false);
+    syntax_var_declr(true);
 
     if(!syntax_match(LEX_SEMICOLON))
         syntax_error("; expected");
@@ -554,7 +559,7 @@ void syntax_call_statement()
 void syntax_call_params(bool require_param)
 {
     if(current_token.type != LEX_RPAREN) {
-        if(!syntax_call_param())
+        if(!syntax_call_param(true))
             syntax_error("param expected");
 
         if(current_token.type == LEX_COMMA) {
@@ -566,14 +571,15 @@ void syntax_call_params(bool require_param)
     }
 }
 
-bool syntax_call_param()
+bool syntax_call_param(bool fetch_next)
 {
     switch(current_token.type) {
     case LEX_IDENTIFIER:
     case LEX_INTEGER:
     case LEX_DOUBLE:
     case LEX_LITERAL:
-        syntax_match(current_token.type);
+        if(fetch_next)
+            syntax_match(current_token.type);
     break;
     default:
         return false;
@@ -590,9 +596,6 @@ void syntax_return_statement()
 
     if(!syntax_match(LEX_SEMICOLON))
         syntax_error("; expected");
-
-    if(symbol_table.active->active_scope->base_scope)
-        syntax_data.valid_return = true;
 }
 
 void syntax_cin_statement()
@@ -608,6 +611,8 @@ void syntax_cin_statement()
     } else if(ptr_data->type != STABLE_VARIABLE) {
         syntax_error("symbol '%s' is not a variable", syntax_data.id);
     }
+
+    curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CIN, ptr_data->var.offset, ptr_data->var.dtype, 0);
 
     syntax_cin_args();
 
@@ -628,6 +633,7 @@ void syntax_cin_args()
             syntax_error("symbol '%s' is not a variable", syntax_data.id);
         }
 
+        curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CIN, ptr_data->var.offset, ptr_data->var.dtype, 0);
         if(current_token.type != LEX_SEMICOLON)
             syntax_cin_args();
     }
@@ -638,8 +644,32 @@ void syntax_cout_statement()
     if(!syntax_match(LEX_OUTPUT))
         syntax_error("<< expected");
 
-    if(!syntax_call_param())
+    if(!syntax_call_param(false))
         syntax_error("param expected");
+
+    if(current_token.type == LEX_IDENTIFIER) {
+        if(!stable_search_scopes(&symbol_table, current_token.val, &ptr_data)) {
+            syntax_error("undefined variable '%s'", current_token.val);
+        } else if(ptr_data->type != STABLE_VARIABLE) {
+            syntax_error("symbol '%s' is not a variable", current_token.val);
+        }
+
+        curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_COUT, ptr_data->var.offset, 0, 0);
+    } else { 
+        int idx = 0;
+
+        if(current_token.type == LEX_INTEGER) {
+           idx = stable_const_insert_int(&const_table, atoi(current_token.val));
+        } else if(current_token.type == LEX_DOUBLE) {
+           idx = stable_const_insert_double(&const_table, atof(current_token.val));
+        } else {
+           idx = stable_const_insert_string(&const_table, current_token.val);
+        }
+
+        curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_COUT, idx, 0, 0);
+    }
+
+    syntax_match(current_token.type);
 
     syntax_cout_args();
 
@@ -651,8 +681,32 @@ void syntax_cout_args()
 {
     if(current_token.type == LEX_OUTPUT) {
         syntax_match(LEX_OUTPUT);
-        if(!syntax_call_param())
+        if(!syntax_call_param(false))
             syntax_error("param expected");
+
+        if(current_token.type == LEX_IDENTIFIER) {
+            if(!stable_search_scopes(&symbol_table, current_token.val, &ptr_data)) {
+                syntax_error("undefined variable '%s'", current_token.val);
+            } else if(ptr_data->type != STABLE_VARIABLE) {
+                syntax_error("symbol '%s' is not a variable", current_token.val);
+            }
+
+            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_COUT, ptr_data->var.offset, 0, 0);
+        } else { 
+            int idx = 0;
+
+            if(current_token.type == LEX_INTEGER) {
+               idx = stable_const_insert_int(&const_table, atoi(current_token.val));
+            } else if(current_token.type == LEX_DOUBLE) {
+               idx = stable_const_insert_double(&const_table, atof(current_token.val));
+            } else {
+               idx = stable_const_insert_string(&const_table, current_token.val);
+            }
+
+            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_COUT, idx, 0, 0);
+        }
+
+        syntax_match(current_token.type);
 
         if(current_token.type != LEX_SEMICOLON)
             syntax_cout_args();
@@ -699,19 +753,16 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    stable_data_t *it;
+
     int rc = 0;
     stable_init(&symbol_table);
     stable_const_init(&const_table);
     lex_initialize(&lex_data, argv[1]);
     instr_list_init(&instr_list);
-
     lex_get_token(&lex_data, &current_token);
     syntax_program();
 
-<<<<<<< HEAD
-    puts("SYMBOL TABLE DUMP");
-    dbg_syntax_print_symbol_table(&symbol_table);
-=======
     int i_idx = stable_const_insert_int(&const_table, 50);
     int d_idx = stable_const_insert_double(&const_table, 2.23);
     int s_idx = stable_const_insert_string(&const_table, "Test");
@@ -737,10 +788,22 @@ int main(int argc, char *argv[])
         break;
         }
     }
->>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
+    puts("DEBUG");
+    stable_search_global(&symbol_table, "main", &it);
+    if(it != NULL)
+        printf("MAIN FUNCTION SIZE: %d\n", it->func.f_item->stack_idx);
+    else
+        puts("INVALID POINTER");
+
+    puts("INSTRUCTIONS DUMP");
+    instr_list_item_t *instr = instr_list.first;
+    while(instr != NULL) {
+        printf("%s: %d, %d, %d\n", instr_string_array[instr->data.type], instr->data.addr1, instr->data.addr2, instr->data.addr3);
+        instr = instr->next;
+    }
     printf("***** INTERPRETER OUTPUT *****\n");
-    instr_list.active = instr_list.first;
-    rc = interpret_process(&instr_list, NULL);
+    //instr_list.active = instr_list.first;
+    rc = interpret_process(&instr_list, &const_table);
 
     instr_list_destroy(&instr_list);
     lex_destroy(&lex_data);

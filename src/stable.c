@@ -19,7 +19,6 @@ void stable_init(stable_t *stable)
 
     if(it == NULL) {
         fprintf(stderr, "%s: Couldn't allocate memory for symbol table\n", __func__);
-<<<<<<< HEAD
         exit(IFJ_INTERNAL_ERR);
     }
 
@@ -33,21 +32,6 @@ void stable_init(stable_t *stable)
         exit(IFJ_INTERNAL_ERR);
     }
 
-=======
-        exit(IFJ_INTERNAL_ERR);
-    }
-
-    it->type = STABLE_TYPE_GLOBAL;
-    it->next = NULL;
-    it->scopes = NULL;
-
-    stable_symbol_list_item_t *s_it = malloc(sizeof *s_it);
-    if(s_it == NULL) {
-        fprintf(stderr, "%s: Couldn't allocate memory for global symbol table\n", __func__);
-        exit(IFJ_INTERNAL_ERR);
-    }
-
->>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
     s_it->node = NULL;
     s_it->next = NULL;
     it->item_list.first = s_it;
@@ -75,10 +59,8 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
         return;
 
     bst_node_t *n = NULL;
-    bool base_scope = false;
     // Oh my god, this is disgusting...
     if(syntax_data->new_scope) {
-        base_scope = syntax_data->function_scope;
         syntax_data->new_scope = false;
         printf("NEW SCOPE FOR KEY %s\n", key);
         if(syntax_data->function_scope) {
@@ -126,7 +108,6 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
 
         it->node = n;
         it->next = NULL;
-        it->base_scope = base_scope;
 
         // Insert it into the scope list and set it as an active scope
         if(stable->active->item_list.first == NULL) {

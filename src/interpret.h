@@ -5,7 +5,9 @@
 #include "stable.h"
 #include "interpret_gen.h"
 
-int interpret_process(instr_list_t *instr_list, char *testconstarray[]);
+void interpret_math_expr(char op, stable_variable_t *var1, stable_variable_t *var2, stable_variable_t *var3);
+void interpret_logic_expr(int op, stable_variable_t *var1, stable_variable_t *var2, stable_variable_t *var3);
+int interpret_process(instr_list_t *instr_list, stable_const_t *const_table);
 
 typedef struct instr_stack {
     int size;

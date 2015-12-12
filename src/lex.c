@@ -282,7 +282,7 @@ int lex_get_token(lex_data_t *d, lex_token_t *t) {
         // Get string literal
         if(d->c == '"') {
             i = 0;
-            lex_buffer_insert(d, i++, d->c);
+            //lex_buffer_insert(d, i++, d->c);
             bool escape = false;
             while((d->c = fgetc(d->source)) != EOF) {
                 if(d->c == '\n') {
@@ -300,7 +300,7 @@ int lex_get_token(lex_data_t *d, lex_token_t *t) {
                 }
                 lex_buffer_insert(d, i++, d->c);
             }
-            lex_buffer_insert(d, i++, d->c);
+            //lex_buffer_insert(d, i++, d->c);
             lex_buffer_insert(d, i, '\0');
 
             t->type = LEX_LITERAL;

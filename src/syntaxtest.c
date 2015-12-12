@@ -4,7 +4,15 @@ string concat(string s1, string s2);
 int find(string s, string search);
 string sort(string s);
 
-int main() {}
+int main() { 
+    int x; 
+    string y;
+
+    cin >> x >> y;
+    cout << "You entered: " << x << "AND" << y << "END OF INPUT";
+
+    return x;
+}
 
 string test(int p)
 {
@@ -38,6 +46,6 @@ string test(int p)
 
 double test2(int a, int b, string c)
 { 
-
+    return y;
 }
 

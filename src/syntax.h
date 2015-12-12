@@ -10,11 +10,6 @@
 #include "lex.h"
 #include "stable.h"
 #include "error.h"
-#include "expr.h"
-
-extern char *lex_token_strings[];
-extern stable_t t_stable;
-
 
 typedef struct syntax_data {
     char *id;
@@ -54,7 +49,7 @@ void syntax_for_statement();
 void syntax_assign_statement();
 void syntax_call_statement();
 void syntax_call_params(bool require_param);
-bool syntax_call_param();
+bool syntax_call_param(bool fetch_next);
 void syntax_return_statement();
 void syntax_cin_statement();
 void syntax_cin_args();

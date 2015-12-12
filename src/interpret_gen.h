@@ -14,39 +14,51 @@ typedef enum {
     INSTR_CALL_CONCAT,  /**< Built-in function: concat */
     INSTR_CALL_FIND,    /**< Built-in function: find */
     INSTR_CALL_SORT,    /**< Built-in function: sort */
-    INSTR_CIN,          /**< Built-in function: cin 
+    INSTR_CIN,          /**< Built-in function: cin
                           *  addr1: index of destination variable, addr2: data type (stable_data_type_t), addr3: unimportant */
-    INSTR_COUT,         /**< Built-in function: cout 
+    INSTR_COUT,         /**< Built-in function: cout
                           *  addr1: index of source variable, addr2 & addr3: unimportant */
-    INSTR_CALL,         /**< Function call 
-                          *  addr1: address of return instruction, addr2: address of variable for return value, addr3: unimportant */
-    INSTR_RET,          /**< Return from a function */
+    INSTR_CALL,         /**< Function call
+                          *  addr1: address destination instruction, addr2: address of variable for return value, addr3: unimportant */
+    INSTR_RET,          /**< Return from a function
+                          *  addr1: index to value to return, add2: n/a, add3: if set to -1, INSTR_RET throws an error 8 when reached */
     INSTR_PUSHF,        /**< Push a new frame - MUST be called before any CALL* instruction
                           *  addr1: number of variables to allocate */
     INSTR_PUSHP,        /**< Push a function parameter value into frame created by PUSHF 
                           *  addr1: index of variable in old frame (or constant), addr2: index of var. in new frame, add3: n/a */
-    INSTR_MOVI,         /**< Assignment (integer) */
-    INSTR_MOVD,         /**< Assignment (double) */
-    INSTR_MOVS,         /**< Assignment (string) */
-    INSTR_ADD,          /**< Expression: addition */
-    INSTR_SUB,          /**< Expression: subtraction */
-    INSTR_MUL,          /**< Expression: multiplication */
-    INSTR_DIV,          /**< Expression: division */
-<<<<<<< HEAD
-=======
+    INSTR_MOVI,         /**< Assignment (integer)
+                          *  addr1: destination variable index, addr2: source variable/constant index */
+    INSTR_MOVD,         /**< Assignment (double)
+                          *  addr1: destination variable index, addr2: source variable/constant index */
+    INSTR_MOVS,         /**< Assignment (string)
+                          *  addr1: destination variable index, addr2: source variable/constant index (source is copied by ifj_strdup()) */
+    INSTR_ADD,          /**< Expression: addition
+                          *  addr1: destination variable index, addr2 & add3: source variable/constant index */
+    INSTR_SUB,          /**< Expression: subtraction
+                          *  addr1: destination variable index, addr2 & add3: source variable/constant index */
+    INSTR_MUL,          /**< Expression: multiplication
+                          *  addr1: destination variable index, addr2 & add3: source variable/constant index */
+    INSTR_DIV,          /**< Expression: division
+                          *  addr1: destination variable index, addr2 & add3: source variable/constant index */
     INSTR_LT,           /**< Expression: less than */
     INSTR_GT,           /**< Expression: greather than */
     INSTR_LTE,          /**< Expression: less than or equal */
     INSTR_GTE,          /**< Expression: greater than or equal */
     INSTR_EQ,           /**< Expression: equality */
     INSTR_NEQ,          /**< Expression: inequality */
->>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
     INSTR_JMP,          /**< Unconditional jump 
                           *  addr1: jump destination address, addr2 & addr3: n/a */
     INSTR_JMPC,         /**< Conditional jump - if variable at addr1 is true, jump to addr2
                           *  addr1: variable index to check, addr2: jump address */
     INSTR_LAB           /**< Label */
 } instr_type_t;
+
+static const char *instr_string_array[] = {
+    "INSTR_HALT", "INSTR_CALL_LENGTH", "INSTR_CALL_SUBSTR", "INSTR_CALL_CONCAT", "INSTR_CALL_FIND",
+    "INSTR_CALL_SORT", "INSTR_CIN", "INSTR_COUT", "INSTR_CALL", "INSTR_RET", "INSTR_PUSHF", "INSTR_PUSHP",
+    "INSTR_MOVI", "INSTR_MOVD", "INSTR_MOVS", "INSTR_ADD", "INSTR_SUB", "INSTR_MUL", "INSTR_DIV", "INSTR_LT",
+    "INSTR_GT", "INSTR_LTE", "INSTR_GTE", "INSTR_EQ", "INSTR_NEQ", "INSTR_JMP", "INSTR_JMPC", "INSTR_LAB"
+};
 
 typedef struct {
     instr_type_t type;
