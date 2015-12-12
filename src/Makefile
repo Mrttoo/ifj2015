@@ -42,7 +42,7 @@ lexanalyze: lex.c
 	${RM} $@
 
 # Binary Search Tree test
-bst: ial.c ial.h util.o
+bst: ial.c ial.h util.o stable.o stack.o
 	${CC} ${CFLAGS} $^ -DIFJ_BST_DEBUG -o $@
 
 stack: stack.c stack.h ial.o util.o

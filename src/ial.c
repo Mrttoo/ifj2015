@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
                    "num", "i", "I", "key", "asdf3", "tea23", "_2314", NULL };
     int rc = 0;
     bst_node_t *root = NULL;
-    stable_data_t data = { .type = LEX_EOF, .value.i = 1 };
+    stable_data_t data = { .type = LEX_EOF, .var.val.i = 1 };
     // Test alloc
     root = bst_new_node("j", &data);
 
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
         } else {
             if(strcmp(ta[i], search->key) == 0) {
                 fprintf(stderr, "[PASS] Found node with correct value (%s == %s) (%d)\n",
-                        ta[i], search->key, search->data.value.i);
+                        ta[i], search->key, search->data.var.val.i);
             } else {
                 fprintf(stderr, "[FAIL] Found node with incorrect value (%s != %s)\n",
                         ta[i], search->key);
