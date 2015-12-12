@@ -1,7 +1,7 @@
 #ifndef __STACK_H_INCLUDED
 #define __STACK_H_INCLUDED
 
-#include "bst.h"
+#include "ial.h"
 
 #define IFJ_STACK_CHUNK 5
 
