@@ -480,12 +480,9 @@ void syntax_stmt_list()
 // TODO: Waiting for LR parser
 void syntax_expression()
 {
-    syntax_match(LEX_IDENTIFIER);
-    if(syntax_match(LEX_LPAREN)) {
-        syntax_call_statement();
-    } else {
-        syntax_precedence();
-    }
+	syntax_precedence();
+	if(syntax_match(LEX_LPAREN))
+			syntax_call_statement();
 }
 
 void syntax_if_statement()

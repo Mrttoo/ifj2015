@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=--std=c11 -Wall -Wextra -g -pedantic
-EXEC=ifj15
+EXEC=syntax
 
 all: ${EXEC}
 
