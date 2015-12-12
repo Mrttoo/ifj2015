@@ -19,6 +19,11 @@ int interpret_process(instr_list_t *instr_list, char *testconstarray[])
 
     frame_stack_init(&fstack);
 
+    if(instr_list->active == NULL) {
+        fprintf(stderr, "%s: [BUG] Hey! You forgot to set an active instruction!\n", __func__);
+        exit(IFJ_INTERNAL_ERR);
+    }
+
     for(;;) {
         instr = instr_active_get_data(instr_list);
         printf("\nCurr instr: %d\n", instr->type);
@@ -41,8 +46,6 @@ int interpret_process(instr_list_t *instr_list, char *testconstarray[])
             curr_frame = tmp_frame;
             curr_frame->ret_val->val.i = strlen(curr_frame->vars.items[0].val.s);
             curr_frame->ret_val->initialized = true;
-            printf("STRLEN RES: %d\n", curr_frame->ret_val->val.i);
-            printf("OK SO FAR\n");
             // Simulate INSTR_RET
             frame_stack_pop(&fstack);
             tmp_frame = frame_stack_get_top(&fstack);

@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 #include "stable.h"
+#include "interpret_gen.h"
+
+int interpret_process(instr_list_t *instr_list, char *testconstarray[]);
 
 typedef struct instr_stack {
     int size;

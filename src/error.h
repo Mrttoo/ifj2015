@@ -2,6 +2,9 @@
 #define __ERROR_H_INCLUDED
 /* Draft for error-related header file */
 #include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 enum ifj_error_codes {
     IFJ_OK                  = 0,  // Everything is ok
@@ -18,5 +21,31 @@ enum ifj_error_codes {
     IFJ_RUNTIME_OTHER_ERR   = 10, // Runtime error - other
     IFJ_INTERNAL_ERR        = 99, // Internal interpreter error
 }; 
+
+static inline void throw_syntax_error(int ec, int line, char *format, ...)
+{
+    va_list args;
+
+    va_start(args, format);
+    fprintf(stderr, "Syntax error on line %d: ", line);
+    vfprintf(stderr, format, args);
+    fprintf(stderr, "\n");
+    va_end(args);
+
+    exit(ec);
+}
+
+static inline void throw_error(int ec, char *format, ...)
+{
+    va_list args;
+
+    va_start(args, format);
+    fprintf(stderr, "Error: ");
+    vfprintf(stderr, format, args);
+    fprintf(stderr, "\n");
+    va_end(args);
+
+    exit(ec);
+}
 
 #endif 

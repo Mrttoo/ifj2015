@@ -19,19 +19,6 @@ typedef struct syntax_data {
     bool valid_return;
 } syntax_data_t;
 
-static inline void throw_syntax_error(int ec, lex_data_t *ld, char *format, ...)
-{
-    va_list args;
-
-    va_start(args, format);
-    fprintf(stderr, "Syntax error on line %d: ", ld->line + 1);
-    vfprintf(stderr, format, args);
-    fprintf(stderr, "\n");
-    va_end(args);
-
-    exit(ec);
-}
-
 /**
   * @brief Checks if given node is a symbol of defined function
   *
