@@ -51,7 +51,7 @@ stack: stack.c stack.h ial.o util.o
 stable: stable.c stable.h stack.o ial.o util.o
 	${CC} ${CFLAGS} $^ -DIFJ_STABLE_DEBUG -o $@
 
-syntax: syntax.c syntax.h error.h interpret_gen.c lex.o stable.o stack.o ial.o util.o interpret.o interpret_funcs.o
+syntax: syntax.c syntax.h error.h interpret_gen.c lex.o stable.o stack.o ial.o util.o interpret.o interpret_funcs.o expr.c expr.h Estack.c
 	${CC} ${CFLAGS} -DIFJ_SYNTAX_DEBUG $^ -o $@
 
 intfuncs: interpret_funcs.c interpret_funcs.h syntax.h error.h

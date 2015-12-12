@@ -9,14 +9,19 @@
 #include "util.h"
 #include "interpret_gen.h"
 
-
-#define ENUM_TO_STR(x) lex_token_strings[x - 256]
-
 #define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, &lex_data, __VA_ARGS__);
 #define syntax_error_ec(ec, ...) throw_syntax_error(ec, &lex_data, __VA_ARGS__);
 
-stable_const_t constant_table;
-instr_list_t list;
+extern lex_data_t lex_data;        /* Data for lexical analyser */
+extern lex_token_t current_token;  /* Currently processed token */
+extern syntax_data_t syntax_data;  /* Data for syntax analyser */
+extern stable_t symbol_table;      /* Symbol table */
+extern stable_const_t const_table; /* Symbol table for constants */
+extern stable_data_t symbol_data;  /* Currently processed symbol table item */
+extern stable_data_t *ptr_data;    /* Pointer for updating/accessing data in symbol table */
+extern instr_list_t instr_list;    /* Instruction list */
+extern instr_list_item_t *curr_instr;
+
 int final_index;
 
 /*
@@ -148,14 +153,14 @@ void type(Stack *stack, Stack *stack_types, Stack *stack_index, int instr_type_t
 		case INSTR_DIV:
 			if((first_op == LEX_INTEGER) && (second_op == LEX_INTEGER))
 			{				
-				instr_insert_instr(&list,instr_type_t, offset, first_addr, second_addr);
+				instr_insert_instr(&instr_list,instr_type_t, offset, first_addr, second_addr);
 				stack_push(&(*stack_types), LEX_INTEGER);
 				break;
 			}
 				
 			else
 			{
-				instr_insert_instr(&list, instr_type_t, offset, first_addr, second_addr);
+				instr_insert_instr(&instr_list, instr_type_t, offset, first_addr, second_addr);
 				stack_push(&(*stack_types), LEX_DOUBLE);
 				break;
 			}
@@ -167,13 +172,13 @@ void type(Stack *stack, Stack *stack_types, Stack *stack_index, int instr_type_t
 		case INSTR_NEQ:
 				if((first_op == LEX_INTEGER) && (second_op == LEX_INTEGER)) 
 				{
-					instr_insert_instr(&list, instr_type_t, offset, first_addr, second_addr);
+					instr_insert_instr(&instr_list, instr_type_t, offset, first_addr, second_addr);
 					stack_push(&(*stack_types), LEX_INTEGER);
 					break;
 				}
 				else
 				{
-					instr_insert_instr(&list, instr_type_t, offset, first_addr, second_addr);
+					instr_insert_instr(&instr_list, instr_type_t, offset, first_addr, second_addr);
 					stack_push(&(*stack_types), LEX_DOUBLE);
 					break;
 				}
@@ -194,21 +199,21 @@ void constant_check(lex_token_t *token, Stack *stack_index)
 	{
 		case LEX_INTEGER:
 		 	i = atoi(token->val);
-			constant_offset = stable_const_insert_int(&constant_table, i);
-			instr_insert_instr(&list, INSTR_MOVI, constant_offset, 0, 0);
+			constant_offset = stable_const_insert_int(&const_table, i);
+			instr_insert_instr(&instr_list, INSTR_MOVI, constant_offset, 0, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 
 		case LEX_DOUBLE:
 			d = atof(token->val);
-			constant_offset = stable_const_insert_double(&constant_table, d);
-			instr_insert_instr(&list, INSTR_MOVD, constant_offset, 0, 0);
+			constant_offset = stable_const_insert_double(&const_table, d);
+			instr_insert_instr(&instr_list, INSTR_MOVD, constant_offset, 0, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 		
 		case LEX_STRING:
-			constant_offset = stable_const_insert_string(&constant_table, token->val);
-			instr_insert_instr(&list, INSTR_MOVS, constant_offset, 0, 0);
+			constant_offset = stable_const_insert_string(&const_table, token->val);
+			instr_insert_instr(&instr_list, INSTR_MOVS, constant_offset, 0, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 
@@ -227,8 +232,7 @@ void constant_check(lex_token_t *token, Stack *stack_index)
    that it continues according to precedence rules (=, <, >).
  */
 
-int syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data_t *symbol_data, stable_data_t
-		*ptr_data, syntax_data_t *syntax_data)
+int syntax_precedence()
 {
 	int i=1;
 
@@ -242,34 +246,26 @@ int syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data_t *symbo
 	stack_push(&stack, symbol_dollar);
 	stack_push(&stack_types, symbol_dollar);
 
-
-
-	stable_const_init(&constant_table);
-	//instr_list_init(&list);
-
-
 	do
 	{
 
 		//if(!stable_search_scopes(symbol_table, syntax_data->id, &ptr_data))
 		//	fprintf(stderr,"Undefined variabile");
 
-		printf("[%s] Current token: (%d) %s\n", __func__, token->type, ENUM_TO_STR(token->type));
-
 		if(stack_top(&stack) == 'E')
 			i=2;
 		else
 			i=1;
 
-		switch(precedence_table[stack_offset(&stack, i)][get_sign(token)])
+		switch(precedence_table[stack_offset(&stack, i)][get_sign(&current_token)])
 		{
 			case '=':
-				if((stack_top(&stack) == sign_lparen) && (get_sign(token) == sign_rparen))
+				if((stack_top(&stack) == sign_lparen) && (get_sign(&current_token) == sign_rparen))
 				{
 					fprintf(stderr,"() ilegal operation");
 				}
-				stack_push(&stack, get_sign(token));
-				lex_get_token(data, token);
+				stack_push(&stack, get_sign(&current_token));
+				lex_get_token(&lex_data, &current_token);
 				break;
 
 			case '<':
@@ -278,28 +274,28 @@ int syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data_t *symbo
 					stack_pop(&stack);
 					stack_push(&stack, '<');
 					stack_push(&stack, 'E');
-					stack_push(&stack, get_sign(token));
+					stack_push(&stack, get_sign(&current_token));
 
 				}
 				else
 				{
 					stack_push(&stack,'<');
-					if((token->type == LEX_INTEGER) || (token->type == LEX_DOUBLE) || (token->type == LEX_STRING))
+					if((current_token.type == LEX_INTEGER) || (current_token.type == LEX_DOUBLE) || (current_token.type == LEX_STRING))
 					{
-						stack_push(&stack_types, token->type);
-						constant_check(token, &stack_index);
+						stack_push(&stack_types, current_token.type);
+						constant_check(&current_token, &stack_index);
 					}
-					else if(token->type == LEX_IDENTIFIER)
+					else if(current_token.type == LEX_IDENTIFIER)
 					{
-						stable_search_scopes(&symbol_table, token->val, &ptr_data);
+						stable_search_scopes(&symbol_table, current_token.val, &ptr_data);
 						int offset = symbol_table.active->stack_idx++;
-						instr_insert_instr(&list, INSTR_MOVD, offset, ptr_data->var.offset , 0);
+						instr_insert_instr(&instr_list, INSTR_MOVD, offset, ptr_data->var.offset , 0);
 						stack_push(&stack_index, offset);
 					}
-					stack_push(&stack, get_sign(token));
+					stack_push(&stack, get_sign(&current_token));
 				}
 
-				lex_get_token(data, token);
+				lex_get_token(&lex_data, &current_token);
 				break;
 
 			/*
@@ -394,11 +390,11 @@ int syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data_t *symbo
 				
 			case '#':
 
-				/* Check for function call, if ID( then we will expect it to be function and return token to syntax. analyator
+				/* Check for function call, if ID( then we will expect it to be function and return &current_token to syntax. analyator
 				   */
 				if(stack_top(&stack) == symbol_id)
 				{
-					if(get_sign(token) == sign_lparen)
+					if(get_sign(&current_token) == sign_lparen)
 						return -1;
 						
 					else
@@ -406,15 +402,15 @@ int syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data_t *symbo
 				}
 		}
 
-		if(token->type == LEX_IDENTIFIER)
+		if(current_token.type == LEX_IDENTIFIER)
 		{
-			if(syntax_data->id != NULL)
+			if(syntax_data.id != NULL)
 			{
-				free(syntax_data->id);
+				free(syntax_data.id);
 			}
-			syntax_data->id = ifj_strdup(token->val);
+			syntax_data.id = ifj_strdup(current_token.val);
 		}
-	}while(!(((stack_top(&stack) == 'E') && (stack_offset(&stack, 2) == symbol_dollar)) && ((get_sign(token) == sign_rparen) || (token->type ==
+	}while(!(((stack_top(&stack) == 'E') && (stack_offset(&stack, 2) == symbol_dollar)) && ((get_sign(&current_token) == sign_rparen) || (current_token.type ==
 						LEX_SEMICOLON))));
 
 return final_index;	

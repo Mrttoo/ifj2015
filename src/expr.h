@@ -50,7 +50,7 @@ enum symbols
 	nonterminal,
 	symbol_error
 };
-int syntax_precedence(lex_token_t *token, lex_data_t *data, stable_data_t *symbol_data, stable_data_t*ptr_data, syntax_data_t *syntax_data);
+int syntax_precedence();
 sign_value get_sign(lex_token_t *t);
 
 

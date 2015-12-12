@@ -484,7 +484,7 @@ void syntax_expression()
     if(syntax_match(LEX_LPAREN)) {
         syntax_call_statement();
     } else {
-        //syntax_precedence(&current_token, &lex_data, &symbol_table, &symbol_data, ptr_data, &syntax_data);
+        syntax_precedence();
     }
 }
 
