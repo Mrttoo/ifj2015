@@ -263,6 +263,11 @@ void syntax_func_declr()
         // Check following compound statement
         syntax_compound_statement();
 
+        // This special return instruction causes runtime error when reached
+        // We use this as a precaution for functions with missing correct return statement
+        // TODO - Uncomment following line, when we have correct return handling
+        //curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_RET, -1, 0, -1);
+
         // Restore global variable and set definition flag to true
         symbol_data = local_data;
         symbol_data.func.defined = true;
