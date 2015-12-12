@@ -449,7 +449,7 @@ int stable_const_insert_int(stable_const_t *table, int val)
     var.initialized = true;
 
     stable_const_insert(table, &var);
-    return (table->free_idx - 1);
+    return (table->free_idx * -1);
 }
 
 int stable_const_insert_double(stable_const_t *table, double val)
@@ -461,7 +461,7 @@ int stable_const_insert_double(stable_const_t *table, double val)
     var.initialized = true;
 
     stable_const_insert(table, &var);
-    return (table->free_idx - 1);
+    return (table->free_idx * -1);
 }
 
 int stable_const_insert_string(stable_const_t *table, char *val)
@@ -473,7 +473,7 @@ int stable_const_insert_string(stable_const_t *table, char *val)
     var.initialized = true;
 
     stable_const_insert(table, &var);
-    return (table->free_idx - 1);
+    return (table->free_idx * -1);
 }
 
 void stable_const_destroy(stable_const_t *table)
@@ -492,6 +492,15 @@ void stable_const_destroy(stable_const_t *table)
     table->items = NULL;
 }
 
+stable_variable_t *stable_const_get(stable_const_t *table, int idx)
+{
+    idx = (idx * -1) - 1;
+
+    if(idx > 0 && (unsigned int)idx >= table->free_idx)
+        return NULL;
+
+    return &(table->items[idx]);
+}
 #ifdef IFJ_STABLE_DEBUG
 
 void dbg_bst_print(bst_node_t *node)

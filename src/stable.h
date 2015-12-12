@@ -281,5 +281,6 @@ int  stable_const_insert_int(stable_const_t *table, int val);
 int  stable_const_insert_double(stable_const_t *table, double val);
 int  stable_const_insert_string(stable_const_t *table, char *val);
 void stable_const_destroy(stable_const_t *table);
+stable_variable_t *stable_const_get(stable_const_t *table, int idx);
 
 #endif

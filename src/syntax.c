@@ -704,13 +704,18 @@ int main(int argc, char *argv[])
     lex_get_token(&lex_data, &current_token);
     syntax_program();
 
-    stable_const_insert_int(&const_table, 50);
-    stable_const_insert_double(&const_table, 2.23);
-    stable_const_insert_string(&const_table, "Test");
+    int i_idx = stable_const_insert_int(&const_table, 50);
+    int d_idx = stable_const_insert_double(&const_table, 2.23);
+    int s_idx = stable_const_insert_string(&const_table, "Test");
 
     puts("SYMBOL TABLE DUMP");
     dbg_syntax_print_symbol_table(&symbol_table);
-    puts("CONST SYMBOL TABLE DUMP");
+    puts("CONST SYMBOL TABLE DUMP - IDX");
+    printf("INT: %d\n", stable_const_get(&const_table, i_idx)->val.i);
+    printf("DOUBLE: %lf\n", stable_const_get(&const_table, d_idx)->val.d);
+    printf("STRING: %s\n", stable_const_get(&const_table, s_idx)->val.s);
+
+    puts("CONST SYMBOL TABLE DUMP - LOOP");
     for(unsigned int i = 0; i < const_table.free_idx; i++) {
         switch(const_table.items[i].dtype) {
         case STABLE_INT:
