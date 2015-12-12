@@ -20,14 +20,18 @@ typedef enum {
                           *  addr1: index of source variable, addr2 & addr3: unimportant */
     INSTR_CALL,         /**< Function call 
                           *  addr1: address of return instruction, addr2: address of variable for return value, addr3: unimportant */
-    INSTR_RET,          /**< Return from a function */
+    INSTR_RET,          /**< Return from a function 
+                          *  addr1: index to value to return, add2: n/a, add3: if set to -1, INSTR_RET throws an error 8 when reached */
     INSTR_PUSHF,        /**< Push a new frame - MUST be called before any CALL* instruction
                           *  addr1: number of variables to allocate */
     INSTR_PUSHP,        /**< Push a function parameter value into frame created by PUSHF 
                           *  addr1: index of variable in old frame (or constant), addr2: index of var. in new frame, add3: n/a */
-    INSTR_MOVI,         /**< Assignment (integer) */
-    INSTR_MOVD,         /**< Assignment (double) */
-    INSTR_MOVS,         /**< Assignment (string) */
+    INSTR_MOVI,         /**< Assignment (integer) 
+                          *  addr1: destination variable index, addr2: source variable/constant index */
+    INSTR_MOVD,         /**< Assignment (double)
+                          *  addr1: destination variable index, addr2: source variable/constant index */
+    INSTR_MOVS,         /**< Assignment (string)
+                          *  addr1: destination variable index, addr2: source variable/constant index (source is copied by ifj_strdup()) */
     INSTR_ADD,          /**< Expression: addition */
     INSTR_SUB,          /**< Expression: subtraction */
     INSTR_MUL,          /**< Expression: multiplication */

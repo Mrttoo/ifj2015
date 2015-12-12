@@ -25,7 +25,6 @@ typedef struct stable_symbol_list {
 typedef struct stable_symbol_list_item {
     struct stable_symbol_list_item *next;   /**< Pointer to next list item */
     bst_node_t *node;                       /**< Pointer to data (BST node) */
-    bool base_scope;                        /**< Determines if current scope is a base one or we're in a block */
 } stable_symbol_list_item_t;
 
 /**
@@ -54,7 +53,8 @@ typedef enum {
 typedef enum {
     STABLE_INT = 0,         /**< int */
     STABLE_DOUBLE,          /**< double */
-    STABLE_STRING           /**< string */
+    STABLE_STRING,          /**< string */
+    STABLE_NONE
 } stable_data_type_t;
 
 /**
@@ -271,7 +271,7 @@ bool stable_compare_param_arrays(stable_data_t *a1, stable_data_t *a2);
 
 typedef struct stable_const {
     unsigned int max_size;
-    unsigned free_idx;
+    unsigned int free_idx;
     stable_variable_t *items;
 } stable_const_t;
 
