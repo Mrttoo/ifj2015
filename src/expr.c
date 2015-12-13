@@ -9,17 +9,17 @@
 #include "util.h"
 #include "interpret_gen.h"
 
-#define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, &lex_data, __VA_ARGS__);
-#define syntax_error_ec(ec, ...) throw_syntax_error(ec, &lex_data, __VA_ARGS__);
+#define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, lex_data.line + 1, __VA_ARGS__);
+#define syntax_error_ec(ec, ...) throw_syntax_error(ec, lex_data.line + 1, __VA_ARGS__);
 
-extern lex_data_t lex_data;        /* Data for lexical analyser */
+extern lex_data_t lex_data;		/* Data for lexical analyser */
 extern lex_token_t current_token;  /* Currently processed token */
 extern syntax_data_t syntax_data;  /* Data for syntax analyser */
-extern stable_t symbol_table;      /* Symbol table */
+extern stable_t symbol_table;	  /* Symbol table */
 extern stable_const_t const_table; /* Symbol table for constants */
 extern stable_data_t symbol_data;  /* Currently processed symbol table item */
-extern stable_data_t *ptr_data;    /* Pointer for updating/accessing data in symbol table */
-extern instr_list_t instr_list;    /* Instruction list */
+extern stable_data_t *ptr_data;	/* Pointer for updating/accessing data in symbol table */
+extern instr_list_t instr_list;	/* Instruction list */
 extern instr_list_item_t *curr_instr;
 
 int final_index;
@@ -37,7 +37,7 @@ int final_index;
 
 int precedence_table[t_size][t_size]=
 {
-//	   +	 -	   *	 /	   <	 >    <=	>=	  ==    !=	   (	 ) 	  id	 $
+//	   +	 -	   *	 /	   <	 >	<=	>=	  ==	!=	   (	 ) 	  id	 $
 	{ '>' , '>' , '<' , '<' , '>' , '>' , '>' , '>' , '>' , '>' , '<' , '>'	, '<' ,	'>' },//+
 	{ '>' , '>' , '<' , '<' , '>' , '>' , '>' , '>' , '>' , '>' , '<' ,	'>' , '<' , '>' },//-
 	{ '>' , '>' , '>' , '>' , '>' , '>' , '>' , '>' , '>' , '>' , '<' ,	'>' , '<' , '>' },//*
@@ -249,11 +249,15 @@ int syntax_precedence()
 
 	do
 	{
-        printf("SYMBOL: %s\n", syntax_data.id);
-		if(!stable_search_scopes(&symbol_table, syntax_data.id, &ptr_data))
+		printf("SYMBOL: %s\n", current_token.val);
+		if(current_token.type == LEX_IDENTIFIER && !stable_search_scopes(&symbol_table, current_token.val, &ptr_data))
 		{
-			fprintf(stderr,"%s: Undefined variabile", __func__);
-			exit(IFJ_DEF_ERR);
+			syntax_match(LEX_IDENTIFIER);
+			if(current_token.type != LEX_LPAREN) {
+				syntax_error_ec(IFJ_DEF_ERR, "Undefined variable");
+			} else {
+				return -1;
+			}
 		}
 
 
@@ -419,9 +423,13 @@ int syntax_precedence()
 				   */
 				if(stack_top(&stack) == symbol_id)
 				{
-					if(get_sign(&current_token) == sign_lparen)
+					if(get_sign(&current_token) == sign_lparen) {
+						if(syntax_data.id != NULL) {
+							free(syntax_data.id);
+							syntax_data.id = ifj_strdup(current_token.val);
+						}
 						return -1;
-						
+					}
 					else
 					{
 						fprintf(stderr, "%s: Variable after variable is not allowed without sign between them\n", __func__);
