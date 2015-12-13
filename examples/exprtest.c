@@ -1,12 +1,15 @@
 int main()
 {
     int a = 3 * 2 - 1;
-    double b = 3 * 5;
+    double b = 3 * 5; 
+    string s = "Teststring";
+    auto ii = 5;
 
-    a = 8 * 9;
+    a = a * 9;
 
     cout << a << "\n";
     cout << b << "\n";
+    cout << s << "\n";
 
     if(a > 0) {
         cout << "It works\n";
