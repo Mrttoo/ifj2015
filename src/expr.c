@@ -116,10 +116,10 @@ sign_value get_sign(lex_token_t *t)
 	}
 }
 
-/*Function should secure that types of variables are correct after binary operations
-  Number of non terminals on stack should match number of types on stack_types.
-  
- */
+/*Function is generating instructions for E->E_op_E cases. Non terminals are saved on stack_index which are then assigned to adr1 and adr2 for
+ * instruction, and offset is generating space in frame stack for result of operation.
+ */  
+ 
 
 void type(Stack *stack, Stack *stack_index, int instr_type_t)
 {
@@ -212,7 +212,6 @@ int syntax_precedence()
 	int i=1;
 
 	Stack stack;
-	Stack stack_types;
 	Stack stack_index;
 
 	Stack_Init(&stack_index);
@@ -262,7 +261,6 @@ int syntax_precedence()
 					stack_push(&stack,'<');
 					if((current_token.type == LEX_INTEGER) || (current_token.type == LEX_DOUBLE) || (current_token.type == LEX_STRING))
 					{
-						stack_push(&stack_types, current_token.type);
 						constant_check(&current_token, &stack_index);
 					}
 					else if(current_token.type == LEX_IDENTIFIER)
