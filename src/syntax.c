@@ -480,10 +480,13 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
 
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     stable_insert(&symbol_table, symbol_data.id, &symbol_data, &syntax_data);
+    int var_offset = symbol_table.active->stack_idx - 1;
+
     if(current_token.type == LEX_ASSIGNMENT) {
         syntax_match(LEX_ASSIGNMENT);
         // TODO: Waiting for LR parser
-        syntax_expression();
+        int offset = syntax_expression();
+        //curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVI, var_offset, offset, 0);
         symbol_data.var.initialized = true;
     } else if(mandatory_init) {
         if(is_auto) {
@@ -501,24 +504,30 @@ void syntax_stmt_list()
     }
 }
 
-// TODO: Waiting for LR parser
-void syntax_expression()
+int syntax_expression()
 {
-    syntax_precedence();
+    int offset = 0;
+
+    offset = syntax_precedence();
     //syntax_match(LEX_IDENTIFIER);
     if(current_token.type == LEX_LPAREN) {
         // TODO
+        printf("Got function call: %s\n", syntax_data.id);
         syntax_call_statement();
     }
+
+    return offset;
 }
 
 void syntax_if_statement()
 {
     instr_list_item_t *preif = NULL, *elsif = NULL, *postif = NULL, *tmp = NULL;
+    int offset = 0;
+
     if(!syntax_match(LEX_LPAREN))
         syntax_error("( expected");
 
-    syntax_expression();
+    offset = syntax_expression();
 
     preif = instr_insert_after_instr(&instr_list, curr_instr, INSTR_LAB, 0, 0, 0);
     elsif = instr_insert_after_instr(&instr_list, preif, INSTR_LAB, 0, 0, 0);
@@ -542,7 +551,7 @@ void syntax_if_statement()
 
     tmp = instr_insert_before_instr(&instr_list, preif, INSTR_JMP, (intptr_t)elsif, 0, 0);
     // TODO - MUST HAVE VALID FIRST ADDRESS (FROM LR PARSER)
-    instr_insert_before_instr(&instr_list, tmp, INSTR_JMPC, 0, (intptr_t)preif, 0);
+    instr_insert_before_instr(&instr_list, tmp, INSTR_JMPC, offset, (intptr_t)preif, 0);
 
     curr_instr = postif;
 }
@@ -550,6 +559,8 @@ void syntax_if_statement()
 void syntax_for_statement()
 {
     instr_list_item_t *forbeg = NULL, *forblock = NULL, *forexpr = NULL, *forend = NULL;
+    int offset = 0;
+
     if(!syntax_match(LEX_LPAREN))
         syntax_error("( expected");
 
@@ -564,11 +575,11 @@ void syntax_for_statement()
     forexpr = instr_insert_after_instr(&instr_list, forblock, INSTR_LAB, 0, 0, 0);
     forend = instr_insert_after_instr(&instr_list, forexpr, INSTR_LAB, 0, 0, 0);
 
-    syntax_expression();
+    offset = syntax_expression();
 
     // Insert conditional block
     // TODO - FIX COND JUMP VARIABLE
-    curr_instr = instr_insert_after_instr(&instr_list, forbeg, INSTR_JMPC, 0, (intptr_t)forblock, 0);
+    curr_instr = instr_insert_after_instr(&instr_list, forbeg, INSTR_JMPC, offset, (intptr_t)forblock, 0);
     instr_insert_after_instr(&instr_list, curr_instr, INSTR_JMP, (intptr_t)forend, 0, 0);
 
     if(!syntax_match(LEX_SEMICOLON))
@@ -602,7 +613,7 @@ void syntax_assign_statement()
         syntax_error("'%s' is not a variable", syntax_data.id);
     }
 
-    printf("ASSIGN STATEMENT");
+    printf("ASSIGN STATEMENT\n");
     syntax_data.assign_dest = &(ptr_data->var);
 
     if(!syntax_match(LEX_ASSIGNMENT))

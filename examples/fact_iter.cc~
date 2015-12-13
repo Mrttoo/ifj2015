@@ -3,7 +3,6 @@ int main()
 {
     int a;
     int vysl;
-int x = (3+5)*2;
     cout << "Zadejte cislo pro vypocet faktorialu: ";
     cin >> a;
     if (a < 0) // cin nacitani zaporneho cisla nemusi podporovat
