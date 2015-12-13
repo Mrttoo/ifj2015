@@ -154,7 +154,7 @@ void syntax_program()
     if(!syntax_match(LEX_EOF))
         syntax_error("expected end of file");
 
-    instr_list_t *halt = instr_insert_instr(&instr_list, INSTR_HALT, 0, 0, 0);
+    instr_list_item_t *halt = instr_insert_instr(&instr_list, INSTR_HALT, 0, 0, 0);
     halt = instr_insert_before_instr(&instr_list, halt, INSTR_LAB, 0, 0, 0);
     // Check for mandatory program components
     // 1. Every program has to have main function with prototype
@@ -617,6 +617,7 @@ void syntax_assign_statement()
 
 void syntax_call_statement()
 {
+    int param_num = 0;
     // TODO
 
     if(!stable_search_global(&symbol_table, syntax_data.id, &(syntax_data.called_func))) {
@@ -628,9 +629,13 @@ void syntax_call_statement()
     // We'll replace the size later (after syntax analysis)
     curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_PUSHF, 
                                           (intptr_t)(syntax_data.called_func), 0, -1);
-    syntax_call_params(false);
 
-    // TODO INSTR_CALL
+    syntax_call_params(false, &param_num, &(syntax_data.called_func->func));
+
+    if(param_num < syntax_data.called_func->func.nparam)
+        syntax_error("invalid count of parameters for function call");
+
+    // TODO INSTR_CALL - EMBEDDED FUNCTION
     curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CALL,
                                           (intptr_t)syntax_data.called_func->func.label,
                                           syntax_data.assign_dest->offset, 0);
@@ -639,13 +644,20 @@ void syntax_call_statement()
         syntax_error(") expected");
 }
 
-void syntax_call_params(bool require_param)
+void syntax_call_params(bool require_param, int *nparam, stable_function_t *func)
 {
     int idx = 0;
+    int desttype = 0;
+    int vartype = 0;
 
     if(current_token.type != LEX_RPAREN) {
         if(!syntax_call_param(false))
             syntax_error("param expected");
+
+        if(*nparam + 1 > func->nparam)
+            syntax_error("invalid count of parameters for function call");
+
+        desttype = func->params[*nparam].dtype;
 
         if(current_token.type == LEX_IDENTIFIER) {
             if(!stable_search_scopes(&symbol_table, current_token.val, &ptr_data)) {
@@ -654,21 +666,37 @@ void syntax_call_params(bool require_param)
                 syntax_error("symbol '%s' is not a variable", current_token.val);
             }
 
-            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_PUSHF, ptr_data->var.offset, 0, 0);
+            vartype = ptr_data->var.dtype;
+
+            if(vartype != desttype) {
+                if((vartype == STABLE_STRING && desttype != STABLE_STRING) ||
+                   (vartype != STABLE_STRING && desttype == STABLE_STRING))
+                   syntax_error("incompatible parameter data type in function call");
+            }
+
+            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_PUSHP, 
+                                                  ptr_data->var.offset, *nparam, desttype);
         } else {
-            if(current_token.type == LEX_INTEGER)
+            if(current_token.type == LEX_INTEGER) {
                 idx = stable_const_insert_int(&const_table, atoi(current_token.val));
-            else if(current_token.type == LEX_DOUBLE)
+            } else if(current_token.type == LEX_DOUBLE) {
                 idx = stable_const_insert_double(&const_table, atof(current_token.val));
-            else
+            } else {
                 idx = stable_const_insert_string(&const_table, current_token.val);
 
-            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_PUSHF, idx, 0, 0);
+                if(desttype != STABLE_STRING)
+                   syntax_error("incompatible parameter data type in function call");
+            }
+
+            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_PUSHP, idx, *nparam, desttype);
         }
+
+        *nparam += 1;
+        syntax_match(current_token.type);
 
         if(current_token.type == LEX_COMMA) {
             syntax_match(LEX_COMMA);
-            syntax_call_params(true);
+            syntax_call_params(true, nparam, func);
         }
     } else if(require_param) {
         syntax_error("param expected");

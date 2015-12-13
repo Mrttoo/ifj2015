@@ -306,7 +306,6 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
             frame_stack_pop(&fstack);
             tmp_frame = frame_stack_get_top(&fstack);
             //printf("Returning to instruction %d\n", ((instr_list_item_t*)curr_frame->ret_addr)->data.type);
-            // TODO: Assign return value - 
             if(curr_frame->ret_val != NULL)
                 *(curr_frame->ret_val) = *var1;
             instr_list->active = (instr_list_item_t*)curr_frame->ret_addr;
@@ -332,12 +331,18 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
                 throw_error(IFJ_UNINITIALIZED_ERR, "Unitialized variable passed to function");
             }
 
-            switch(curr_frame->vars.items[instr->addr2].dtype) {
+            switch(instr->addr3) {
             case STABLE_INT:
-                tmp_frame->vars.items[instr->addr2].val.i = var1->val.i;
+                if(var1->dtype == STABLE_INT)
+                    tmp_frame->vars.items[instr->addr2].val.i = var1->val.i;
+                else
+                    tmp_frame->vars.items[instr->addr2].val.i = var1->val.d;
             break;
             case STABLE_DOUBLE:
-                tmp_frame->vars.items[instr->addr2].val.d = var1->val.d;
+                if(var1->dtype == STABLE_DOUBLE)
+                    tmp_frame->vars.items[instr->addr2].val.d = var1->val.d;
+                else
+                    tmp_frame->vars.items[instr->addr2].val.d = var1->val.i;
             break;
             case STABLE_STRING:
                 tmp_frame->vars.items[instr->addr2].val.s = ifj_strdup(var1->val.s);
@@ -345,7 +350,7 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
             }
 
             tmp_frame->vars.items[instr->addr2].initialized = true;
-            tmp_frame->vars.items[instr->addr2].dtype = var1->dtype;
+            tmp_frame->vars.items[instr->addr2].dtype = instr->addr3;
         break;
         case INSTR_MOVI:
             if(instr->addr2 < 0)

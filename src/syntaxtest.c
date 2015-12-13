@@ -5,7 +5,7 @@ int find(string s, string search);
 string sort(string s);
 
 int function();
-int function2();
+int function2(int x, double n);
 
 int main() { 
     int x; 
@@ -34,17 +34,20 @@ int main() {
 int function() {
     int x;
     cout << "FUNCTION";
+    cin >> x;
 
-    x = function2();
+    x = function2(123.12, x);
 
     return x;
 }
 
-int function2() {
-    int x;
+int function2(int x, double n) {
+    int y;
     cout << "FUNCITON 2";
     cout << "MULTI\nLINE\nCOUT\n";
     cout << "SPECIAL CHARS: \x24, \x40\n";
+    cout << "Ahoj\nSve'te\\\x22";
+    cout << "Variable passed to a function: " << x << "\n" << n << "\n";
 
     return x;
 }

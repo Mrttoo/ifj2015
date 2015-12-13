@@ -25,7 +25,7 @@ typedef enum {
     INSTR_PUSHF,        /**< Push a new frame - MUST be called before any CALL* instruction
                           *  addr1: number of variables to allocate */
     INSTR_PUSHP,        /**< Push a function parameter value into frame created by PUSHF 
-                          *  addr1: index of variable in old frame (or constant), addr2: index of var. in new frame, add3: n/a */
+                          *  addr1: index of variable in old frame (or constant), addr2: index of var. in new frame, add3: dtype */
     INSTR_MOVI,         /**< Assignment (integer)
                           *  addr1: destination variable index, addr2: source variable/constant index */
     INSTR_MOVD,         /**< Assignment (double)

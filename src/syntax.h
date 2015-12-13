@@ -50,7 +50,7 @@ void syntax_if_statement();
 void syntax_for_statement();
 void syntax_assign_statement();
 void syntax_call_statement();
-void syntax_call_params(bool require_param);
+void syntax_call_params(bool require_param, int *nparam, stable_function_t *func);
 bool syntax_call_param(bool fetch_next);
 void syntax_return_statement();
 void syntax_cin_statement();
