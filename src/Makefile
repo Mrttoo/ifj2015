@@ -3,6 +3,7 @@ CC=gcc
 CFLAGS=--std=c11
 EXEC=ifj15
 
+
 all: ${EXEC}
 
 ifj15: syntax.c syntax.h error.h interpret_gen.c lex.o stable.o stack.o ial.o util.o interpret.o interpret_funcs.o expr.c expr.h estack.c string.h string.c ef.h ef.c

@@ -29,7 +29,7 @@ extern stable_data_t *ptr_data;	/* Pointer for updating/accessing data in symbol
 extern instr_list_t instr_list;	/* Instruction list */
 extern instr_list_item_t *curr_instr;
 
-int final_index;
+int final_index = 0;
 
 /*
    case precedence_table[stack_top][t->type]
