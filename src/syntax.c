@@ -492,8 +492,17 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
         syntax_match(LEX_ASSIGNMENT);
         // TODO: Waiting for LR parser
         int offset = syntax_expression();
-        //curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVI, var_offset, offset, 0);
-        symbol_data.var.initialized = true;
+        switch(symbol_data.var.dtype) {
+        case STABLE_INT:
+            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVI, var_offset, offset, 0);
+        break;
+        case STABLE_DOUBLE:
+            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVD, var_offset, offset, 0);
+        break;
+        case STABLE_STRING:
+            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVS, var_offset, offset, 0);
+        break;
+        }
     } else if(mandatory_init) {
         if(is_auto) {
             syntax_error_ec(IFJ_TYPE_DETECT_ERR, "missing initialization for 'auto' variable");
