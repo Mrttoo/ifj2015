@@ -8,7 +8,7 @@ int function();
 int function2(int x, double n);
 
 int main() { 
-    int x; 
+    int x;
     string y;
 
     cin >> x >> y;
