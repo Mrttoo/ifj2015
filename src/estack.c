@@ -7,7 +7,7 @@
 #include "estack.h"
 #include <stdio.h>
 
-#define STACK_MAX 100
+#define STACK_MAX 256
 
 void Stack_Init(Stack *S)
 {

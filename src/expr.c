@@ -146,7 +146,7 @@ void type(Stack *stack, Stack *stack_index, int instr_type_t)
 	stack_pop(&(*stack_index));
 	int offset = symbol_table.active->stack_idx++;
 	final_index = offset;
-	stack_push(&stack_index, offset);
+	stack_push(&(*stack_index), offset);
 
 
 	switch(instr_type_t)
