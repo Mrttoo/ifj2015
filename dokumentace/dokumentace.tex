@@ -37,11 +37,11 @@
 \vspace{\stretch{0.618}}
 \end{center}
 
-{\noindent\Large \hfill Martin Honza (xhonza03) - \%\\}
-{\indent\Large \hfill Patrik Jurnečka (xjurne03) - \%\\}
-{\indent\Large \hfill Hana Slámová (xslamo00) - \%\\}
-{\indent\Large \hfill Frantisek Šumšal (xsumsa01) - \%\\}
-{\indent\Large\today \hfill Adam Švidroň (xsvidr00) - \%}
+{\noindent\Large \hfill Martin Honza (xhonza03) - 20\%\\}
+{\indent\Large \hfill Patrik Jurnečka (xjurne03) - 20\%\\}
+{\indent\Large \hfill Hana Slámová (xslamo00) - 20\%\\}
+{\indent\Large \hfill Frantisek Šumšal (xsumsa01) - 20\%\\}
+{\indent\Large\today \hfill Adam Švidroň (xsvidr00) - 20\%}
 
 \end{titlepage}
 
@@ -101,7 +101,7 @@ LL gramatika postupně ověřuje rekurzivním sestupem příchozí tokeny. Funkc
 	11. & $<$varDeclr$>$      &$ \rightarrow $& $<$typeSpec$>$ $<$varDeclrItem$>$ ; $|$ auto $<$varInitialize$>$ ; \\
 	12. & $<$varDelcrItem$>$  &$ \rightarrow $& ID $|$ $<$varInitialize$>$ \\
 	13. & $<$varInitialize$>$ &$ \rightarrow $& ID $=$ $<$expression$>$ \\
-	14. & $<$ifStmt$>$        &$ \rightarrow $& if ( $<$expression> ) $<$compoundStmt$>$ else $<$compoundStmt$>$ \\
+	14. & $<$ifStmt$>$        &$ \rightarrow $& if ( $<$expression$>$ ) $<$compoundStmt$>$ else $<$compoundStmt$>$ \\
 	15. & $<$forStmt$>$       &$ \rightarrow $& for ( $<$varDeclr$>$ ; $<$expression$>$ ; $<$assignStmt$>$ ) \\ 
 		& 					  & 			  & $<$compoundStmt$>$ \\
 	16. & $<$assignEndStmt$>$ &$ \rightarrow $& $<$assignStmt$>$ ; \\
@@ -235,7 +235,7 @@ Ke sdílení zdrojových kódů jsme využili GitHub s vlastním soukromým kan�
 	\item\textbf{Martin Honza:} Syntaktická analýza výrazů, pomocné práce
 	\item\textbf{Patrik Jurnečka:} Dokumentace, prezentace, pomocné práce při tvorbě modulů
 	\item\textbf{Hana Slámová:} Vestavěné funkce, pomocné práce při tvorbě modulů
-	\item\textbf{Frantisek Šumšal:} Lexikální analýzátor, syntaktický analyzátor, interpret, organizace a vedení týmu
+	\item\textbf{Frantisek Šumšal:} Lexikální analyzátor, syntaktický analyzátor, interpret, organizace a vedení týmu
 	\item\textbf{Adam Švidroň:} Vestavěné funkce, pomocné práce při tvorbě modulů
 \end{itemize}  
 
@@ -250,9 +250,9 @@ Dokumentace i prezentace jsme psali v jazyce \LaTeX.
 
 \subsection{Metriky kódu}
 \begin{itemize}
-	\item Počet souborů: ...
-	\item Počet řádků zdrojového kódu: ...
-	\item Velikost spustitelného souboru: ... (OS Linux 32 bitová architektůra)
+	\item Počet souborů: 29
+	\item Celkový počet řádků kódu: 5 676
+	\item Velikost spustitelného souboru: 121kB (OS Linux 32 bitová architektura)
 \end{itemize}  
 
 \nocite{Ahoc2007}
