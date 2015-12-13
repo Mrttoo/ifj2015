@@ -284,21 +284,63 @@ int lex_get_token(lex_data_t *d, lex_token_t *t) {
             i = 0;
             //lex_buffer_insert(d, i++, d->c);
             bool escape = false;
+            int hexa = 0;
+            int tmpval = 0;
+            int conv = 0;
             while((d->c = fgetc(d->source)) != EOF) {
                 if(d->c == '\n') {
                     fprintf(stderr, "Unexpected end of string literal on line %d\n", d->line + 1);
                     exit(IFJ_LEX_ERR);
                 } else if(!escape && d->c == '"') {
                     break;
+                } else if(hexa > 0) {
+                    if(isupper(d->c))
+                        conv = d->c - 'A';
+                    else if(islower(d->c))
+                        conv = d->c - 'a';
+                    else if(isdigit(d->c))
+                        conv = d->c - '0';
+
+                    if(hexa == 2) {
+                        tmpval += conv * 16;
+                    } else {
+                        tmpval += conv;
+                        lex_buffer_insert(d, i++, tmpval);
+                        tmpval = 0;
+                        conv = 0;
+                    }
+
+                    hexa--;
+                    continue;
+                } else if(escape) {
+                    switch(d->c) {
+                    case '"':
+                        lex_buffer_insert(d, i++, '"');
+                    break;
+                    case 'n':
+                        lex_buffer_insert(d, i++, '\n');
+                    break;
+                    case 't':
+                        lex_buffer_insert(d, i++, '\t');
+                    break;
+                    case '\\':
+                        lex_buffer_insert(d, i++, '\\');
+                    break;
+                    case 'x':
+                        hexa = 2;
+                    break;
+                    }
+
+                    escape = false;
+                    continue;
                 } else if(d->c == '\\') {
                     if(escape)
                         escape = false;
                     else
                         escape = true;
-                } else if(escape) {
-                    escape = false;
+                    continue;
                 }
-                lex_buffer_insert(d, i++, d->c);
+               lex_buffer_insert(d, i++, d->c);
             }
             //lex_buffer_insert(d, i++, d->c);
             lex_buffer_insert(d, i, '\0');

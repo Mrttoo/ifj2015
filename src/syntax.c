@@ -194,8 +194,10 @@ void syntax_program()
     // Insert necessary PUSHF and CALL instructions (and set main function as active one)
     instr_list_item_t *instr = ptr_data->func.label;
     printf("FUNCTION %s LABEL: %d\n", ptr_data->id, (intptr_t)(ptr_data->func.label));
-    instr_list.active = instr_insert_before_instr(&instr_list, instr, INSTR_CALL, (intptr_t)instr, (intptr_t)halt, -1);
-    instr_list.active = instr_insert_before_instr(&instr_list, instr_list.active, INSTR_PUSHF, ptr_data->func.f_item->stack_idx, 0, 0);
+    instr_list.active = instr_insert_before_instr(&instr_list, instr, INSTR_CALL, 
+                                                  (intptr_t)instr, (intptr_t)halt, -1);
+    instr_list.active = instr_insert_before_instr(&instr_list, instr_list.active, INSTR_PUSHF, 
+                                                  ptr_data->func.f_item->stack_idx, 0, 0);
 
     free(syntax_data.id);
     syntax_data.id = NULL;
@@ -249,7 +251,6 @@ void syntax_func_declr()
     // Insert function declaration into global symbol table
     if(!stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
         symbol_data.func.label = instr_insert_instr(&instr_list, INSTR_LAB, 0, 0, 0);
-        printf("INSERTING LABEL FOR FUNCTION %s - [%d]\n", symbol_data.id, symbol_data.func.label);
         stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
         clean_params = false;
         instr = symbol_data.func.label;
@@ -271,7 +272,6 @@ void syntax_func_declr()
             stable_insert(&symbol_table, func_param.id, &func_param, &syntax_data);
         }
 
-        printf("SETTING ACTIVE INSTRUCTION TO [%d] - %s\n", (intptr_t)instr, symbol_data.id);
         curr_instr = instr;
 
         // Save current function data

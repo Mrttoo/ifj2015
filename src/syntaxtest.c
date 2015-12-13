@@ -43,6 +43,8 @@ int function() {
 int function2() {
     int x;
     cout << "FUNCITON 2";
+    cout << "MULTI\nLINE\nCOUT\n";
+    cout << "SPECIAL CHARS: \x24, \x40\n";
 
     return x;
 }
