@@ -2,10 +2,14 @@
 int main()
 {
     int a;
+<<<<<<< HEAD
 a = a+1;
 
 
 /*int x = (3+5)*2;
+=======
+    int vysl;
+>>>>>>> 06d2f8eaaf966d8cc0bf5a6e15d91132ea9772ab
     cout << "Zadejte cislo pro vypocet faktorialu: ";
     cin >> a;
     if (a < 0) // cin nacitani zaporneho cisla nemusi podporovat
@@ -14,12 +18,21 @@ a = a+1;
     }
     else
     {
+<<<<<<< HEAD
         vysl = 1;*/
    /*     for (int foo; a > 0; a = a - 1)
+=======
+        vysl = 1;
+        for (int foo; a > 0; a = a - 1)
+>>>>>>> 06d2f8eaaf966d8cc0bf5a6e15d91132ea9772ab
         {
             vysl = vysl * a;
         }
         cout << "Vysledek je: " << vysl << "\n";
+<<<<<<< HEAD
     }*/
+=======
+    }
+>>>>>>> 06d2f8eaaf966d8cc0bf5a6e15d91132ea9772ab
     return 0;
 }

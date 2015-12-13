@@ -416,7 +416,11 @@ int syntax_precedence()
 							free(syntax_data.id);
 							syntax_data.id = ifj_strdup(current_token.val);
 						}
+<<<<<<< HEAD
 						return; 
+=======
+						return -1; 
+>>>>>>> 06d2f8eaaf966d8cc0bf5a6e15d91132ea9772ab
 					}
 					else
 					{

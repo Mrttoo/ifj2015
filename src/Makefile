@@ -2,7 +2,10 @@ CC=gcc
 #CFLAGS=--std=c11 -Wall -Wextra -g -pedantic
 CFLAGS=--std=c11
 EXEC=ifj15
+<<<<<<< HEAD
 
+=======
+>>>>>>> 06d2f8eaaf966d8cc0bf5a6e15d91132ea9772ab
 
 all: ${EXEC}
 
