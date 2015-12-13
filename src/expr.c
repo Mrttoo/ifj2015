@@ -115,10 +115,12 @@ sign_value get_sign(lex_token_t *t)
 		return symbol_dollar;
 	
 	case LEX_EOF:
-		return symbol_eof;
+		fprintf(stderr,"%s: Unexpected end of file\n", __func__);
+		exit(IFJ_SYNTAX_ERR);
 
 	default:
-		return symbol_error;
+		fprintf(stderr,"%s: Unexpected token\n", __func__);
+		exit(IFJ_SYNTAX_ERR);
 	}
 }
 
@@ -144,6 +146,7 @@ void type(Stack *stack, Stack *stack_index, int instr_type_t)
 	stack_pop(&(*stack_index));
 	int offset = symbol_table.active->stack_idx++;
 	final_index = offset;
+	stack_push(&stack_index, offset);
 
 
 	switch(instr_type_t)
