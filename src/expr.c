@@ -344,8 +344,12 @@ int syntax_precedence()
 						if(stack_top(&stack) == sign_lparen)
 						{
 							stack_pop(&stack);
-							stack_push(&stack, 'E');
-							printf("Reduction rule E->(E) used\n");
+							if(stack_top(&stack) == '<')
+							{
+								stack_pop(&stack);
+								stack_push(&stack, 'E');
+								printf("Reduction rule E->(E) used\n");
+							}
 						}
 					}
 					else
