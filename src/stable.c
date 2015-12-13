@@ -232,7 +232,6 @@ void stable_clean_data_struct(stable_data_t *data, bool params)
     data->type = STABLE_UNDEFINED;
 }
 
-// TODO: DEBUG
 void dbg_syntax_print_tree(bst_node_t *node)
 {
     if(node == NULL)
@@ -251,7 +250,7 @@ bool stable_search_scope(stable_t *stable, char *key, stable_data_t **result)
     if(it == NULL)
         return false;
 
-    dbg_syntax_print_tree(it->node);
+    //dbg_syntax_print_tree(it->node);
     bst_node_t *node = bst_lookup_node(it->node, key);
 
     if(node != NULL) {
@@ -273,7 +272,7 @@ bool stable_search_scopes(stable_t *stable, char *key, stable_data_t **result)
 
     for(int i = stable->active->scopes->free_idx - 1; i >= 0; i--) {
         node = bst_lookup_node(stable->active->scopes->items[i]->node, key);
-        dbg_syntax_print_tree(stable->active->scopes->items[i]->node);
+        //dbg_syntax_print_tree(stable->active->scopes->items[i]->node);
         if(node != NULL) {
             if(result != NULL)
                 *result = &(node->data);
@@ -359,7 +358,7 @@ void stable_destroy_data(stable_data_t *data)
     if(data == NULL)
         return;
 
-    printf("[DESTROYING] %s (%s)\n", data->id, (data->type == STABLE_FUNCTION) ? "function" : "variable");
+    //printf("[DESTROYING] %s (%s)\n", data->id, (data->type == STABLE_FUNCTION) ? "function" : "variable");
 
     if(data->type == STABLE_FUNCTION) {
         for(unsigned int i = 0; i < data->func.nparam; i++) {
