@@ -109,6 +109,7 @@ sign_value get_sign(lex_token_t *t)
 		return symbol_dollar;
 	
 	case LEX_EOF:
+
 		return symbol_eof;
 
 	default:
