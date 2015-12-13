@@ -240,6 +240,7 @@ int syntax_precedence()
 	Stack stack_types;
 	Stack stack_index;
 
+	Stack_Init(&stack_index);
 	Stack_Init(&stack);
 	Stack_Init(&stack_types);
 
@@ -249,8 +250,12 @@ int syntax_precedence()
 	do
 	{
 
-		//if(!stable_search_scopes(symbol_table, syntax_data->id, &ptr_data))
-		//	fprintf(stderr,"Undefined variabile");
+		if(!stable_search_scopes(&symbol_table, syntax_data.id, &ptr_data))
+		{
+			fprintf(stderr,"%s: Undefined variabile", __func__);
+			exit(IFJ_DEF_ERR);
+		}
+
 
 		if(stack_top(&stack) == 'E')
 			i=2;
@@ -262,7 +267,9 @@ int syntax_precedence()
 			case '=':
 				if((stack_top(&stack) == sign_lparen) && (get_sign(&current_token) == sign_rparen))
 				{
-					fprintf(stderr,"() ilegal operation");
+					fprintf(stderr,"%s:() ilegal operation\n", __func__);
+					exit(IFJ_SYNTAX_ERR);
+
 				}
 				stack_push(&stack, get_sign(&current_token));
 				lex_get_token(&lex_data, &current_token);
@@ -289,7 +296,12 @@ int syntax_precedence()
 					{
 						stable_search_scopes(&symbol_table, current_token.val, &ptr_data);
 						int offset = symbol_table.active->stack_idx++;
-						instr_insert_instr(&instr_list, INSTR_MOVD, offset, ptr_data->var.offset , 0);
+						if(ptr_data->var.dtype == 0)
+							instr_insert_instr(&instr_list, INSTR_MOVI, offset, ptr_data->var.offset, 0);
+						else if(ptr_data->var.dtype == 1)
+							instr_insert_instr(&instr_list, INSTR_MOVD, offset, ptr_data->var.offset, 0);
+						else if(ptr_data->var.dtype == 2)
+							instr_insert_instr(&instr_list, INSTR_MOVS, offset, ptr_data->var.offset, 0);
 						stack_push(&stack_index, offset);
 					}
 					stack_push(&stack, get_sign(&current_token));
@@ -316,7 +328,10 @@ int syntax_precedence()
 						printf("Reduction rule E->i used\n");
 					}
 					else
-						fprintf(stderr,"Error >");
+					{
+						fprintf(stderr,"%s: Precedence error in stack\n", __func__);
+						exit(IFJ_SYNTAX_ERR);
+					}
 				}
 
 				//E->(E)
@@ -330,12 +345,15 @@ int syntax_precedence()
 						{
 							stack_pop(&stack);
 							stack_push(&stack, 'E');
-							//TAC(
 							printf("Reduction rule E->(E) used\n");
 						}
 					}
 					else
-						fprintf(stderr, "Error ->E");
+					{
+						fprintf(stderr,"%s: Precedence error in stack\n", __func__);
+						exit(IFJ_SYNTAX_ERR);
+					}
+
 					
 				}
 				
@@ -383,8 +401,11 @@ int syntax_precedence()
 							break;
 						case sign_plus:
 							type(&stack, &stack_types, &stack_index, INSTR_ADD);
+							break;
 						default:
-							fprintf(stderr, "Error all");
+							fprintf(stderr,"%s: Expected sign token\n", __func__);
+							exit(IFJ_SYNTAX_ERR);
+							break;
 					}
 				}
 				
@@ -398,7 +419,10 @@ int syntax_precedence()
 						return -1;
 						
 					else
-						fprintf(stderr, "Error, variable after variable is not allowed without sign between them");
+					{
+						fprintf(stderr, "%s: Variable after variable is not allowed without sign between them\n", __func__);
+						exit(IFJ_SEM_OTHERS_ERR);
+					}
 				}
 		}
 
