@@ -121,16 +121,11 @@ sign_value get_sign(lex_token_t *t)
   
  */
 
-void type(Stack *stack, Stack *stack_types, Stack *stack_index, int instr_type_t)
+void type(Stack *stack, Stack *stack_index, int instr_type_t)
 {
-	int second_op = stack_top(&(*stack_types));
-	stack_pop(&(*stack_types));
-	int first_op = stack_top(&(*stack_types));
-	stack_pop(&(*stack_types));
 
 	int first_addr;
 	int second_addr;
-
 
 	stack_pop(&(*stack));
 	stack_pop(&(*stack));
@@ -151,37 +146,17 @@ void type(Stack *stack, Stack *stack_types, Stack *stack_index, int instr_type_t
 		case INSTR_SUB:
 		case INSTR_MUL:
 		case INSTR_DIV:
-			if((first_op == LEX_INTEGER) && (second_op == LEX_INTEGER))
-			{				
 				curr_instr = instr_insert_after_instr(&instr_list, curr_instr, instr_type_t, offset, first_addr, second_addr);
-				stack_push(&(*stack_types), LEX_INTEGER);
 				break;
-			}
-				
-			else
-			{
-				curr_instr = instr_insert_after_instr(&instr_list, curr_instr, instr_type_t, offset, first_addr, second_addr);
-				stack_push(&(*stack_types), LEX_DOUBLE);
-				break;
-			}
+
 		case INSTR_LT:
 		case INSTR_GT:
 		case INSTR_LTE:
 		case INSTR_GTE:
 		case INSTR_EQ:
 		case INSTR_NEQ:
-				if((first_op == LEX_INTEGER) && (second_op == LEX_INTEGER)) 
-				{
 					curr_instr = instr_insert_after_instr(&instr_list, curr_instr, instr_type_t, offset, first_addr, second_addr);
-					stack_push(&(*stack_types), LEX_INTEGER);
 					break;
-				}
-				else
-				{
-					curr_instr = instr_insert_after_instr(&instr_list, curr_instr, instr_type_t, offset, first_addr, second_addr);
-					stack_push(&(*stack_types), LEX_DOUBLE);
-					break;
-				}
 		default:
 				break;
 	}
@@ -242,10 +217,8 @@ int syntax_precedence()
 
 	Stack_Init(&stack_index);
 	Stack_Init(&stack);
-	Stack_Init(&stack_types);
 
 	stack_push(&stack, symbol_dollar);
-	stack_push(&stack_types, symbol_dollar);
 
 	do
 	{
@@ -369,42 +342,42 @@ int syntax_precedence()
 					switch(stack_top(&stack))
 					{
 						case sign_not_equal:
-							type(&stack, &stack_types, &stack_index, INSTR_NEQ);
+							type(&stack, &stack_index, INSTR_NEQ);
 							break;
 
 						case sign_equal:
-							type(&stack, &stack_types, &stack_index, INSTR_EQ);
+							type(&stack, &stack_index, INSTR_EQ);
 							break;
 
 						case sign_greater_equal:
-							type(&stack, &stack_types, &stack_index, INSTR_GTE);
+							type(&stack, &stack_index, INSTR_GTE);
 							break;
 
 						case sign_less_equal:
-							type(&stack, &stack_types, &stack_index, INSTR_LTE);
+							type(&stack, &stack_index, INSTR_LTE);
 							break;
 
 						case sign_less:
-							type(&stack, &stack_types, &stack_index, INSTR_LT);
+							type(&stack, &stack_index, INSTR_LT);
 							break;
 
 						case sign_greater:
-							type(&stack, &stack_types, &stack_index, INSTR_GT);
+							type(&stack, &stack_index, INSTR_GT);
 							break;
 
 						case sign_slash:
-							type(&stack, &stack_types, &stack_index, INSTR_DIV);
+							type(&stack, &stack_index, INSTR_DIV);
 							break;
 
 						case sign_times:
-							type(&stack, &stack_types, &stack_index, INSTR_MUL);
+							type(&stack, &stack_index, INSTR_MUL);
 							break;
 
 						case sign_minus:
-							type(&stack, &stack_types, &stack_index, INSTR_SUB);
+							type(&stack, &stack_index, INSTR_SUB);
 							break;
 						case sign_plus:
-							type(&stack, &stack_types, &stack_index, INSTR_ADD);
+							type(&stack, &stack_index, INSTR_ADD);
 							break;
 						default:
 							fprintf(stderr,"%s: Expected sign token\n", __func__);
