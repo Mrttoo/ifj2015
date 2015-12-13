@@ -45,7 +45,7 @@ void syntax_compound_statement();
 bool syntax_var_declr(bool mandatory_init);
 void syntax_var_declr_item(bool mandatory_init, bool is_auto);
 void syntax_stmt_list();
-void syntax_expression();
+int syntax_expression();
 void syntax_if_statement();
 void syntax_for_statement();
 void syntax_assign_statement();
