@@ -109,6 +109,7 @@ sign_value get_sign(lex_token_t *t)
 	case LEX_IDENTIFIER:
 	case LEX_INTEGER:
 	case LEX_DOUBLE:
+	case LEX_LITERAL:
 		return symbol_id;
 	
 	case LEX_SEMICOLON:
@@ -178,26 +179,29 @@ void constant_check(lex_token_t *token, Stack *stack_index)
 	int i;
 	double d;
 	int constant_offset;
+	int offset = symbol_table.active->stack_idx++;
+	final_index = offset;
 
 	switch(token->type)
 	{
 		case LEX_INTEGER:
 		 	i = atoi(token->val);
 			constant_offset = stable_const_insert_int(&const_table, i);
-			curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVI, 0, constant_offset, 0);
+			curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVI, offset, constant_offset, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 
 		case LEX_DOUBLE:
 			d = atof(token->val);
 			constant_offset = stable_const_insert_double(&const_table, d);
-			curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVD, 0, constant_offset, 0);
+			curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVD, offset, constant_offset, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 		
 		case LEX_STRING:
+		case LEX_LITERAL:
 			constant_offset = stable_const_insert_string(&const_table, token->val);
-			curr_instr =  instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVS, 0, constant_offset, 0);
+			curr_instr =  instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVS, offset, constant_offset, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 
@@ -272,7 +276,7 @@ int syntax_precedence()
 				else
 				{
 					stack_push(&stack,'<');
-					if((current_token.type == LEX_INTEGER) || (current_token.type == LEX_DOUBLE) || (current_token.type == LEX_STRING))
+					if((current_token.type == LEX_INTEGER) || (current_token.type == LEX_DOUBLE) || (current_token.type == LEX_STRING) || (current_token.type == LEX_LITERAL))
 					{
 						constant_check(&current_token, &stack_index);
 					}
@@ -287,6 +291,7 @@ int syntax_precedence()
 						else if(ptr_data->var.dtype == 2)
 							curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVS, offset, ptr_data->var.offset, 0);
 						stack_push(&stack_index, offset);
+						final_index = offset;
 					}
 					stack_push(&stack, get_sign(&current_token));
 				}
