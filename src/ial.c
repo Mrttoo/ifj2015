@@ -116,6 +116,62 @@ int Boyer_Moor_Alg(char* string,char* pattern, int * CharJumpArray, int * MatchJ
         return -1;        // Neuspesne hledani
 
 }
+
+char *sort (char *string)
+{    
+    /*vyrobime duplikat mimo READ-ONLY pamate*/
+    char *s2 = ifj_strdup(string);
+    unsigned int size = strlen(s2);
+    /*kazdy prvok posuvame vyssie do haldy ak sa da*/
+    for(unsigned int i=0; i<size; ++i)
+    {
+    /*Pre rodica plati vztah s potomkom rodic=(potomok-1)/2*/
+        for(int j=i; j>0; j=(j-1)/2)
+        {
+            int k = (j-1)/2;
+            if(s2[j]>s2[k]) 
+            {
+                char swap=s2[j];
+                s2[j]=s2[k];
+                s2[k]=swap;
+            }
+        }
+    }
+    //printf("%s\n", s2); //vypise vytvorenu haldu (heap)
+    for(unsigned int i=size; i>0; --i)
+    {    
+        unsigned int parent, child, L, R;
+        /* Vymenime najvyssi prvok s poslednym listom starej haldy
+         ** znizujeme index posledneho prvku po kazdom jednom triedeni*/
+        char swap=s2[0];
+        s2[0]=s2[i-1];
+        s2[i-1]=swap;
+        parent = 0;
+
+        /* Vymiename najvyssi prvok haldy s najvacsim potomkom
+        ** dokym neexistuje dalsi potomok, ak je potomok iba jeden,
+        ** skontrolujeme, ci je potomok vacsi, ak ano, vymenime*/
+        while(2*parent+3 < i)
+        {
+            L = parent*2+1;
+            R = parent*2+2;
+            if (R==i)
+                child = L;
+            else
+                child = s2[L]>s2[R]?L:R;
+            if (s2[child] > s2[parent])
+            {
+                swap = s2[parent];
+                s2[parent]=s2[child];
+                s2[child]=swap;
+            }
+            parent = child;
+        }
+        parent = 0;
+    }
+    return s2;
+}
+
 /**
   *  Draft of Binary Search Tree
   *  which will be used for implementation
@@ -248,11 +304,7 @@ int main(int argc, char *argv[])
                    "num", "i", "I", "key", "asdf3", "tea23", "_2314", NULL };
     int rc = 0;
     bst_node_t *root = NULL;
-<<<<<<< HEAD
-    stable_data_t data = { .type = LEX_EOF, .value.i = 1 };
-=======
     stable_data_t data = { .type = LEX_EOF, .var.val.i = 1 };
->>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
     // Test alloc
     root = bst_new_node("j", &data);
 
@@ -273,11 +325,7 @@ int main(int argc, char *argv[])
         } else {
             if(strcmp(ta[i], search->key) == 0) {
                 fprintf(stderr, "[PASS] Found node with correct value (%s == %s) (%d)\n",
-<<<<<<< HEAD
-                        ta[i], search->key, search->data.value.i);
-=======
                         ta[i], search->key, search->data.var.val.i);
->>>>>>> 5264cd71921354294c7c2d04e4fb433d011ad7e7
             } else {
                 fprintf(stderr, "[FAIL] Found node with incorrect value (%s != %s)\n",
                         ta[i], search->key);

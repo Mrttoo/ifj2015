@@ -25,9 +25,10 @@ pString s;
 void ef_substr(TData *string,TData *ret, int from, int length)	;
 
 void ef_length(TData *string, TData *ret);
-void ef_concat();
 
-void ef_find();
+void ef_concat(TData *string1, TData *string2, TData *ret);
+
+void ef_find(TData * stringP, TData * stringT, TData *ret);
 TData* initData();
 
 #endif

@@ -43,6 +43,9 @@ int function() {
 
 int function2(int x, double n) {
     int y;
+    string str;
+    int fnd;
+
     cout << "FUNCITON 2";
     cout << "MULTI\nLINE\nCOUT\n";
     cout << "SPECIAL CHARS: \x24, \x40\n";
@@ -53,7 +56,27 @@ int function2(int x, double n) {
 
     cout << "String length: " << y << "\n";
 
-    return x;
+    str = concat("Concat", " test");
+
+    cout << str;
+
+    cout << "END FUNCTION 2\n";
+
+    fnd = find("TESTE1STEST", "1");
+
+    cout << fnd << "\n";
+
+    string sbstr;
+    sbstr = substr("12TEST12", 2, 4);
+
+    cout << sbstr << "\n";
+
+    string srt;
+
+    srt = sort("5123650");
+
+    cout << srt << "\n";
+    return y;
 }
 //string test(int p)
 //{

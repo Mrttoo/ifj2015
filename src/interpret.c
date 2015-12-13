@@ -7,6 +7,7 @@
 #include "interpret.h"
 #include "stable.h"
 #include "ef.h"
+#include "string.h"
 #include "util.h"
 
 void interpret_math_expr(char op, stable_variable_t *var1, stable_variable_t *var2, stable_variable_t *var3)
@@ -208,11 +209,17 @@ void interpret_logic_expr(int op, stable_variable_t *var1, stable_variable_t *va
 int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
 {
     stable_variable_t *var1 = NULL, *var2 = NULL, *var3 = NULL;
+    TData tdata1, tdata2, tdata3;
     instr_t *instr = NULL;
     frame_t *curr_frame = NULL;
     frame_t *tmp_frame = NULL;
     frame_stack_t fstack;
+    char *tmp = NULL;
 
+    // TODO - CHECK
+    tdata1.s = malloc(sizeof *(tdata1.s));
+    tdata2.s = malloc(sizeof *(tdata1.s));
+    tdata3.s = malloc(sizeof *(tdata1.s));
     frame_stack_init(&fstack);
 
     if(instr_list->active == NULL) {
@@ -251,16 +258,100 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
             curr_frame = tmp_frame;
         break;
         case INSTR_CALL_SUBSTR:
+            // Simulate INSTR_CALL
+            tmp_frame->ret_val = &(curr_frame->vars.items[instr->addr2]);
+            curr_frame = tmp_frame;
+            var1 = &(curr_frame->vars.items[0]);
+            var2 = &(curr_frame->vars.items[1]);
+            var3 = &(curr_frame->vars.items[2]);
 
+            tdata1.type = DT_STRING;
+            tdata1.s->data = var1->val.s;
+            tdata1.s->length = strlen(var1->val.s) + 1;
+
+            tdata3.type = DT_STRING;
+            createStringData(tdata3.s, tdata1.s->length + tdata2.s->length + 1);
+
+            ef_substr(&tdata1, &tdata3, var2->val.i, var3->val.i);
+
+            curr_frame->ret_val->val.s = tdata3.s->data;
+            curr_frame->ret_val->initialized = true;
+            if(curr_frame->ret_val->dtype == STABLE_NONE)
+                curr_frame->ret_val->dtype = STABLE_STRING;
+            // Simulate INSTR_RET
+            frame_stack_pop(&fstack);
+            tmp_frame = frame_stack_get_top(&fstack);
+            frame_destroy(curr_frame);
+            curr_frame = tmp_frame;
         break;
         case INSTR_CALL_CONCAT:
+            // Simulate INSTR_CALL
+            tmp_frame->ret_val = &(curr_frame->vars.items[instr->addr2]);
+            curr_frame = tmp_frame;
+            var1 = &(curr_frame->vars.items[0]);
+            var2 = &(curr_frame->vars.items[1]);
+
+            tmp = malloc(sizeof *tmp * (strlen(var1->val.s) + strlen(var2->val.s) + 2));
+            if(tmp == NULL)
+                throw_error(IFJ_INTERNAL_ERR, "unable to allocate memory");
+
+            tmp[0] = '\0';
+            strcpy(tmp, var1->val.s);
+            strcat(tmp, var2->val.s);
+
+            curr_frame->ret_val->val.s = tmp;
+            curr_frame->ret_val->initialized = true;
+            curr_frame->ret_val->dtype = STABLE_STRING;
+
+            // Simulate INSTR_RET
+            frame_stack_pop(&fstack);
+            tmp_frame = frame_stack_get_top(&fstack);
+            frame_destroy(curr_frame);
+            curr_frame = tmp_frame;
 
         break;
         case INSTR_CALL_FIND:
+            // Simulate INSTR_CALL
+            tmp_frame->ret_val = &(curr_frame->vars.items[instr->addr2]);
+            curr_frame = tmp_frame;
+            var1 = &(curr_frame->vars.items[0]);
+            var2 = &(curr_frame->vars.items[1]);
 
+            tdata1.type = DT_STRING;
+            tdata1.s->data = var1->val.s;
+            tdata1.s->length = strlen(var1->val.s) + 1;
+
+            tdata2.type = DT_STRING;
+            tdata2.s->data = var2->val.s;
+            tdata2.s->length = strlen(var2->val.s) + 1;
+
+            tdata3.type = DT_INT;
+            tdata3.i = -1;
+
+            ef_find(&tdata2, &tdata1, &tdata3);
+
+            curr_frame->ret_val->val.i = tdata3.i;
+            curr_frame->ret_val->initialized = true;
+            if(curr_frame->ret_val->dtype == STABLE_NONE)
+                curr_frame->ret_val->dtype = STABLE_INT;
+            // Simulate INSTR_RET
+            frame_stack_pop(&fstack);
+            tmp_frame = frame_stack_get_top(&fstack);
+            frame_destroy(curr_frame);
+            curr_frame = tmp_frame;
         break;
         case INSTR_CALL_SORT:
-
+            tmp_frame->ret_val = &(curr_frame->vars.items[instr->addr2]);
+            curr_frame = tmp_frame;
+            curr_frame->ret_val->val.s = sort(curr_frame->vars.items[0].val.s);
+            curr_frame->ret_val->initialized = true;
+            if(curr_frame->ret_val->dtype == STABLE_NONE)
+                curr_frame->ret_val->dtype = STABLE_STRING;
+            // Simulate INSTR_RET
+            frame_stack_pop(&fstack);
+            tmp_frame = frame_stack_get_top(&fstack);
+            frame_destroy(curr_frame);
+            curr_frame = tmp_frame;
         break;
         case INSTR_CIN:
             curr_frame->vars.items[instr->addr1].dtype = instr->addr2;
@@ -447,6 +538,10 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
 
         instr_jump_next(instr_list);
     }
+
+    free(tdata1.s);
+    free(tdata2.s);
+    free(tdata3.s);
 }
 
 #ifdef IFJ_INTERPRET_DEBUG
