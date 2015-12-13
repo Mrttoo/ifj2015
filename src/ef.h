@@ -1,3 +1,9 @@
+/**
+  * Project: Implementace interpretu imperativniho jazyka IFJ15
+  * Authors: Frantisek Sumsal, Martin Honza, Hana Slamova,
+  *          Adam Svidron, Patrik Jurnecka
+  * Logins:  xsumsa01, xhonza03, xslamo00, xsvidr00, xjurne03
+*/
 
 #ifndef __EF_H
 #define __EF_H
