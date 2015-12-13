@@ -64,11 +64,9 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
     // Oh my god, this is disgusting...
     if(syntax_data->new_scope) {
         syntax_data->new_scope = false;
-        printf("NEW SCOPE FOR KEY %s\n", key);
         if(syntax_data->function_scope) {
             // Create new function scope (new item in stable_t list)
             syntax_data->function_scope = false;
-            printf("NEW LIST FOR KEY %s\n", key);
             stable_item_t *it = malloc(sizeof *it);
             if(it == NULL) {
                 fprintf(stderr, "%s: Unable to allocate memory for list item\n", __func__);
@@ -130,7 +128,6 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
         // If active 'outer' scope is a global scope
         // force creation of 'inner' function scope 
         if(stable->active->type == STABLE_TYPE_GLOBAL) {
-            puts("GLOBAL SYMBOL TABLE IS ACTIVE");
             syntax_data->new_scope = true;
             stable_insert(stable, key, data, syntax_data);
         }
@@ -138,12 +135,10 @@ void stable_insert(stable_t *stable, char *key, stable_data_t *data, syntax_data
         // If we don't have any active 'outer' (function) or 'inner' (block) scope
         // force it's creation
         if(stable->active->active_scope == NULL || stable->active->item_list.active == NULL) {
-            puts("NO SCOPE IS ACTIVE");
             syntax_data->new_scope = true;
             stable_insert(stable, key, data, syntax_data);
         } else {
             // Or just insert symbol into active scope symbol table
-            printf("INSERTING NODE %s INTO EXISTING TREE\n", key);
             if(data->type == STABLE_VARIABLE)
                 data->var.offset = stable->active->stack_idx++;
 
@@ -270,9 +265,7 @@ bool stable_search_scopes(stable_t *stable, char *key, stable_data_t **result)
 
     bst_node_t *node = NULL;
 
-    printf("[SEARCH %s] Num of scopes: %d\n", key, stable->active->scopes->free_idx);
     for(int i = stable->active->scopes->free_idx - 1; i >= 0; i--) {
-        printf("Tree %d: \n", i);
         node = bst_lookup_node(stable->active->scopes->items[i]->node, key);
         dbg_syntax_print_tree(stable->active->scopes->items[i]->node);
         if(node != NULL) {

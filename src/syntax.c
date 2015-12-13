@@ -555,7 +555,7 @@ void syntax_for_statement()
     if(!syntax_match(LEX_LPAREN))
         syntax_error("( expected");
 
-    syntax_var_declr(true);
+    syntax_var_declr(false);
 
     if(!syntax_match(LEX_SEMICOLON))
         syntax_error("; expected");
@@ -626,19 +626,43 @@ void syntax_call_statement()
 
     syntax_match(LEX_LPAREN);
 
+    char *id = syntax_data.called_func->id;
+    intptr_t pushf_size = syntax_data.called_func->func.nparam;
+    intptr_t pushf_state = 0;
+    instr_list_item_t *instr = NULL;
+
+    if(strcmp(id, "length") == 0) {
+        instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CALL_LENGTH, 
+                                         0, syntax_data.assign_dest->offset, 0);
+    } else if(strcmp(id, "substr") == 0) {
+        instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CALL_SUBSTR, 
+                                         0, syntax_data.assign_dest->offset, 0);
+    } else if(strcmp(id, "concat") == 0) {
+        instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CALL_CONCAT, 
+                                         0, syntax_data.assign_dest->offset, 0);
+    } else if(strcmp(id, "find") == 0) {
+        instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CALL_FIND, 
+                                         0, syntax_data.assign_dest->offset, 0);
+    } else if(strcmp(id, "sort") == 0) {
+        instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CALL_SORT, 
+                                         0, syntax_data.assign_dest->offset, 0);
+    } else {
+        instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CALL,
+                                              (intptr_t)syntax_data.called_func->func.label,
+                                              syntax_data.assign_dest->offset, 0);
+        pushf_size = (intptr_t)(syntax_data.called_func);
+        pushf_state = -1;
+    }
+
     // We'll replace the size later (after syntax analysis)
-    curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_PUSHF, 
-                                          (intptr_t)(syntax_data.called_func), 0, -1);
+    curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_PUSHF, pushf_size, 0, pushf_state);
 
     syntax_call_params(false, &param_num, &(syntax_data.called_func->func));
 
-    if(param_num < syntax_data.called_func->func.nparam)
+    if((unsigned int)param_num < syntax_data.called_func->func.nparam)
         syntax_error("invalid count of parameters for function call");
 
-    // TODO INSTR_CALL - EMBEDDED FUNCTION
-    curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CALL,
-                                          (intptr_t)syntax_data.called_func->func.label,
-                                          syntax_data.assign_dest->offset, 0);
+    curr_instr = instr;
 
     if(!syntax_match(LEX_RPAREN))
         syntax_error(") expected");
@@ -654,7 +678,7 @@ void syntax_call_params(bool require_param, int *nparam, stable_function_t *func
         if(!syntax_call_param(false))
             syntax_error("param expected");
 
-        if(*nparam + 1 > func->nparam)
+        if((unsigned int)(*nparam) + 1 > func->nparam)
             syntax_error("invalid count of parameters for function call");
 
         desttype = func->params[*nparam].dtype;

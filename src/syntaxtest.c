@@ -22,7 +22,7 @@ int main() {
 
     cout << "AFTER IF";
 
-    for(int i = x; x; x = x) {
+    for(int i; x; x = x) {
         cout << "FOR";
     }
 
@@ -48,6 +48,10 @@ int function2(int x, double n) {
     cout << "SPECIAL CHARS: \x24, \x40\n";
     cout << "Ahoj\nSve'te\\\x22";
     cout << "Variable passed to a function: " << x << "\n" << n << "\n";
+
+    y = length("123456789");
+
+    cout << "String length: " << y << "\n";
 
     return x;
 }
