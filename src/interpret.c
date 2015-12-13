@@ -15,6 +15,7 @@
 #include "ef.h"
 #include "string.h"
 #include "util.h"
+#include "ial.h"
 
 void interpret_math_expr(char op, stable_variable_t *var1, stable_variable_t *var2, stable_variable_t *var3)
 {

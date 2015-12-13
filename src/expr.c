@@ -416,7 +416,7 @@ int syntax_precedence()
 							free(syntax_data.id);
 							syntax_data.id = ifj_strdup(current_token.val);
 						}
-						return; 
+						return -1; 
 					}
 					else
 					{

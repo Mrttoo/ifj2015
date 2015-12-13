@@ -14,6 +14,7 @@
 void ComputeJumps(char* pattern, int * CharJumpArray);
 void ComputeMatchJumps(char* pattern, int * MatchJumpArray);
 int Boyer_Moor_Alg(char* string,char* pattern, int * CharJumpArray, int * MatchJumpArray);
+char *sort (char *string);
 
 /**
   * @brief Structure for BST node
