@@ -479,6 +479,7 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
     }
 
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
+    stable_insert(&symbol_table, symbol_data.id, &symbol_data, &syntax_data);
     if(current_token.type == LEX_ASSIGNMENT) {
         syntax_match(LEX_ASSIGNMENT);
         // TODO: Waiting for LR parser
@@ -491,8 +492,6 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
             syntax_error("initialization expected");
         }
     }
-
-    stable_insert(&symbol_table, symbol_data.id, &symbol_data, &syntax_data);
 }
 
 void syntax_stmt_list()
@@ -505,8 +504,8 @@ void syntax_stmt_list()
 // TODO: Waiting for LR parser
 void syntax_expression()
 {
-	//syntax_precedence();
-    syntax_match(LEX_IDENTIFIER);
+    syntax_precedence();
+    //syntax_match(LEX_IDENTIFIER);
     if(current_token.type == LEX_LPAREN) {
         // TODO
         syntax_call_statement();

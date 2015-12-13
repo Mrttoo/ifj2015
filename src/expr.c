@@ -153,14 +153,14 @@ void type(Stack *stack, Stack *stack_types, Stack *stack_index, int instr_type_t
 		case INSTR_DIV:
 			if((first_op == LEX_INTEGER) && (second_op == LEX_INTEGER))
 			{				
-				instr_insert_instr(&instr_list,instr_type_t, offset, first_addr, second_addr);
+				curr_instr = instr_insert_after_instr(&instr_list, curr_instr, instr_type_t, offset, first_addr, second_addr);
 				stack_push(&(*stack_types), LEX_INTEGER);
 				break;
 			}
 				
 			else
 			{
-				instr_insert_instr(&instr_list, instr_type_t, offset, first_addr, second_addr);
+				curr_instr = instr_insert_after_instr(&instr_list, curr_instr, instr_type_t, offset, first_addr, second_addr);
 				stack_push(&(*stack_types), LEX_DOUBLE);
 				break;
 			}
@@ -172,13 +172,13 @@ void type(Stack *stack, Stack *stack_types, Stack *stack_index, int instr_type_t
 		case INSTR_NEQ:
 				if((first_op == LEX_INTEGER) && (second_op == LEX_INTEGER)) 
 				{
-					instr_insert_instr(&instr_list, instr_type_t, offset, first_addr, second_addr);
+					curr_instr = instr_insert_after_instr(&instr_list, curr_instr, instr_type_t, offset, first_addr, second_addr);
 					stack_push(&(*stack_types), LEX_INTEGER);
 					break;
 				}
 				else
 				{
-					instr_insert_instr(&instr_list, instr_type_t, offset, first_addr, second_addr);
+					curr_instr = instr_insert_after_instr(&instr_list, curr_instr, instr_type_t, offset, first_addr, second_addr);
 					stack_push(&(*stack_types), LEX_DOUBLE);
 					break;
 				}
@@ -200,20 +200,20 @@ void constant_check(lex_token_t *token, Stack *stack_index)
 		case LEX_INTEGER:
 		 	i = atoi(token->val);
 			constant_offset = stable_const_insert_int(&const_table, i);
-			instr_insert_instr(&instr_list, INSTR_MOVI, constant_offset, 0, 0);
+			curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVI, 0, constant_offset, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 
 		case LEX_DOUBLE:
 			d = atof(token->val);
 			constant_offset = stable_const_insert_double(&const_table, d);
-			instr_insert_instr(&instr_list, INSTR_MOVD, constant_offset, 0, 0);
+			curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVD, 0, constant_offset, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 		
 		case LEX_STRING:
 			constant_offset = stable_const_insert_string(&const_table, token->val);
-			instr_insert_instr(&instr_list, INSTR_MOVS, constant_offset, 0, 0);
+			curr_instr =  instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVS, 0, constant_offset, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 
@@ -249,7 +249,7 @@ int syntax_precedence()
 
 	do
 	{
-
+        printf("SYMBOL: %s\n", syntax_data.id);
 		if(!stable_search_scopes(&symbol_table, syntax_data.id, &ptr_data))
 		{
 			fprintf(stderr,"%s: Undefined variabile", __func__);
@@ -297,11 +297,11 @@ int syntax_precedence()
 						stable_search_scopes(&symbol_table, current_token.val, &ptr_data);
 						int offset = symbol_table.active->stack_idx++;
 						if(ptr_data->var.dtype == 0)
-							instr_insert_instr(&instr_list, INSTR_MOVI, offset, ptr_data->var.offset, 0);
+							curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVI, offset, ptr_data->var.offset, 0);
 						else if(ptr_data->var.dtype == 1)
-							instr_insert_instr(&instr_list, INSTR_MOVD, offset, ptr_data->var.offset, 0);
+							curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVD, offset, ptr_data->var.offset, 0);
 						else if(ptr_data->var.dtype == 2)
-							instr_insert_instr(&instr_list, INSTR_MOVS, offset, ptr_data->var.offset, 0);
+							curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVS, offset, ptr_data->var.offset, 0);
 						stack_push(&stack_index, offset);
 					}
 					stack_push(&stack, get_sign(&current_token));
@@ -421,7 +421,7 @@ int syntax_precedence()
 					else
 					{
 						fprintf(stderr, "%s: Variable after variable is not allowed without sign between them\n", __func__);
-						exit(IFJ_SEM_OTHERS_ERR);
+						exit(IFJ_SEM_OTHER_ERR);
 					}
 				}
 		}
