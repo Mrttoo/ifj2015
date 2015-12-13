@@ -1,0 +1,30 @@
+<program>       -> <declrList> EOF
+<declrList>     -> <funcDeclr> <declrList> | EPSILON
+
+<funcDeclr>     -> <typeSpec> ID ( <params> ) <funcStmt>
+<funcStmt>      -> <compoundStmt> | ;
+<params>        -> <paramItem> | EPSILON
+<paramItem>     -> <typeSpec> ID , <paramItem> | <typeSpec> ID
+<typeSpec>      -> int | double | string
+
+<statement>     -> <compoundStatement> | <ifStmt> | <forStmt> | <assignEndStmt> | <callStmt> | 
+                   <returnStmt> | <inputStmt> | <outputStmt> | <varDeclr> | <expressionStmt>
+<compoundStmt>  -> { <stmtList> }
+<stmtList>      -> <statement> <stmtList> | EPSILON
+<varDeclr>      -> <typeSpec> <varDeclrItem> ; | auto <varInitialize> ;
+<varDelcrItem>  -> ID | <varInitialize>
+<varInitialize> -> ID = <expression>
+
+<ifStmt>        -> if ( <expression> ) <compoundStmt> else <compoundStmt>
+<forStmt>       -> for ( <varDeclr> ; <expression> ; <assignStmt> ) <compoundStmt>
+<assignEndStmt> -> <assignStmt> ;
+<assignStmt>    -> ID = <expression> | ID = <call>
+<callStmt>      -> ID = <call>
+<call>          -> ID ( <callParams> )
+<callParams>    -> <callParam>, <callParams> | <callParam> | EPSILON
+<callParam>     -> ID | LITERAL
+<returnStmt>    -> return <expression> ;
+<inputStmt>     -> cin >> ID <inputArgs> ;
+<inputArgs>     -> >> ID | EPSILON
+<outputStmt>    -> cout << <callParam> <outputArgs> ;
+<outputArgs>    -> << <callParam> | EPSILON
