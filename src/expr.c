@@ -11,7 +11,7 @@
 #include "syntax.h"
 #include "error.h"
 #include "expr.h"
-#include "Estack.h"
+#include "estack.h"
 #include "util.h"
 #include "interpret_gen.h"
 

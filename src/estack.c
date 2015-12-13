@@ -4,7 +4,7 @@
   *          Adam Svidron, Patrik Jurnecka
   * Logins:  xsumsa01, xhonza03, xslamo00, xsvidr00, xjurne03
 */
-#include "Estack.h"
+#include "estack.h"
 #include <stdio.h>
 
 #define STACK_MAX 100

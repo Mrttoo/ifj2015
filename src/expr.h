@@ -14,7 +14,7 @@
 #include "lex.h"
 #include "syntax.h"
 #include "error.h"
-#include "Estack.h"
+#include "estack.h"
 
 typedef enum 
 {
