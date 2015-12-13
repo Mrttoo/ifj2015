@@ -14,6 +14,7 @@
 #include "estack.h"
 #include "util.h"
 #include "interpret_gen.h"
+#include "syntax.h"
 
 #define syntax_error(...) throw_syntax_error(IFJ_SYNTAX_ERR, lex_data.line + 1, __VA_ARGS__);
 #define syntax_error_ec(ec, ...) throw_syntax_error(ec, lex_data.line + 1, __VA_ARGS__);
@@ -109,6 +110,7 @@ sign_value get_sign(lex_token_t *t)
 	case LEX_IDENTIFIER:
 	case LEX_INTEGER:
 	case LEX_DOUBLE:
+	case LEX_LITERAL:
 		return symbol_id;
 	
 	case LEX_SEMICOLON:
@@ -178,26 +180,32 @@ void constant_check(lex_token_t *token, Stack *stack_index)
 	int i;
 	double d;
 	int constant_offset;
+	int offset = symbol_table.active->stack_idx++;
+	final_index = offset;
 
 	switch(token->type)
 	{
 		case LEX_INTEGER:
+            symbol_data.var.dtype = STABLE_INT;
 		 	i = atoi(token->val);
 			constant_offset = stable_const_insert_int(&const_table, i);
-			curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVI, 0, constant_offset, 0);
+			curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVI, offset, constant_offset, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 
 		case LEX_DOUBLE:
+            symbol_data.var.dtype = STABLE_DOUBLE;
 			d = atof(token->val);
 			constant_offset = stable_const_insert_double(&const_table, d);
-			curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVD, 0, constant_offset, 0);
+			curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVD, offset, constant_offset, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 		
 		case LEX_STRING:
+		case LEX_LITERAL:
+            symbol_data.var.dtype = STABLE_STRING;
 			constant_offset = stable_const_insert_string(&const_table, token->val);
-			curr_instr =  instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVS, 0, constant_offset, 0);
+			curr_instr =  instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVS, offset, constant_offset, 0);
 			stack_push(&(*stack_index), constant_offset);
 			break;
 
@@ -230,7 +238,6 @@ int syntax_precedence()
 
 	do
 	{
-		printf("SYMBOL: %s\n", current_token.val);
 		if(current_token.type == LEX_IDENTIFIER && !stable_search_scopes(&symbol_table, current_token.val, &ptr_data))
 		{
 			syntax_match(LEX_IDENTIFIER);
@@ -272,7 +279,7 @@ int syntax_precedence()
 				else
 				{
 					stack_push(&stack,'<');
-					if((current_token.type == LEX_INTEGER) || (current_token.type == LEX_DOUBLE) || (current_token.type == LEX_STRING))
+					if((current_token.type == LEX_INTEGER) || (current_token.type == LEX_DOUBLE) || (current_token.type == LEX_STRING) || (current_token.type == LEX_LITERAL))
 					{
 						constant_check(&current_token, &stack_index);
 					}
@@ -287,6 +294,7 @@ int syntax_precedence()
 						else if(ptr_data->var.dtype == 2)
 							curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVS, offset, ptr_data->var.offset, 0);
 						stack_push(&stack_index, offset);
+						final_index = offset;
 					}
 					stack_push(&stack, get_sign(&current_token));
 				}
@@ -309,7 +317,7 @@ int syntax_precedence()
 					{
 						stack_pop(&stack);
 						stack_push(&stack, 'E');
-						printf("Reduction rule E->i used\n");
+						//printf("Reduction rule E->i used\n");
 					}
 					else
 					{
@@ -332,7 +340,7 @@ int syntax_precedence()
 							{
 								stack_pop(&stack);
 								stack_push(&stack, 'E');
-								printf("Reduction rule E->(E) used\n");
+								//printf("Reduction rule E->(E) used\n");
 							}
 						}
 					}
@@ -408,7 +416,7 @@ int syntax_precedence()
 							free(syntax_data.id);
 							syntax_data.id = ifj_strdup(current_token.val);
 						}
-						return -1;
+						return -1; 
 					}
 					else
 					{

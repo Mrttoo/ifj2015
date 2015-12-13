@@ -128,7 +128,7 @@ void syntax_insert_builtins()
 
 bool syntax_match(lex_token_type_t predict_token)
 {
-    printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
+    //printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     if(current_token.type == predict_token) {
         if(current_token.type == LEX_IDENTIFIER) {
             if(syntax_data.id != NULL) {
@@ -199,7 +199,6 @@ void syntax_program()
     // 4. Prepare instruction list
     // Insert necessary PUSHF and CALL instructions (and set main function as active one)
     instr_list_item_t *instr = ptr_data->func.label;
-    printf("FUNCTION %s LABEL: %d\n", ptr_data->id, (intptr_t)(ptr_data->func.label));
     instr_list.active = instr_insert_before_instr(&instr_list, instr, INSTR_CALL, 
                                                   (intptr_t)instr, (intptr_t)halt, -1);
     instr_list.active = instr_insert_before_instr(&instr_list, instr_list.active, INSTR_PUSHF, 
@@ -213,7 +212,7 @@ void syntax_program()
 void declr_list()
 {
     syntax_func_declr();
-    printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
+    //printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     if(current_token.type != LEX_EOF)
         declr_list();
 }
@@ -251,9 +250,8 @@ void syntax_func_declr()
     if(!syntax_match(LEX_RPAREN))
         syntax_error(") expected");
 
-    printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
+    //printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
 
-    printf("SYMBOL LABEL %p\n", symbol_data.func.label);
     // Insert function declaration into global symbol table
     if(!stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
         symbol_data.func.label = instr_insert_instr(&instr_list, INSTR_LAB, 0, 0, 0);
@@ -397,7 +395,7 @@ bool syntax_param_item()
 bool syntax_statement()
 {
     bool rc = true;
-    printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
+    //printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     // compoundStmt
     if(current_token.type == LEX_LBRACE) {
         syntax_data.new_scope = true;
@@ -432,7 +430,7 @@ bool syntax_statement()
 
 void syntax_compound_statement()
 {
-    printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
+    //printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     if(!syntax_match(LEX_LBRACE))
         syntax_error("{ expected");
 
@@ -450,6 +448,7 @@ void syntax_compound_statement()
 bool syntax_var_declr(bool mandatory_init)
 {
     bool rc = true;
+    syntax_data.dtype = STABLE_NONE;
 
     if(current_token.type == LEX_KW_AUTO) {
         syntax_match(LEX_KW_AUTO);
@@ -484,13 +483,12 @@ void syntax_var_declr_item(bool mandatory_init, bool is_auto)
         }
     }
 
-    printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
+    //printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
     stable_insert(&symbol_table, symbol_data.id, &symbol_data, &syntax_data);
     int var_offset = symbol_table.active->stack_idx - 1;
 
     if(current_token.type == LEX_ASSIGNMENT) {
         syntax_match(LEX_ASSIGNMENT);
-        // TODO: Waiting for LR parser
         int offset = syntax_expression();
         switch(symbol_data.var.dtype) {
         case STABLE_INT:
@@ -526,8 +524,6 @@ int syntax_expression()
     offset = syntax_precedence();
     //syntax_match(LEX_IDENTIFIER);
     if(current_token.type == LEX_LPAREN) {
-        // TODO
-        printf("Got function call: %s\n", syntax_data.id);
         syntax_call_statement();
     }
 
@@ -602,9 +598,10 @@ void syntax_for_statement()
 
     // Set expresison block as the active one
     curr_instr = forexpr;
-    syntax_assign_statement();
+    int offset2 = syntax_assign_statement();
 
     // Insert jump to for begin
+    curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVI, offset, offset2, 0);
     curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_JMP, (intptr_t)forbeg, 0, 0);
 
     if(!syntax_match(LEX_RPAREN))
@@ -617,8 +614,10 @@ void syntax_for_statement()
     curr_instr = forend;
 }
 
-void syntax_assign_statement()
+int syntax_assign_statement()
 {
+    int offset = 0;
+
     if(!syntax_match(LEX_IDENTIFIER))
         syntax_error("identifier expected");
 
@@ -628,15 +627,16 @@ void syntax_assign_statement()
         syntax_error("'%s' is not a variable", syntax_data.id);
     }
 
-    printf("ASSIGN STATEMENT\n");
     syntax_data.assign_dest = &(ptr_data->var);
 
     if(!syntax_match(LEX_ASSIGNMENT))
         syntax_error("= expected");
 
-    syntax_expression();
+    offset = syntax_expression();
 
     syntax_data.assign_dest = NULL;
+
+    return offset;
 }
 
 void syntax_call_statement()
@@ -895,7 +895,32 @@ void syntax_cout_args()
             syntax_cout_args();
     }
 }
+int main(int argc, char *argv[])
+{
+    if(argc < 2) {
+        fprintf(stderr, "Usage: %s source.file\n", argv[0]);
+        exit(1);
+    }
 
+    stable_data_t *it;
+
+    int rc = 0;
+    stable_init(&symbol_table);
+    stable_const_init(&const_table);
+    lex_initialize(&lex_data, argv[1]);
+    instr_list_init(&instr_list);
+    lex_get_token(&lex_data, &current_token);
+    syntax_program();
+
+    rc = interpret_process(&instr_list, &const_table);
+
+    instr_list_destroy(&instr_list);
+    lex_destroy(&lex_data);
+    stable_const_destroy(&const_table);
+    stable_destroy(&symbol_table);
+
+    return rc;
+}
 #ifdef IFJ_SYNTAX_DEBUG
 void dbg_syntax_print_bst(bst_node_t *node)
 {

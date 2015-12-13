@@ -15,6 +15,7 @@
 #include "ef.h"
 #include "string.h"
 #include "util.h"
+#include "ial.h"
 
 void interpret_math_expr(char op, stable_variable_t *var1, stable_variable_t *var2, stable_variable_t *var3)
 {
@@ -26,6 +27,9 @@ void interpret_math_expr(char op, stable_variable_t *var1, stable_variable_t *va
         op_type = STABLE_DOUBLE;
     else
        op_type = STABLE_INT;
+
+    if(var1->dtype == STABLE_STRING || var2->dtype == STABLE_STRING || var3->dtype == STABLE_STRING)
+        throw_error(IFJ_TYPE_COMP_ERR, "Invalid expression operands");
 
     switch(op) {
     case '+':
@@ -83,8 +87,6 @@ void interpret_math_expr(char op, stable_variable_t *var1, stable_variable_t *va
     break;
     }
 
-    printf("RESULT_D: %lf | RESULT_I: %d\n", res_d, res_i);
-
     switch(var1->dtype) {
     case STABLE_INT:
         if(op_type == STABLE_DOUBLE)
@@ -115,7 +117,6 @@ void interpret_logic_expr(int op, stable_variable_t *var1, stable_variable_t *va
 {
     int res = 0;
 
-    printf("var2: %d | var3: %d\n", var2->val.i, var3->val.i);
     switch(op) {
     case INSTR_LT:
         if(var2->dtype == STABLE_INT && var3->dtype == STABLE_INT)
@@ -235,7 +236,7 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
 
     for(;;) {
         instr = instr_active_get_data(instr_list);
-        printf("\nCurr instr: %s\n", instr_string_array[instr->type]);
+        //printf("\nCurr instr: %s\n", instr_string_array[instr->type]);
 
         switch(instr->type) {
         case INSTR_HALT:
@@ -399,7 +400,6 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
             else
                 var1 = &(curr_frame->vars.items[instr->addr1]);
 
-            puts("DESTROYING STACK FRAME");
             frame_stack_pop(&fstack);
             tmp_frame = frame_stack_get_top(&fstack);
             //printf("Returning to instruction %d\n", ((instr_list_item_t*)curr_frame->ret_addr)->data.type);
@@ -412,7 +412,7 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
         case INSTR_PUSHF:
             // Prepare new frame into temporary variable
             // INSTR_CALL or INSTR_PUSHP instruction MUST follow
-            printf("CREATING NEW STACK FRAME FOR %d VARS\n", instr->addr1);
+            //printf("CREATING NEW STACK FRAME FOR %d VARS\n", instr->addr1);
             tmp_frame = frame_stack_new(&fstack, instr->addr1);
         break;
         case INSTR_PUSHP:

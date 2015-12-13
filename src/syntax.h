@@ -27,6 +27,7 @@ typedef struct syntax_data {
     stable_data_t *called_func;
 } syntax_data_t;
 
+bool syntax_match(lex_token_type_t predict_token);
 /**
   * @brief Checks if given node is a symbol of defined function
   *
@@ -54,7 +55,7 @@ void syntax_stmt_list();
 int syntax_expression();
 void syntax_if_statement();
 void syntax_for_statement();
-void syntax_assign_statement();
+int syntax_assign_statement();
 void syntax_call_statement();
 void syntax_call_params(bool require_param, int *nparam, stable_function_t *func);
 bool syntax_call_param(bool fetch_next);

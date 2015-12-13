@@ -272,9 +272,6 @@ void bst_foreach_func(bst_node_t *node, void (*func)(bst_node_t *node))
     if(node == NULL || func == NULL)
         return;
 
-    printf("Node %s | Type: %s\n", node->data.id, node->data.type == STABLE_FUNCTION ? "FUNCTION" : (node->data.type == STABLE_VARIABLE ? "VARIABLE" : "ERROR"));
-    printf("Defined: %s\n", node->data.func.defined ? "true" : "false");
-
     bst_foreach_func(node->left, func);
     func(node);
     bst_foreach_func(node->right, func);
