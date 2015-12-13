@@ -278,9 +278,12 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
         case INSTR_CALL:
             // Set new frame (created by INSTR_PUSHF) as active
             // and proceed to called function
-            if(curr_frame != NULL) {
+            if(curr_frame != NULL && instr->addr3 != -1) {
                 tmp_frame->ret_val = &(curr_frame->vars.items[instr->addr2]);
                 tmp_frame->ret_addr = (void*)instr_list->active;
+            } else {
+                tmp_frame->ret_val = NULL;
+                tmp_frame->ret_addr = (void*)instr->addr2;
             }
 
             curr_frame = tmp_frame;
@@ -302,9 +305,10 @@ int interpret_process(instr_list_t *instr_list, stable_const_t *const_table)
             puts("DESTROYING STACK FRAME");
             frame_stack_pop(&fstack);
             tmp_frame = frame_stack_get_top(&fstack);
-            printf("Returning to instruction %d\n", ((instr_list_item_t*)curr_frame->ret_addr)->data.type);
+            //printf("Returning to instruction %d\n", ((instr_list_item_t*)curr_frame->ret_addr)->data.type);
             // TODO: Assign return value - 
-            *(curr_frame->ret_val) = *var1;
+            if(curr_frame->ret_val != NULL)
+                *(curr_frame->ret_val) = *var1;
             instr_list->active = (instr_list_item_t*)curr_frame->ret_addr;
             frame_destroy(curr_frame);
             curr_frame = tmp_frame;

@@ -17,6 +17,8 @@ typedef struct syntax_data {
     bool new_scope;
     bool function_scope;
     bool valid_return;
+    stable_variable_t *assign_dest;
+    stable_data_t *called_func;
 } syntax_data_t;
 
 /**

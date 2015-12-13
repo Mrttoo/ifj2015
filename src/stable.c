@@ -25,6 +25,8 @@ void stable_init(stable_t *stable)
     it->type = STABLE_TYPE_GLOBAL;
     it->next = NULL;
     it->scopes = NULL;
+    it->stack_idx = 0;
+    it->active_scope = 0;
 
     stable_symbol_list_item_t *s_it = malloc(sizeof *s_it);
     if(s_it == NULL) {

@@ -147,13 +147,15 @@ void syntax_program()
     symbol_data.id = NULL;
     syntax_data.new_scope = false;
     syntax_data.function_scope = false;
+    syntax_data.assign_dest = NULL;
+    syntax_data.called_func = NULL;
 
     declr_list();
     if(!syntax_match(LEX_EOF))
         syntax_error("expected end of file");
 
-    instr_insert_instr(&instr_list, INSTR_HALT, 0, 0, 0);
-
+    instr_list_t *halt = instr_insert_instr(&instr_list, INSTR_HALT, 0, 0, 0);
+    halt = instr_insert_before_instr(&instr_list, halt, INSTR_LAB, 0, 0, 0);
     // Check for mandatory program components
     // 1. Every program has to have main function with prototype
     // int main()
@@ -177,10 +179,22 @@ void syntax_program()
     bst_node_t *st_global = stable_get_global(&symbol_table);
     bst_foreach_func(st_global, syntax_check_func_def);
 
-    // 3. Prepare instruction list
+    // 3. Replace every 'partial' PUSHF instruction (those with addr3 == -1)
+    instr_list_item_t *it = instr_list.first;
+    while(it != NULL) {
+        if(it->data.type == INSTR_PUSHF && it->data.addr3 == -1) {
+            it->data.addr1 = ((stable_data_t*)(it->data.addr1))->func.f_item->stack_idx;
+            it->data.addr3 = 0;
+        }
+
+        it = it->next;
+    }
+
+    // 4. Prepare instruction list
     // Insert necessary PUSHF and CALL instructions (and set main function as active one)
     instr_list_item_t *instr = ptr_data->func.label;
-    instr_list.active = instr_insert_before_instr(&instr_list, instr, INSTR_CALL, (intptr_t)instr, 0, 0);
+    printf("FUNCTION %s LABEL: %d\n", ptr_data->id, (intptr_t)(ptr_data->func.label));
+    instr_list.active = instr_insert_before_instr(&instr_list, instr, INSTR_CALL, (intptr_t)instr, (intptr_t)halt, -1);
     instr_list.active = instr_insert_before_instr(&instr_list, instr_list.active, INSTR_PUSHF, ptr_data->func.f_item->stack_idx, 0, 0);
 
     free(syntax_data.id);
@@ -208,6 +222,7 @@ void syntax_func_declr()
     symbol_data.type = STABLE_FUNCTION;
     syntax_data.new_scope = true;
     syntax_data.function_scope = true;
+    ptr_data = NULL;
 
     if(!syntax_type_spec())
         syntax_error("type expected");
@@ -230,10 +245,16 @@ void syntax_func_declr()
 
     printf("[%s] Current token: (%d) %s\n", __func__, current_token.type, ENUM_TO_STR(current_token.type));
 
+    printf("SYMBOL LABEL %p\n", symbol_data.func.label);
     // Insert function declaration into global symbol table
     if(!stable_search_global(&symbol_table, symbol_data.id, &ptr_data)) {
+        symbol_data.func.label = instr_insert_instr(&instr_list, INSTR_LAB, 0, 0, 0);
+        printf("INSERTING LABEL FOR FUNCTION %s - [%d]\n", symbol_data.id, symbol_data.func.label);
         stable_insert_global(&symbol_table, symbol_data.id, &symbol_data);
         clean_params = false;
+        instr = symbol_data.func.label;
+    } else {
+        instr = ptr_data->func.label;
     }
 
     if(current_token.type == LEX_SEMICOLON && syntax_match(LEX_SEMICOLON)) {
@@ -250,7 +271,7 @@ void syntax_func_declr()
             stable_insert(&symbol_table, func_param.id, &func_param, &syntax_data);
         }
 
-        instr = instr_insert_instr(&instr_list, INSTR_LAB, 0, 0, 0);
+        printf("SETTING ACTIVE INSTRUCTION TO [%d] - %s\n", (intptr_t)instr, symbol_data.id);
         curr_instr = instr;
 
         // Save current function data
@@ -485,9 +506,12 @@ void syntax_stmt_list()
 // TODO: Waiting for LR parser
 void syntax_expression()
 {
-	syntax_precedence();
-	if(syntax_match(LEX_LPAREN))
-			syntax_call_statement();
+	//syntax_precedence();
+    syntax_match(LEX_IDENTIFIER);
+    if(current_token.type == LEX_LPAREN) {
+        // TODO
+        syntax_call_statement();
+    }
 }
 
 void syntax_if_statement()
@@ -580,15 +604,36 @@ void syntax_assign_statement()
         syntax_error("'%s' is not a variable", syntax_data.id);
     }
 
+    printf("ASSIGN STATEMENT");
+    syntax_data.assign_dest = &(ptr_data->var);
+
     if(!syntax_match(LEX_ASSIGNMENT))
         syntax_error("= expected");
 
     syntax_expression();
+
+    syntax_data.assign_dest = NULL;
 }
 
 void syntax_call_statement()
 {
+    // TODO
+
+    if(!stable_search_global(&symbol_table, syntax_data.id, &(syntax_data.called_func))) {
+        syntax_error("undeclared function %s\n", syntax_data.id);
+    }
+
+    syntax_match(LEX_LPAREN);
+
+    // We'll replace the size later (after syntax analysis)
+    curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_PUSHF, 
+                                          (intptr_t)(syntax_data.called_func), 0, -1);
     syntax_call_params(false);
+
+    // TODO INSTR_CALL
+    curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_CALL,
+                                          (intptr_t)syntax_data.called_func->func.label,
+                                          syntax_data.assign_dest->offset, 0);
 
     if(!syntax_match(LEX_RPAREN))
         syntax_error(") expected");
@@ -596,9 +641,30 @@ void syntax_call_statement()
 
 void syntax_call_params(bool require_param)
 {
+    int idx = 0;
+
     if(current_token.type != LEX_RPAREN) {
-        if(!syntax_call_param(true))
+        if(!syntax_call_param(false))
             syntax_error("param expected");
+
+        if(current_token.type == LEX_IDENTIFIER) {
+            if(!stable_search_scopes(&symbol_table, current_token.val, &ptr_data)) {
+                syntax_error("undefined variable '%s'", current_token.val);
+            } else if(ptr_data->type != STABLE_VARIABLE) {
+                syntax_error("symbol '%s' is not a variable", current_token.val);
+            }
+
+            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_PUSHF, ptr_data->var.offset, 0, 0);
+        } else {
+            if(current_token.type == LEX_INTEGER)
+                idx = stable_const_insert_int(&const_table, atoi(current_token.val));
+            else if(current_token.type == LEX_DOUBLE)
+                idx = stable_const_insert_double(&const_table, atof(current_token.val));
+            else
+                idx = stable_const_insert_string(&const_table, current_token.val);
+
+            curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_PUSHF, idx, 0, 0);
+        }
 
         if(current_token.type == LEX_COMMA) {
             syntax_match(LEX_COMMA);
@@ -631,6 +697,9 @@ void syntax_return_statement()
         syntax_error("expression expected");
 
     syntax_expression();
+
+    // TODO - CORRECT RETURN VARIABLE INDEX
+    curr_instr = instr_insert_after_instr(&instr_list, curr_instr, INSTR_RET, 0, 0, 0); 
 
     if(!syntax_match(LEX_SEMICOLON))
         syntax_error("; expected");
@@ -836,7 +905,7 @@ int main(int argc, char *argv[])
     puts("INSTRUCTIONS DUMP");
     instr_list_item_t *instr = instr_list.first;
     while(instr != NULL) {
-        printf("%s: %d, %d, %d\n", instr_string_array[instr->data.type], instr->data.addr1, instr->data.addr2, instr->data.addr3);
+        printf("[%d] %s: %d, %d, %d\n", instr, instr_string_array[instr->data.type], instr->data.addr1, instr->data.addr2, instr->data.addr3);
         instr = instr->next;
     }
     printf("***** INTERPRETER OUTPUT *****\n");
