@@ -109,6 +109,7 @@ sign_value get_sign(lex_token_t *t)
 	case LEX_IDENTIFIER:
 	case LEX_INTEGER:
 	case LEX_DOUBLE:
+	case LEX_LITERAL:
 		return symbol_id;
 	
 	case LEX_SEMICOLON:
@@ -198,6 +199,7 @@ void constant_check(lex_token_t *token, Stack *stack_index)
 			break;
 		
 		case LEX_STRING:
+		case LEX_LITERAL:
 			constant_offset = stable_const_insert_string(&const_table, token->val);
 			curr_instr =  instr_insert_after_instr(&instr_list, curr_instr, INSTR_MOVS, offset, constant_offset, 0);
 			stack_push(&(*stack_index), constant_offset);
@@ -274,7 +276,7 @@ int syntax_precedence()
 				else
 				{
 					stack_push(&stack,'<');
-					if((current_token.type == LEX_INTEGER) || (current_token.type == LEX_DOUBLE) || (current_token.type == LEX_STRING))
+					if((current_token.type == LEX_INTEGER) || (current_token.type == LEX_DOUBLE) || (current_token.type == LEX_STRING) || (current_token.type == LEX_LITERAL))
 					{
 						constant_check(&current_token, &stack_index);
 					}
