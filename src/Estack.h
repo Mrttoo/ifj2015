@@ -15,12 +15,4 @@ void stack_pop(Stack *S);
 int stack_offset(Stack *S, int d);
 
 
-
-union Data {
-	int i;
-	double d ;
-	char *str;
-}; 
-
-
 #endif
