@@ -14,7 +14,6 @@
 
 \title{Interpret imperativního jazyka IFJ15}
 \subtitle{Tým 043, varianta b/2/I}
-\author{Patrik Jurnečka}
 
 \providecommand{\uv}[1]{\quotedblbase #1\textquotedblleft} %Uvozovky 
 
@@ -33,15 +32,18 @@
 			\item Martin Honza
 			\item Patrik Jurnečka
 			\item Hana Slámová
-			\item Frantisek Šumšal (vedoucí týmu)
+			\item František Šumšal (vedoucí týmu)
 			\item Adam Švidroň
 		\end{itemize}
 }
 
+\subsection{Obsah}
 \frame {
 	\frametitle{Obsah}
 		\begin{enumerate}
 			\item Organizace
+			
+			\item Moduly interpretu
 			
 			\item Lexikální analyzátor
 			
@@ -60,6 +62,7 @@
 		\end{figure}
 }
 
+\subsection{Organizace}
 \frame{
 	\frametitle{Organizace}
 	\begin{enumerate}
@@ -75,6 +78,15 @@
 	\end{figure}
 }
 
+\section{Moduly interpretu jazyka IFJ15}
+\frame{
+	\frametitle{Moduly interpretu}
+	\begin{figure}
+		\scalebox{0.2}{\includegraphics{moduly.png}}
+	\end{figure}
+}
+
+\subsection{Lexikální analyzátor}
 \frame {
 	\frametitle{Lexikální analyzátor}
 	\begin{enumerate}
@@ -106,25 +118,90 @@
 	\end{figure}
 }
 
+\subsection{Překlad řízený syntaxí}
 \frame{
-	\frametitle{Syntaktický a sémantický analyzátor}
+	\frametitle{Překlad řízený syntaxí}
 	\begin{enumerate}
+		\item Jádro překladače
+		\item Po dokončení je volán interpret
 		\item Kontrola syntaxe (správná posloupnost tokenů)
-		\item Volání funkce lex\_get\_token()
-		\item LL gramatika
-		\item Precedenční analýza
+		\item Obecný syntaktický analyzátor
 		\begin{itemize}
-			\item Precedenční tabulka
-			\item Generování 3AC (tříadresný kód)
-			\item Sémantické kontroly
+			\item Vstupem jsou jednotlivé tokeny (funkce lex\_get\_token())
+			\item LL gramatika - str. 4 v dokumentaci
+			\item Očekáván výraz volá se SA výrazů
 		\end{itemize}
 	\end{enumerate}	
 }
 
+\frame{
+	\frametitle{Překlad řízený syntaxí}
+	\begin{enumerate}
+		\item Syntaktický analyzátor výrazů
+		\begin{itemize}
+			\item Precedenční tabulka - str. 5 v dokumentaci
+			\item Analýza zdola nahoru
+		\end{itemize}
+		\item Generování 3AC (tříadresný kód)
+		\begin{itemize}
+			\item Generování instrukcí
+			\item Instrukce se ukládají do seznamu instrukcí
+		\end{itemize}
+	\end{enumerate}	
+}
+
+\subsection{Interpret}
 \frame {
 	\frametitle{Interpret}
 	\begin{enumerate}
 		\item Zpracovaní instrukční sady
+		\item Vrací návratový kód
+		\item Pracuje se vstupními a výstupními operacemi
+	\end{enumerate}
+}
+
+\section{Algoritmy do IAL}
+\subsection{Algoritmus Heapsort}
+\frame {
+	\frametitle{Algoritmus Heapsort}
+	\framesubtitle{Funkce \textbf{sort}}
+	\begin{enumerate}
+		\item Algoritmus řazení
+		\item Linearitmetická složitost
+		\item Nestabilní algoritmus
+	\end{enumerate}
+}
+
+\subsection{Boyer-Moorův algoritmus}
+\frame {
+	\frametitle{Boyer-Moorův algoritmus}
+	\framesubtitle{Funkce \textbf{find}}
+	\begin{enumerate}
+		\item Algoritmus vyhledávání
+		\item Velmi efektivní algoritmus
+		\item Porovnávání dle podmínek
+		\item Čím delší je vyhledávaný podřetězec, tím je kratší doba
+	\end{enumerate}
+}
+
+\subsection{Tabulka symbolů}
+\frame {
+	\frametitle{Tabulka symbolů}
+	\begin{enumerate}
+		\item Implementováno pomocí binárního vyhledávacího stromu
+		\item Nejpoužívanější implementace
+		\item Ukládání informací o funkcích a proměnných
+	\end{enumerate}
+}
+
+\section[]{Práce v týmu}
+\frame {
+	\frametitle{Práce v týmu}
+	\begin{enumerate}
+		\item Komunikace pomocí IRC Freenode
+		\item Nepravidelné osobní setkání
+		\item Sdílení souborů pomocí Git
+		\item Rozdělení prací nebylo striktně určeno
 	\end{enumerate}
 }
 
@@ -141,8 +218,9 @@
 	\frametitle{REFERENCE}
 	\small 	
 	{
-	\textsc {AHO, Alfred V.}, J. \textit{Compilers: principles, techniques,}. 2nd ed. Boston: Pearson/Addison Wesley, c2007, XXIV, 1009~s. ISBN 03-214-8681-1.\\
+	\textit{Přednášky, skripta a podklady k předmětu IFJ a IAL} \\
 	\bigskip
+	\textsc {AHO, Alfred V.}, J. \textit{Compilers: principles, techniques,}. 2nd ed. Boston: Pearson/Addison Wesley, c2007, XXIV, 1009~s. ISBN 03-214-8681-1.\\
 	}	
 }
 
